@@ -33,7 +33,8 @@
   (let ((counter 0)
         (sum-counter 0)
         (sum 0)
-        (res-list))
+        (res-list)
+        (bonuscount 0))
     ;; (error (print alist))
     (setf res-list (mapcar #'(lambda (item)
                                (let ((articul (cdr (assoc :id  item)))
@@ -51,6 +52,7 @@
                                                      (price product)
                                                      (siteprice product)))
                                      (setf sum (+ sum (* cnt price)))
+                                     (setf bonuscount (+ bonuscount (* cnt (bonuscount product) 10)))
                                      (setf sum-counter (+ sum-counter cnt))
                                      (list :numpos counter
                                            :count cnt
@@ -66,7 +68,7 @@
                                            ;;для sendmail
                                            :cnt cnt)))))
                            alist))
-    (values-list (list res-list sum-counter sum))))
+    (values-list (list res-list sum-counter sum bonuscount))))
 
 
 (defun newcart-tovar (n)
@@ -91,13 +93,17 @@
         (cart)
         (products)
         (count 0)
-        (pricesum 0))
+        (pricesum 0)
+        (bonuscount nil))
     (when (not (null cart-cookie))
       (setf cart (json:decode-json-from-string cart-cookie))
-      (multiple-value-bind (lst cnt sm) (newcart-cart-products cart)
+      (multiple-value-bind (lst cnt sm bc) (newcart-cart-products cart)
         (setf products (remove-if #'null lst))
         (setf count cnt)
-        (setf pricesum sm)))
+        (setf pricesum sm)
+        (if (and bc
+                 (not (equal bc 0)))
+            (setf bonuscount bc))))
     (if (and (not (null products))
              (< 0 pricesum)
              (< 0 count))
@@ -105,7 +111,11 @@
           (soy.newcart:fullpage (list :head (root:newcart-head)
                                       :header (soy.newcart:header)
                                       :footer (root:newcart-footer)
-                                      :leftcells (soy.newcart:leftcells)
+                                      :leftcells (soy.newcart:leftcells
+                                                  (list :bonuscount bonuscount
+                                                        :bonusname (if bonuscount
+                                                                       (nth (skls.get-count-skls bonuscount)
+                                                                        (list "бонус" "бонуса" "бонусов")))))
                                       :rightcells (soy.newcart:rightcells
                                                    (list :notfinished "true"
                                                          :deliverysum pricesum
@@ -114,7 +124,7 @@
                                                          :products (mapcar #'soy.newcart:product-item products))))))
         (progn
           ;; страница для пустой корзины с автоматическим редиректом на главную
-          ;; (log5:log-for (or eshop::newcart-log
+          ;; (log5:log-for (or esho::newcart-log
           ;;                   log5:warn+) "trying to checkout null cart")
           (soy.newcart:fullpage (list :head (soy.newcart:head-redirect (list :timeout 5
                                                                              :url "/"))
@@ -193,7 +203,8 @@
         (user) ;; данные о пользователе
         (products)
         (count)  ;; количество товаров в корзине
-        (pricesum)) ;; сумма заказа
+        (pricesum) ;; сумма заказа
+        (bonuscount)) ;; сумма бонусов
     ;; кукисы пользователя
     (mapcar #'(lambda (cookie)
                 (cond ((string= (car cookie) "cart") (setf cart (json:decode-json-from-string (cdr cookie))))
@@ -207,11 +218,14 @@
     ;;если кукисы не пустые
     (when (and (not (null cart))
                (not (null user)))
-      (multiple-value-bind (lst cnt sm) (newcart-cart-products cart)
+      (multiple-value-bind (lst cnt sm bc) (newcart-cart-products cart)
         (setf products (remove-if #'null lst))
         ;; (print products)
         (setf count cnt)
-        (setf pricesum sm)))
+        (setf pricesum sm)
+        (if (and bc
+                 (not (equal bc 0)))
+            (setf bonuscount bc))))
     (if (and (not (null products))
              (not (null (newcart-get-data-from-alist :phone user))))
         ;; если в заказе есть валидные товары и телефон пользователя
@@ -229,7 +243,7 @@
             ;; существует два вида доставки: курьером и самовывоз (express | pickup)
             (if  (string= delivery-type "express")
                  (setf deliverysum (yml.get-delivery-price (newcart-cart-products cart))))
-            (format t "EKK: ~a" ekk)
+            ;; (format t "EKK: ~a" ekk)
             (setf client-mail
                   (sendmail:clientmail
                    (list :datetime (time.get-date-time)
@@ -249,10 +263,20 @@
                                           bankaccount)
                          :phone phone
                          :ekk ekk
+                         :bonuscount (if (and ekk
+                                              (not (equal ekk "")))
+                                         bonuscount)
+                         :bonusname (if bonuscount
+                                        (nth (skls.get-count-skls bonuscount)
+                                             (list "бонус" "бонуса" "бонусов")))
                          :email email
                          :comment (cond  ((string= delivery-type "express") courier_comment)
                                          ((string= delivery-type "pickup") pickup_comment)
                                          (t ""))
+                         :articles (let ((articles (articles.sort (get-articles-list))))
+                                     (if articles
+                                         (articles-view-articles (subseq articles 0 7))
+                                         nil))
                          :products products
                          :deliverysum deliverysum
                          :itogo (+ pricesum deliverysum))))
@@ -302,6 +326,11 @@
                                                  (if (equal comment "") nil comment))
                                      :email (if (equal email "") nil email)
                                      :name (if (equal name "") nil name)
+                                     :bonuscount (if ekk
+                                                     bonuscount)
+                                     :bonusname (if bonuscount
+                                                    (nth (skls.get-count-skls bonuscount)
+                                                         (list "бонус" "бонуса" "бонусов")))
                                      :courier (equal delivery-type "express")
                                      :oplata (cond ((string= payment "payment_method-1")
                                                     "<p class=\"h2\">Оплата наличными</p><p>Вы получите кассовый товарный чек</p>")

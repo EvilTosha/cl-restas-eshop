@@ -189,3 +189,8 @@
             hour
             minute
             second)))
+
+(defun time.get-delta-new-year-date ()
+  (- 31 (multiple-value-bind (second minute hour date month year) (time.get-decode-timestamp)
+          (declare (ignore second minute hour month year))
+          date)))

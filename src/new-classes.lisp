@@ -43,11 +43,12 @@
 (defmethod new-classes.decode (in-string (dummy group-filter))
   (if (or (string= in-string "") (null in-string))
       nil
-      (let* ((tmp (read-from-string in-string)))
-        (make-instance 'group-filter
-                       :name (getf tmp :name)
-                       :base (getf tmp :base)
-                       :advanced (getf tmp :advanced)))))
+      (let ((*package* (find-package :eshop)))
+            (let* ((tmp (read-from-string in-string)))
+              (make-instance 'group-filter
+                             :name (getf tmp :name)
+                             :base (getf tmp :base)
+                             :advanced (getf tmp :advanced))))))
 
 ;;макрос для создания метода десериализации класса из файла, по данным имени класса и списку полей
 (defmacro new-classes.make-unserialize-method (name class-fields)
@@ -338,8 +339,8 @@
 
 (defun new-classes.unserialize-all ()
   (sb-ext:gc :full t)
-  (unserialize-from-file (pathname (format nil "~atest/tt10.bkp" (user-homedir-pathname))) (make-instance 'product))
-  (unserialize-from-file (pathname (format nil "~atest/grs10.bkp" (user-homedir-pathname))) (make-instance 'group))
+  (unserialize-from-file (pathname (format nil "~atest/tt25.bkp" (user-homedir-pathname))) (make-instance 'product))
+  (unserialize-from-file (pathname (format nil "~atest/grs25.bkp" (user-homedir-pathname))) (make-instance 'group))
   (unserialize-from-file (pathname (format nil "~atest/filters" (user-homedir-pathname))) (make-instance 'filter))
   (wlog "Making lists")
   (storage.make-lists)
@@ -379,7 +380,7 @@
   "Одноразовый перенос олдовых характеристик поверх хранилища продуктов и проставление производителя"
   (let ((original-storage (storage *global-storage*))
         (*global-storage* (make-instance 'global-storage)))
-    (unserialize-from-file (pathname (format nil "~atest/tt1.bkp" (user-homedir-pathname))) (make-instance 'product))
+    (unserialize-from-file (pathname (format nil "~atest/tt12.bkp" (user-homedir-pathname))) (make-instance 'product))
     ;; на данном этапе в *global-storage* только продукты
     (maphash #'(lambda (k v)
                  (declare (ignore k))
@@ -404,20 +405,23 @@
   (sb-ext:gc :full t))
 
 
+
 (defun new-classes.DBG-unserialize-groups ()
   "Одноразовый перенос олдовых характеристик поверх хранилища продуктов и проставление производителя"
   (let ((original-storage (storage *global-storage*))
         (*global-storage* (make-instance 'global-storage)))
-    (unserialize-from-file (pathname (format nil "~atest/groups" (user-homedir-pathname))) (make-instance 'group))
+    (unserialize-from-file (pathname (format nil "~atest/grs25.bkp" (user-homedir-pathname))) (make-instance 'group))
     ;; на данном этапе в *global-storage* только группы
     (maphash #'(lambda (k v)
                  (declare (ignore k))
+                 (if (equal (key v) "lcd-televizory")
+                           (wlog (raw-fullfilter v)))
                  (when (and (equal (type-of v) 'group)
-                            (fullfilter v))
+                            (raw-fullfilter v))
                    (let ((item (gethash (key v) original-storage)))
                      (when item
-                       (let ((raw-filter (fullfilter v))
-                             (filter (fullfilter v)))
+                       (let ((raw-filter (raw-fullfilter v))
+                             (filter (raw-fullfilter v)))
                          (setf filter (object-fields.string-add-newlines filter))
                          (setf filter (new-classes.decode filter (make-instance 'group-filter)))
                          (setf (fullfilter item) filter)

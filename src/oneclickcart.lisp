@@ -26,7 +26,7 @@
       (setf count cnt)
       (setf pricesum sm))
     (setf client-mail
-          (sendmail:clientmail
+          (sendmail:clientmail-elka
            (list :datetime (time.get-date-time)
                  :order_id order-id
                  :name name
@@ -37,7 +37,7 @@
                  :bankaccount ""
                  :phone phone
                  :email email
-                 :comment (format nil "Заказ через форму один клик ~@[!!! Предзаказ !!!~]" (preorder (gethash articul (storage *global-storage*))))
+                 :comment (format nil "Заказ с новогодней елки.")
                  :products products
                  :deliverysum 0
                  :itogo pricesum)))
@@ -52,10 +52,10 @@
                 :isdelivery "Самовывоз"
                 :date (time.get-date)
                 :time (time.get-time)
-                :comment (format nil "Заказ через форму один клик ~@[!!! Предзаказ !!!~]" (preorder (gethash articul (storage *global-storage*))))
+                :comment (format nil "Заказ с новогодней елки.")
                 :products products))
     (setf filename (format nil "~a_~a.txt" (time.get-short-date) order-id))
-            ;;сорханение заказа
+    ;;сорханение заказа
     (save-order-text order-id client-mail)
     ;; удаление страных символов
     (setf client-mail (remove-if #'(lambda(c) (< 10000 (char-code c))) client-mail))
@@ -202,9 +202,12 @@
         (order-id))
    (if (not (null telef))
        (progn
-         (if (equal "33" articul)
-             (setf order-id (oneclick-sendmail2 telef articul name email))
-             (setf order-id (oneclick-sendmail1 telef articul name email)))
+         (if (equal "/elka2012"
+                    (puri:uri-path (puri:parse-uri (hunchentoot:referer))))
+             (setf order-id (oneclick-sendmail telef articul name email))
+             (if (equal "33" articul)
+                 (setf order-id (oneclick-sendmail2 telef articul name email))
+                 (setf order-id (oneclick-sendmail1 telef articul name email))))
          (soy.oneclickcart:answerwindow (list :phone telef
                                               :orderid order-id)))
        (soy.oneclickcart:formwindow1 (list :articul articul)))))

@@ -17,6 +17,9 @@
 (restas:define-route admin-make-key-route ("/administration-super-panel/make" :method :post)
   (show-admin-page "make"))
 
+(restas:define-route admin-pics-route ("/administration-super-panel/pics" :method :post)
+  (show-admin-page "pics"))
+
 (restas:define-route admin-parenting-key-route ("/administration-super-panel/parenting" :method :post)
   (show-admin-page "parenting"))
 
@@ -76,6 +79,7 @@
          (list "<li><a href=\"/administration-super-panel\"><b>MAIN ADMIN</b></a></li>"
                "<li><a href=\"/administration-super-panel/history\">gateway</a></li>"
                "<li><a href=\"/administration-super-panel/actions\">actions</a></li>"
+               "<li><a href=\"/administration-super-panel/picss\">pics</a></li>"
                "<li><a href=\"/administration-super-panel/info\">info</a></li>"))))
 
 (defun admin.test-get-post-parse ()

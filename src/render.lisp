@@ -193,11 +193,15 @@
                            ""
                            (key group))
             :price (siteprice object)
+            :bonuscount (if (and (bonuscount object)
+                                 (not (equal (bonuscount object) 0)))
+                            (* (bonuscount object) 10))
             :formatprice (get-format-price (siteprice object))
             :formatstoreprice (get-format-price
                                (+ (siteprice object)
                                   (delta-price object)))
             :bestprice (> (delta-price object) 0)
+            :groupd (groupd.is-groupd object)
             :firstpic (car pics)
             :promotiontext (concatenate 'string
                                         (let ((value))
@@ -343,6 +347,10 @@
                              :siteprice (siteprice object)
                              :storeprice (price object)
                              :bestprice (> (delta-price object) 0)
+                             :groupd (groupd.is-groupd object)
+                             :bonuscount (if (and (bonuscount object)
+                                                  (not (equal (bonuscount object) 0)))
+                                             (* (bonuscount object) 10))
                              :formatsiteprice (get-format-price (siteprice object))
                              :formatstoreprice (get-format-price
                                                 (+ (siteprice object)
@@ -365,7 +373,6 @@
                                                   " "
                                                    (if (= 0 (yml.get-product-delivery-price1 object))
                                             "(бесплатная доставка)"))
-
                              :others (soy.product:others
                                       (list :others (mapcar #'(lambda (x)
                                                                 (if (equal 'product (type-of x))

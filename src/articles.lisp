@@ -224,7 +224,9 @@
                                        :subcontent  (soy.articles:article-big (list :sharebuttons (soy.articles:share-buttons
                                                                                                    (list :key (key object)))
                                                                                     :name (name object)
-                                                                                    :date (time.article-encode-date object)
+                                                                                    :date (if (= (date object) 0)
+                                                                                              nil
+                                                                                              (time.article-encode-date object))
                                                                                     :body (prerender-string-replace (body object))
                                                                                     :articles (let ((articles (articles.sort (remove-if #'(lambda(v)(equal v object)) (get-articles-list)))))
                                                                                                 (if articles

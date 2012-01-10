@@ -42,4 +42,5 @@
                (:file "admin-gateway" :depends-on ("new-classes"))
                (:file "gateway" :depends-on ("admin-gateway"))
                (:file "email" :depends-on ("gateway"))
+               (:file "groupd" :depends-on ("email"))
                ))))

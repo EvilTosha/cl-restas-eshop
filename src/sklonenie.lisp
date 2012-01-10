@@ -3,6 +3,63 @@
 
 (defparameter *group-skls* (make-hash-table :test #'equal))
 
+;; function getNameCountIndex(count) {
+;; 	var cnt = (count % 100);
+;; 	var result = 0;
+;;         if (cnt >= 20) {
+;; 	   cnt = (cnt % 10);
+;; 	};
+;; 	if (cnt == 0) {
+;; 	   result = 2;
+;; 	} else {
+;; 	    if (cnt == 1) {
+;; 	   	result = 0;
+;; 	    } else {
+;;                 if (cnt < 5) {
+;; 	           result = 1;
+;;                 }  else {
+;; 	           result = 2;
+;; 		};
+;;             };
+;; 	};
+;; 	return result;
+;; }
+
+
+(defun skls.get-count-skls(count)
+  (let ((cnt (mod count 100))
+        (result 0))
+    (if (>= cnt 20)
+        (setf cnt (mod cnt 20)))
+    (if (= cnt 0)
+        (setf result 2)
+        (if (= cnt 1)
+            (setf result 0)
+            (if (< cnt 5)
+                (setf result 1)
+                (setf result 2))))
+    result))
+  ;; 	var cnt = (count % 100);
+;; 	var result = 0;
+;;         if (cnt >= 20) {
+;; 	   cnt = (cnt % 10);
+;; 	};
+;; 	if (cnt == 0) {
+;; 	   result = 2;
+;; 	} else {
+;; 	    if (cnt == 1) {
+;; 	   	result = 0;
+;; 	    } else {
+;;                 if (cnt < 5) {
+;; 	           result = 1;
+;;                 }  else {
+;; 	           result = 2;
+;; 		};
+;;             };
+;; 	};
+;; 	return result;
+
+
 (defun restore-skls-from-files ()
   (let ((t-storage))
       (print "start load skls....{")

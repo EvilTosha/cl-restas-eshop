@@ -67,7 +67,7 @@
   ))
 
 (defun write-groups (stream)
-  (format stream "~a;~a;~a;~a;%"
+  (format stream "~a;~a;~a;~a;~%"
           "Название категории"
           "url страницы"
           "Active"
@@ -165,7 +165,7 @@
                                       (key v)
                                       (stripper vendor)
                                        "yes"
-                                       (let ((desc (gethash vendor (vendors-seo v))))
+                                       (let ((desc (gethash (string-downcase vendor) (vendors-seo v))))
                                          (if (and (not (null desc))
                                                   (not (string= "" desc)))
                                              "yes"
@@ -1278,21 +1278,50 @@
 ;;   )
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ;; (mapcar #'(lambda (v) (setf (parents v) nil))
 ;;  (remove-if-not #'(lambda (v) (and (parents v)
 ;;                                  (null (car (parents v)))))
 ;;  (storage.get-products-list)))
+
+
+;; (mapcar #'(lambda (group)
+;;               (when (raw-fullfilter group)
+;;                 (let ((rwf (raw-fullfilter group)))
+;;                   (setf (raw-fullfilter group) (object-fields.string-add-newlines rwf)))))
+;;         (storage.get-groups-list))
+
+
+
+
+(defun create-sale-filter (group)
+  (let* ((key (format nil "~a-~a" (key group) "sale"))
+         (filter)
+         (tmp-filter (car (remove-if-not #'(lambda (v) (equal (key v) key))
+                                    (filters group)))))
+    (if (not tmp-filter)
+        (setf filter (make-instance 'filter))
+        (setf filter tmp-filter))
+    (setf (name filter) "Распродажа")
+    (setf (func filter) #'groupd.is-groupd)
+    (setf (key filter) key)
+    (setf (parents filter) (list group))
+    (when (not tmp-filter)
+      (setf (gethash key (storage *global-storage*)) filter)
+      (push filter (filters group)))
+    filter
+    ))
+
+(defun report.set-salefilter ()
+  (mapcar #'(lambda (v)
+              (let ((gr (gethash (format nil "~a" v) (storage *global-storage*))))
+                (create-sale-filter gr)))
+          (list "netbuki"
+                "noutbuki"
+                "planshetnie-komputery"
+                "cifrovye-fotoapparaty"
+                "lcd-televizory"
+                "monitory"
+                "printery"
+                "mfu"
+                "myshki"
+                "klaviatury")))
