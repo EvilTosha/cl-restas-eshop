@@ -326,8 +326,8 @@
                                value))
          :emptyfield (soy.class_forms:catalog-keyoption-field (list
                                                                :number (format nil "' + $~aCnt + '"
-                                                                               name)))
-         :name name
+                                                                               (replace-all name "-" "_"))))
+         :name (replace-all name "-" "_")
          :number (- (length value) 1)
          :disabled disabled)))
 
