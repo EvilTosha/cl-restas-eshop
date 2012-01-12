@@ -79,7 +79,7 @@
          (list "<li><a href=\"/administration-super-panel\"><b>MAIN ADMIN</b></a></li>"
                "<li><a href=\"/administration-super-panel/history\">gateway</a></li>"
                "<li><a href=\"/administration-super-panel/actions\">actions</a></li>"
-               "<li><a href=\"/administration-super-panel/picss\">pics</a></li>"
+               "<li><a href=\"/administration-super-panel/pics\">pics</a></li>"
                "<li><a href=\"/administration-super-panel/info\">info</a></li>"))))
 
 (defun admin.test-get-post-parse ()
@@ -91,6 +91,7 @@
            (format nil "raw GET params: ~a <br />list to unique keys: ~a <br />raw POST params: ~a<br />list to unique keys: ~a"
                    (print get-params) (servo.plist-to-unique get-params)
                    (print post-params) (servo.plist-to-unique post-params))))))
+
 
 (defun admin.group-content-column (dataindex)
   (soy.admin-table:table-column
@@ -249,6 +250,15 @@
                      :fields (new-classes.make-fields empty-item)
                      :target "make")))))))
 
+(defun admin-gateway.pics-deleting (new-post-data)
+  (let* ((key (getf new-post-data :key))
+         (p (gethash key (storage *global-storage*)))
+         (output (format nil "product with key ~a not found" key)))
+    (when p
+      (rename-remove-product-pics p)
+      (setf output (format nil "Succes deleting ~a's pics" key)))
+    (soy.admin:pics-deleting (list :output output))))
+
 (defun admin-gateway.do-action (action)
   (if (not (null action))
       (cond
@@ -337,6 +347,8 @@
                               (admin-gateway.make-content new-post-data))
                              ((string= key "parenting")
                               (admin-gateway.parenting-content new-post-data))
+                             ((string= key "pics")
+                              (admin-gateway.pics-deleting new-post-data))
                              (t (format nil "~a" key)))))))))
 
 
