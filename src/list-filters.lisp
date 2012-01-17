@@ -68,8 +68,11 @@
 
 
 (defun list-filters.sort-list (list json-sorters)
-  (let ((sorters (mapcar #'servo.alist-to-plist (decode-json-from-string json-sorters))))
-    list))
+  (if json-sorters
+      (let ((sorters (mapcar #'servo.alist-to-plist (decode-json-from-string json-sorters))))
+        list)
+      ;; else
+      list))
 
 (defun list-filters.get-json ()
   (print (hunchentoot:request-uri hunchentoot:*request*))
