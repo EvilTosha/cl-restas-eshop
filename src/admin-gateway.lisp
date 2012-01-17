@@ -260,38 +260,49 @@
     (soy.admin:pics-deleting (list :output output))))
 
 (defun admin-gateway.do-action (action)
-  (if (not (null action))
-      (cond
-        ((string= "do-gc" action)
-         (progn
-           (sb-ext:gc :full t)
-           (regex-replace-all
-            "\\n"
-            (with-output-to-string
-                (*standard-output*)
-              (room))
-            "<br>")))
-        ((string= "report-products" action)
-         (progn
-           (let ((name (format nil "reports/products-report-~a.csv" (time.encode.backup-filename))))
-             (create-report name #'write-products-report)
-             "DO PRODUCTS REPORT")))
-        ((string= "proccess-pictures" action)
-         (progn
-           (rename-convert-all)
-           "DO proccess-pictures"))
-        ((string= "dtd" action)
-         (progn
-           (dtd)
-           "DO DTD"))
-        ((string= "report" action)
-         (progn
-           (let ((name (format nil "reports/write-groups-active-product-num-~a.csv" (time.encode.backup-filename))))
-             (create-report name #'write-groups-active-product-num)
-             "DO REPORT")))
-        ((string= "compile" action)
-         "DO COMPILE")
-        (t (format nil "DON't know action ~a" action)))))
+  (handler-case
+      (if (not (null action))
+          (cond
+            ((string= "do-gc" action)
+             (progn
+               (sb-ext:gc :full t)
+               (regex-replace-all
+                "\\n"
+                (with-output-to-string
+                    (*standard-output*)
+                  (room))
+                "<br>")))
+            ((string= "report-products" action)
+             (progn
+               (let ((name (format nil "reports/products-report-~a.csv" (time.encode.backup-filename))))
+                 (create-report name #'write-products-report)
+                 "DO PRODUCTS REPORT")))
+            ((string= "proccess-pictures" action)
+             (progn
+               (rename-convert-all)
+               "DO proccess-pictures"))
+            ((string= "dtd" action)
+             (progn
+               (dtd)
+               "DO DTD"))
+            ((string= "report" action)
+             (progn
+               (let ((name (format nil "reports/write-groups-active-product-num-~a.csv" (time.encode.backup-filename))))
+                 (create-report name #'write-groups-active-product-num)
+                 "DO REPORT")))
+            ((string= "compile" action)
+             "DO COMPILE")
+            ((string= "articles-restore" action)
+             (articles.restore)
+             "RESTORE ARTICLES")
+            ((string= "main-page-restore" action)
+             (main-page.restore)
+             "RESTORE MAIN-PAGE")
+            ((string= "static-pages-restore" action)
+             (static-pages.restore)
+             "STATIC PAGES RESTORE")
+            (t (format nil "DON't know action ~a" action))))
+    (error (e) (format  nil "ERROR:~%~a" e))))
 
 (defun admin-gateway.parenting-content (new-post-data)
   (let ((post-data new-post-data))
