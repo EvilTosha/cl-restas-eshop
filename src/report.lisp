@@ -1325,3 +1325,31 @@
                 "mfu"
                 "myshki"
                 "klaviatury")))
+
+
+
+
+
+(defun report.test-get-dems (product)
+  (let* ((articul (articul product))
+         (path-art  (ppcre:regex-replace  "(\\d{1,3})(\\d{0,})"  (format nil "~a" articul)  "\\1/\\1\\2" ))
+         (pic (car (get-pics articul)))
+         (dest-pic-path (format nil "~a/~a/~a/~a"
+                                *path-to-product-pics* "goods" path-art pic))
+         (src-pic-path (format nil "~a/~a/~a/~a"
+                               *path-to-product-pics* "big" path-art pic)))
+    (if pic
+        (multiple-value-bind (w h) (images-get-dimensions dest-pic-path)
+          (when (< 300 h)
+              (wlog (format nil "~a: ~aх~a" articul w h))
+              (rename-convert src-pic-path dest-pic-path 225 nil)
+              )))))
+
+
+(defun report.convert-name (input-string)
+  (format nil "~{~a~^ ~}"
+          (mapcar #'string-convertion-for-title
+                  (split-sequence:split-sequence #\Space input-string))))
+
+
+

@@ -29,7 +29,7 @@
           (sendmail:clientmail-elka
            (list :datetime (time.get-date-time)
                  :order_id order-id
-                 :name name
+                 :name (report.convert-name name)
                  :family "" ;; Фамилия не передается отдельно
                  :paytype "Наличными"
                  :deliverytype "Самовывоз"
@@ -44,7 +44,7 @@
     (setf mail-file
           (list :order_id order-id
                 :ekk ""
-                :name name
+                :name (report.convert-name name)
                 :family ""
                 :addr "Левашовский пр., д.12"
                 :phone phone
@@ -87,7 +87,7 @@
           (sendmail:clientmail
            (list :datetime (time.get-date-time)
                  :order_id order-id
-                 :name name
+                 :name (report.convert-name name)
                  :family "" ;; Фамилия не передается отдельно
                  :paytype "Наличными"
                  :deliverytype "Самовывоз"
@@ -102,7 +102,7 @@
     (setf mail-file
           (list :order_id order-id
                 :ekk ""
-                :name name
+                :name (report.convert-name name)
                 :family ""
                 :addr "Левашовский пр., д.12"
                 :phone phone
@@ -154,7 +154,7 @@
           (sendmail:clientmail
            (list :datetime (time.get-date-time)
                  :order_id order-id
-                 :name name
+                 :name (report.convert-name name)
                  :family "" ;; Фамилия не передается отдельно
                  :paytype "Наличными"
                  :deliverytype "Самовывоз"
@@ -169,7 +169,7 @@
     (setf mail-file
           (list :order_id order-id
                 :ekk ""
-                :name name
+                :name (report.convert-name name)
                 :family ""
                 :addr "Левашовский пр., д.12"
                 :phone phone
@@ -207,7 +207,7 @@
           (sendmail:clientmail
            (list :datetime (time.get-date-time)
                  :order_id order-id
-                 :name name
+                 :name (report.convert-name name)
                  :family "" ;; Фамилия не передается отдельно
                  :paytype "Наличными"
                  :deliverytype "Самовывоз"
@@ -222,7 +222,7 @@
     (setf mail-file
           (list :order_id order-id
                 :ekk ""
-                :name name
+                :name (report.convert-name name)
                 :family ""
                 :addr "Левашовский пр., д.12"
                 :phone phone
