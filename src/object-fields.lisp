@@ -310,9 +310,9 @@
 (defun object-fields.keyoptions-field-serialize (keyoptions)
   (format nil "[~{~a~^,~}]"
           (mapcar #'(lambda (keyoption)
-                           (format nil "{\"optgroup\":\"~a\",\"optname\":\"~a\"}"
-                                   (getf keyoption :optgroup)
-                                   (getf keyoption :optname)))
+                           (format nil "{\"optgroup\":~a,\"optname\":~a}"
+                                   (encode-json-to-string (getf keyoption :optgroup))
+                                   (encode-json-to-string (getf keyoption :optname))))
                   keyoptions)))
 
 
@@ -337,9 +337,9 @@
 (defun object-fields.catalog-keyoptions-field-serialize (keyoptions)
   (format nil "[~{~a~^,~}]"
           (mapcar #'(lambda (keyoption)
-                      (format nil "{\"optgroup\":\"~a\",\"optname\":\"~a\",\"showname\":\"~a\",\"units\":\"~a\"}"
-                              (getf keyoption :optgroup)
-                              (getf keyoption :optname)
-                              (getf keyoption :showname)
-                              (or (getf keyoption :units) "")))
+                      (format nil "{\"optgroup\":~a,\"optname\":~a,\"showname\":~a,\"units\":~a}"
+                              (encode-json-to-string (getf keyoption :optgroup))
+                              (encode-json-to-string (getf keyoption :optname))
+                              (encode-json-to-string (getf keyoption :showname))
+                              (encode-json-to-string (or (getf keyoption :units) ""))))
                   keyoptions)))

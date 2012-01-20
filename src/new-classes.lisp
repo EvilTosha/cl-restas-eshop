@@ -81,7 +81,7 @@
             (loop for line = (read-line file nil 'EOF)
                until (eq line 'EOF)
                do
-                 ;; (print (subseq line 0 20))
+                 (print (subseq line 0 20))
                  (let ((str line)
                        (last-sym (if (= 0 (length line))
                                      "."
@@ -331,7 +331,7 @@
                           :if-exists :supersede
                           :external-format :utf-8)
       (mapcar #'(lambda (object)
-                  (format file "~a~%" (serialize-entity1 object))
+                  (format file "~a~%" (serialize-entity object))
                   (incf total))
               object-list))
     (format nil "Total serialized: ~a" total)))
@@ -348,8 +348,7 @@
   (maphash #'(lambda (key value)
                (declare (ignore key))
                (new-classes.post-unserialize value))
-           (storage *global-storage*))
-  )
+           (storage *global-storage*)))
 
 (defun new-classes.parent (item)
   "Returns main parent of item"
