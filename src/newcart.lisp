@@ -248,7 +248,7 @@
                   (sendmail:clientmail
                    (list :datetime (time.get-date-time)
                          :order_id order-id
-                         :name (format nil "~a ~a" name family)
+                         :name (report.convert-name (format nil "~a ~a" name family))
                          :family "" ;; Фамилия не передается отдельно
                          :paytype (cond ((string= payment "payment_method-1") "Наличными")
                                         ((string= payment "payment_method-2") "Кредитной картой")
@@ -273,16 +273,16 @@
                          :comment (cond  ((string= delivery-type "express") courier_comment)
                                          ((string= delivery-type "pickup") pickup_comment)
                                          (t ""))
-                         :articles (let ((articles (articles.sort (get-articles-list))))
-                                     (if articles
-                                         (articles-view-articles (subseq articles 0 7))
-                                         nil))
+                         :articles nil;;  (let ((articles (articles.sort (get-articles-list))))
+                                     ;; (if articles
+                                     ;;     (articles-view-articles (subseq articles 0 7))
+                                     ;;     nil))
                          :products products
                          :deliverysum deliverysum
                          :itogo (+ pricesum deliverysum))))
             (setf mail-file (list :order_id order-id
                                   :ekk ekk
-                                  :name (format nil "~a ~a" name family)
+                                  :name (report.convert-name (format nil "~a ~a" name family))
                                   :family ""
                                   :addr addr
                                   :isdelivery (cond ((string= delivery-type "express") "Доставка")
@@ -325,7 +325,7 @@
                                                                              (t "")))))
                                                  (if (equal comment "") nil comment))
                                      :email (if (equal email "") nil email)
-                                     :name (if (equal name "") nil name)
+                                     :name (if (equal name "") nil (report.convert-name name))
                                      :bonuscount (if ekk
                                                      bonuscount)
                                      :bonusname (if bonuscount

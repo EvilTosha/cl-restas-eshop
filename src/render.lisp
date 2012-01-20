@@ -262,6 +262,7 @@
                               (let ((key-optgroup (getf pair :optgroup))
                                     (key-optname  (getf pair :optname))
                                     (key-alias  (getf pair :showname))
+                                    (key-units  (getf pair :units))
                                     (optvalue))
                                 (mapcar #'(lambda (optgroup)
                                             (when (string= (getf optgroup :name) key-optgroup)
@@ -276,7 +277,8 @@
                                     (list :optgroup key-alias
                                           :optvalue (if (equal "Есть" optvalue)
                                                         ""
-                                                        optvalue)))))
+                                                        optvalue)
+                                          :optunits key-units))))
                           (catalog-keyoptions parent))))))
 
 

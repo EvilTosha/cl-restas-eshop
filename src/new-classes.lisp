@@ -339,8 +339,8 @@
 
 (defun new-classes.unserialize-all ()
   (sb-ext:gc :full t)
-  (unserialize-from-file (pathname (format nil "~atest/products123.bkp" (user-homedir-pathname))) (make-instance 'product))
-  (unserialize-from-file (pathname (format nil "~atest/groups123.bkp" (user-homedir-pathname))) (make-instance 'group))
+  (unserialize-from-file (pathname (format nil "~atest/grs25.bkp" (user-homedir-pathname))) (make-instance 'group))
+  (unserialize-from-file (pathname (format nil "~atest/tt25.bkp" (user-homedir-pathname))) (make-instance 'product))
   (unserialize-from-file (pathname (format nil "~atest/filters" (user-homedir-pathname))) (make-instance 'filter))
   (wlog "Making lists")
   (storage.make-lists)
@@ -379,7 +379,7 @@
   "Одноразовый перенос олдовых характеристик поверх хранилища продуктов и проставление производителя"
   (let ((original-storage (storage *global-storage*))
         (*global-storage* (make-instance 'global-storage)))
-    (unserialize-from-file (pathname (format nil "~atest/tt12.bkp" (user-homedir-pathname))) (make-instance 'product))
+    (unserialize-from-file (pathname (format nil "~atest/tt25.bkp" (user-homedir-pathname))) (make-instance 'product))
     ;; на данном этапе в *global-storage* только продукты
     (maphash #'(lambda (k v)
                  (declare (ignore k))
