@@ -853,3 +853,25 @@
               (sort diff-list
                     #'(lambda (a b)
                         (< (car a) (car b))))))))
+
+(defun servo.edit-get-param (url name value)
+  (let* ((uri (puri:parse-uri url))
+         (params (hunchentoot::form-url-encoded-list-to-alist (split "&" (puri:uri-query uri))))
+         (is-new-param t)
+         (query))
+    (mapcar #'(lambda (p)
+                (when (equal (car p) name)
+                  (setf (cdr p) value)
+                  (setf is-new-param nil)))
+            params)
+    (if is-new-param
+        (push (cons name value) params))
+    (setf (puri:uri-query uri) (format nil "~{~a~^&~}"
+            (mapcar #'(lambda (p)
+                        (concatenate 'string (car p)
+                                     (if (not (equal (cdr p) ""))
+                                         (format nil "=~a" (cdr p)))))
+                    params)))
+    (format nil "~a" uri)))
+
+
