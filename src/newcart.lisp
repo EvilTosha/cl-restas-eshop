@@ -152,7 +152,7 @@
             (soy.newcart:cart-content (list :accessories (soy.product:accessories)
                                             :products (format nil "~{~a~}"
                                                               (mapcar #'(lambda (x)
-                                                                          (print (cart:product x))
+                                                                          ;; (print (cart:product x))
                                                                           (soy.newcart:cart-product x))
                                                                       products))))
             :no-need-cart t)

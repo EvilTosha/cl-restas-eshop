@@ -12,7 +12,7 @@
   (:import-from :arnesi :parse-float)
   (:import-from :alexandria :read-file-into-string)
   (:export :compile-templates
-		   :*storage*
+		   ;; :*storage*
            :name
            :unserialize
            :plist-representation

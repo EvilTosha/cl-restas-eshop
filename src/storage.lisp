@@ -147,7 +147,7 @@
   "Editing or adding object to storage and edit it in appropriate lists"
   (when (not key-supplied-p)
     (setf key (key object)))
-  (log5::log-for test "add/edit ~a" key)
+  ;; (log5::log-for test "add/edit ~a" key)
   (setf (gethash key (storage *global-storage*)) object)
   (when (equal (type-of object) 'product)
     (setf (products *global-storage*) (storage.edit-in-list (products *global-storage*) object key))

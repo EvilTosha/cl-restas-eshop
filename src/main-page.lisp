@@ -79,7 +79,7 @@
           (progn
             (wlog "WARN: No banner")))
       (if banner
-          (list :url (nth 1 (opts banner))
+          (list :url (format nil "~a?bannerType=~a" (nth 1 (opts banner)) type)
                 :src (nth 2 (opts banner)))
           (list :url ""
                 :src ""))))
