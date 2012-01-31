@@ -27,6 +27,9 @@
 (restas:define-route admin-pics-route ("/administration-super-panel/pics" :method :post)
   (show-admin-page "pics"))
 
+(restas:define-route admin-templates-route ("/administration-super-panel/templates" :method :post)
+  (show-admin-page "templates"))
+
 (restas:define-route admin-parenting-key-route ("/administration-super-panel/parenting" :method :post)
   (show-admin-page "parenting"))
 
@@ -87,7 +90,8 @@
                "<li><a href=\"/administration-super-panel/history\">gateway</a></li>"
                "<li><a href=\"/administration-super-panel/actions\">actions</a></li>"
                "<li><a href=\"/administration-super-panel/pics\">pics</a></li>"
-               "<li><a href=\"/administration-super-panel/info\">info</a></li>"))))
+               "<li><a href=\"/administration-super-panel/info\">info</a></li>"
+               "<li><a href=\"/administration-super-panel/templates\">templates</a></li>"))))
 
 (defun admin.test-get-post-parse ()
   "parsing get & post parameters for testing"
@@ -260,11 +264,24 @@
 (defun admin-gateway.pics-deleting (new-post-data)
   (let* ((key (getf new-post-data :key))
          (p (gethash key (storage *global-storage*)))
-         (output (format nil "product with key ~a not found" key)))
+         (output (format nil "Product with key ~a not found" key)))
     (when p
       (rename-remove-product-pics p)
-      (setf output (format nil "Succes deleting ~a's pics" key)))
+      (setf output (format nil "Successfully deleted ~a's pics" key)))
     (soy.admin:pics-deleting (list :output output))))
+
+(defun admin-gateway.compile-template (new-post-data)
+  (let ((name (getf new-post-data :name))
+         (output))
+    (setf output
+          (if (file-exists-p (pathname (format nil "~a/~a" *path-to-tpls* name)))
+              (handler-case
+                  (progn
+                    (servo.compile-soy name)
+                    (format nil "Successfully compiled ~a" name))
+                (error (e) (format  nil "ERROR:~%~a" e)))
+              (format nil "File ~a not found" name)))
+    (soy.admin:compile-template (list :output output))))
 
 (defun admin-gateway.do-action (action)
   (handler-case
@@ -308,6 +325,9 @@
             ((string= "static-pages-restore" action)
              (static-pages.restore)
              "STATIC PAGES RESTORE")
+            ((string= "groupd-restore" action)
+             (groupd.restore)
+             "GROUPD RESTORE")
             (t (format nil "DON't know action ~a" action))))
     (error (e) (format  nil "ERROR:~%~a" e))))
 
@@ -367,6 +387,8 @@
                               (admin-gateway.parenting-content new-post-data))
                              ((string= key "pics")
                               (admin-gateway.pics-deleting new-post-data))
+                             ((string= key "templates")
+                              (admin-gateway.compile-template new-post-data))
                              (t (format nil "~a" key)))))))))
 
 
