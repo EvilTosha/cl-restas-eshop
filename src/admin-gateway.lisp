@@ -1,5 +1,12 @@
 (in-package #:eshop)
 
+(defvar *admin-test-request*)
+(defvar *admin-test-session*)
+
+(restas:define-route admin-testtest-route ("/administration-super-panel/testtest")
+   (setf *admin-test-request* hunchentoot:*request*)
+   (setf *admin-test-session* hunchentoot:*session*)
+   "TEST")
 
 ;; ADMIN ROUTE
 (restas:define-route admin-route ("/administration-super-panel")

@@ -1356,3 +1356,27 @@
 
 
 
+
+(defun report.transfer-group (g1 g2)
+  (when (storage.main-parent g1)
+    (setf (groups (storage.main-parent g1)) (remove-if #'(lambda (v) (equal v g1)) (groups (storage.main-parent g1))))
+    (wlog "(setf (groups (storage.")
+    (setf (parents g1) nil)
+    (wlog "(setf (parents g1) nil))"))
+  (when g2
+    (push g1 (groups g2))
+    (wlog "    (push  g1 (groups g2)")
+    (setf (parents g1) (list g2))
+    (wlog "    (setf (parents g1) (list g2))"))
+  )
+
+;; (report.transfer-group
+;; (gethash "otrazhateli" (storage *global-storage*))
+;; (gethash "studiynoe-oborudovanie" (storage *global-storage*)))
+
+
+
+(defun report.get-groups (group)
+  (if (null (groups group))
+      (format t "~&(equal key \"~a\")" (key group))
+      (mapcar #'report.get-groups (groups group))))
