@@ -222,12 +222,13 @@
 
 
 (defun object-fields.group-list-field-get-data (string-list)
-  (if (equal (type-of string-list) 'cons)
-      (mapcar #'(lambda (parent)
-                  (log5:log-for debug-console "~a~%" parent)
-                  (gethash parent (storage *global-storage*)))
-              string-list)
-      (list (gethash string-list (storage *global-storage*)))))
+  (when string-list
+    (if (equal (type-of string-list) 'cons)
+        (mapcar #'(lambda (parent)
+                    (log5:log-for debug-console "~a~%" parent)
+                    (gethash parent (storage *global-storage*)))
+                string-list)
+        (list (gethash string-list (storage *global-storage*))))))
 
 
 (defun object-fields.group-list-field-serialize (groups)
