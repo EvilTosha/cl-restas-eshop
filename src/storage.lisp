@@ -171,3 +171,9 @@
   (setf (active-products *global-storage*) (storage.get-active-products-list))
   (setf (filters *global-storage*) (storage.get-filters-list)))
 
+(defun storage.group-unbinding (group)
+  (mapcar #'(lambda (product)
+              (setf (parents product) nil))
+          (products group))
+  (setf (products group) nil))
+
