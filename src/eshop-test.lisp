@@ -123,3 +123,9 @@
 ;;   ;; (print (length l))
 ;;   (test-is-empty2 l)))
 
+
+;; (mapcar #'(lambda (v) (format nil "\"~a\":\"~a\""
+;;                               (if (cadr (nth 6 v))
+;;                                   (json:encode-json-to-string (cadr (nth 6 v))) (car (nth 6 v)))
+;;                               (if (cadr (nth 7 v))
+;;                                   (json:encode-json-to-string (cadr (nth 7 v)))))) *tmp-hrefs*)

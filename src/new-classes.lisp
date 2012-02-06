@@ -339,9 +339,9 @@
 (defun new-classes.serialize-all ()
   (let ((bkp-dir (format nil "~atest/" (user-homedir-pathname))))
     (wlog "start products serialized")
-    (new-classes.serialize-list-to-file (storage.get-products-list) (pathname (format nil "~a~a" bkp-dir "tt26.bkp")))
+    (new-classes.serialize-list-to-file (storage.get-products-list) (pathname (format nil "~a~a" bkp-dir "tt27.bkp")))
     (wlog "start groups serialized")
-    (new-classes.serialize-list-to-file (storage.get-groups-list) (pathname (format nil "~a~a" bkp-dir "grs26.bkp")))))
+    (new-classes.serialize-list-to-file (storage.get-groups-list) (pathname (format nil "~a~a" bkp-dir "grs27.bkp")))))
 
 (defun new-classes.unserialize-all ()
   (let ((t-storage))
