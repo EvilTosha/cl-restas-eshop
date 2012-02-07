@@ -1380,3 +1380,15 @@
   (if (null (groups group))
       (format t "~&(equal key \"~a\")" (key group))
       (mapcar #'report.get-groups (groups group))))
+
+
+(defun report.do-seo-reports ()
+   (let ((name (format nil "reports/seo-report-groups-~a.csv" (time.encode.backup-filename))))
+     (create-report name #'write-groups)
+    (wlog "Groups SEO report"))
+   (let ((name (format nil "reports/seo-report-vendors-~a.csv" (time.encode.backup-filename))))
+     (create-report name #'write-vendors)
+    (wlog "Vendors SEO report"))
+   (let ((name (format nil "reports/seo-report-products-~a.csv" (time.encode.backup-filename))))
+     (create-report name #'write-products)
+    (wlog "Products SEO report")))
