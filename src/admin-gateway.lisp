@@ -328,6 +328,12 @@
             ((string= "groupd-restore" action)
              (groupd.restore)
              "GROUPD RESTORE")
+            ((string= "seo-report" action)
+             (report.do-seo-reports)
+             "SEO-REPORT")
+            ((string= "gateway-restore" action)
+             (gateway.restore-history)
+             "GATEWAY-RESTORE")
             (t (format nil "DON't know action ~a" action))))
     (error (e) (format  nil "ERROR:~%~a" e))))
 
