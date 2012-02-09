@@ -83,12 +83,72 @@
                 "товара"
                 "товаров")))))
 
+(defun newcart-yandex-cookie ()
+  (let* ((cookie (hunchentoot:cookie-in "user-nc"))
+         (cookie-data (when cookie
+                        (servo.alist-to-plist (decode-json-from-string cookie))))
+         (post-data (servo.alist-to-plist (hunchentoot:post-parameters hunchentoot:*request*)))
+         (street (getf post-data :street))
+         (building (getf post-data :building))
+         (suite (getf post-data :suite))
+         (entrance (getf post-data :entrance))
+         (flat (getf post-data :flat))
+         (floor (getf post-data :floor))
+         (firstname (getf post-data :firstname))
+         (fathersname (getf post-data :fathersname))
+         (family (getf post-data :lastname))
+         (phone (getf post-data :phone))
+         (email (getf post-data :email))
+         (intercom (getf post-data :intercom))
+         (phone-extra (getf post-data :phone-extra))
+         (comment (getf post-data :comment))
+         name
+         addr
+         courier-comment)
+    (setf name (report.convert-name
+                (format nil "~a ~a" firstname fathersname)))
+    (setf addr (format nil "~{~a~^, ~}"
+                       (loop
+                          :for (x y)
+                          :in (list (list street "")
+                                    (list building "")
+                                    (list suite "к.")
+                                    (list entrance "подъезд")
+                                    (list floor "этаж")
+                                    (list flat "кв."))
+                          :when (and x (string/= x ""))
+                          :collect (format nil "~a ~a" y x))))
+    (setf courier-comment
+          (format nil "~{~a~^; ~}"
+                  (loop
+                     :for (x y)
+                     :in (list (list intercom "Домофон:")
+                               (list phone-extra "Доп. телефон:")
+                               (list comment "Комментарий:"))
+                     :when (and x (string/= x ""))
+                     :collect (format nil "~a ~a" y x))))
+    (loop
+       :for (x y)
+       :in (list (list :addr addr)
+                 (list :name name)
+                 (list :family family)
+                 (list :phone phone)
+                 (list :email email)
+                 (list :courier_comment courier-comment))
+       :when (and y (string/= y ""))
+       :do (setf (getf cookie-data x) y))
+    (setf (getf cookie-data "delivery-type") "express")
+    (hunchentoot:set-cookie "user-nc"
+                            :value (format nil "{~{\"~(~a~)\":\"~a\"~^,~}}" cookie-data))))
+
 
 
 
 ;;отображение страницы
 (defun newcart-show (&optional (request-str ""))
   (declare (ignore request-str))
+  (when (assoc "operation_id" (hunchentoot:post-parameters hunchentoot:*request*)  :test #'string=)
+    (newcart-yandex-cookie))
   (let ((cart-cookie (hunchentoot:cookie-in "cart"))
         (cart)
         (products)
