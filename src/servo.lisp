@@ -747,11 +747,8 @@
 
 ;; Сделать строку начинающейся с заглавной буквы.
 (defun string-convertion-for-title (title)
-  (if (and (not (null title))
-           (not (equal "" title)))
-      (format nil "~a~a"
-              (string-upcase (subseq title 0 1))
-              (subseq title 1))
+  (if title
+      (format nil "~@(~a~)" title)
       ""))
 
 

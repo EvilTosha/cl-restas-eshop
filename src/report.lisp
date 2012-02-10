@@ -1350,9 +1350,7 @@
 
 (defun report.convert-name (input-string)
   (string-trim (list #\Space #\Tab #\Newline)
-               (format nil "~{~a~^ ~}"
-                       (mapcar #'string-convertion-for-title
-                               (split-sequence:split-sequence #\Space input-string)))))
+               (format nil "~:(~a~)" input-string)))
 
 
 

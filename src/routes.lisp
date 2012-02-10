@@ -171,6 +171,9 @@
 (restas:define-route checkout-route ("/checkout")
   (newcart-show))
 
+(restas:define-route checkout-post-route ("/checkout" :method :post)
+                     (newcart-show))
+
 (restas:define-route checkout0-route ("/checkout0")
   (newcart-show))
  ;; (checkout-page-0))
