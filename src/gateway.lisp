@@ -458,57 +458,57 @@
 ;;             (loop
 ;;                :for line = (read-line file nil 'EOF)
 
-(defun backup.get-last-filename (name-path &optional (timestamp (get-universal-time)))
-  (let* ((current-name (format nil "~a/~a.bkp" name-path (time.encode.backup timestamp)))
-         (*serialize-check-flag* nil)
-         (щ-gateway))
+;; (defun backup.get-last-filename (name-path &optional (timestamp (get-universal-time)))
+;;   (let* ((current-name (format nil "~a/~a.bkp" name-path (time.encode.backup timestamp)))
+;;          (*serialize-check-flag* nil)
+;;          (щ-gateway))
 
 
-(defun backup.restore-backup (&optional (timestamp (get-universal-time)))
-  (mapcar #'(lambda (dir)
-              (let* ((filename (time.encode.backup timestamp))
-                     (current-name (format nil "~a/backup/~a.bkp" *path-to-logs* filename))
-                     )
-          '("groups"
-            "products"
-            "filters")))
+;; (defun backup.restore-backup (&optional (timestamp (get-universal-time)))
+;;   (mapcar #'(lambda (dir)
+;;               (let* ((filename (time.encode.backup timestamp))
+;;                      (current-name (format nil "~a/backup/~a.bkp" *path-to-logs* filename))
+;;                      )
+;;           '("groups"
+;;             "products"
+;;             "filters")))
 
-              (let* ((filename (time.encode.backup timestamp))
-                     (current-name (format nil "~a/backup/~a.bkp" *path-to-logs* filename))
-                     (*serialize-check-flag* nil)
-                     (last-gateway))
-                (wlog current-name)
-                (setf last-gateway (car
-                                    (remove-if #'(lambda (v) (string< current-name (format nil "~a" v)))
-                                   (reverse (directory
-                                             (format nil "~a/gateway/*.bkp" *path-to-logs*))))))
-                (wlog last-gateway)
-                (if last-gateway
-                    (let ((data)
-                          (lastgateway-ts (time.decode.backup
-                                           (subseq
-                                            (car (last (split-sequence:split-sequence
-                                                        #\/
-                                                        (format nil "~a" last-gateway)))) 0 19))))
-                      (with-open-file (file last-gateway)
-                        (loop
-                           :for line = (read-line file nil 'EOF)
-                           :until (eq line 'EOF)
-                           :do (progn
-                                 (wlog (subseq line 0 20))
-                                 (setf data (append (json:decode-json-from-string line) data))
-                                 ;; (wlog (length data))
-                                 ;; (gateway.process-products data)
-                                 )))
-                      (wlog (length data))
-                      (gateway.process-products1 data)
-                      (gateway.update-actives data)
-                      (wlog lastgateway-ts)
-                      (wlog timestamp)
-                      (gateway.restore-singles1 lastgateway-ts timestamp)
-                      (post-proccess-gateway)
-                      )))
-              "test")
+;;               (let* ((filename (time.encode.backup timestamp))
+;;                      (current-name (format nil "~a/backup/~a.bkp" *path-to-logs* filename))
+;;                      (*serialize-check-flag* nil)
+;;                      (last-gateway))
+;;                 (wlog current-name)
+;;                 (setf last-gateway (car
+;;                                     (remove-if #'(lambda (v) (string< current-name (format nil "~a" v)))
+;;                                    (reverse (directory
+;;                                              (format nil "~a/gateway/*.bkp" *path-to-logs*))))))
+;;                 (wlog last-gateway)
+;;                 (if last-gateway
+;;                     (let ((data)
+;;                           (lastgateway-ts (time.decode.backup
+;;                                            (subseq
+;;                                             (car (last (split-sequence:split-sequence
+;;                                                         #\/
+;;                                                         (format nil "~a" last-gateway)))) 0 19))))
+;;                       (with-open-file (file last-gateway)
+;;                         (loop
+;;                            :for line = (read-line file nil 'EOF)
+;;                            :until (eq line 'EOF)
+;;                            :do (progn
+;;                                  (wlog (subseq line 0 20))
+;;                                  (setf data (append (json:decode-json-from-string line) data))
+;;                                  ;; (wlog (length data))
+;;                                  ;; (gateway.process-products data)
+;;                                  )))
+;;                       (wlog (length data))
+;;                       (gateway.process-products1 data)
+;;                       (gateway.update-actives data)
+;;                       (wlog lastgateway-ts)
+;;                       (wlog timestamp)
+;;                       (gateway.restore-singles1 lastgateway-ts timestamp)
+;;                       (post-proccess-gateway)
+;;                       )))
+;;               "test")
 
 
 (defun gateway.restore-history (&optional (timestamp (get-universal-time)))
