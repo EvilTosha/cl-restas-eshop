@@ -871,4 +871,5 @@
                     params)))
     (format nil "~a" uri)))
 
-
+(defmethod servo.available-for-order-p ((object product))
+	(< (get-universal-time) (+ (date-modified object) (life-time (parent object)))))

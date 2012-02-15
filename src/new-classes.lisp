@@ -599,7 +599,8 @@
    (:name vendors-seo         :initform (make-hash-table :test #'equal) :disabled t     :type textedit-hashtable        :serialize t)
    (:name seo-text            :initform nil                             :disabled nil   :type textedit                  :serialize t)
    (:name keyoptions          :initform nil                             :disabled nil   :type keyoptions                :serialize t)
-   (:name catalog-keyoptions  :initform nil                             :disabled nil   :type catalog-keyoptions        :serialize t)))
+   (:name catalog-keyoptions  :initform nil                             :disabled nil   :type catalog-keyoptions        :serialize t)
+   (:name life-time           :initform 0                               :disabled nil   :type time                      :serialize t)))
 
 
 (new-classes.make-class-and-methods
