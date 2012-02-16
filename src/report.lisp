@@ -1390,3 +1390,86 @@
    (let ((name (format nil "reports/seo-report-products-~a.csv" (time.encode.backup-filename))))
      (create-report name #'write-products)
     (wlog "Products SEO report")))
+
+
+
+(defun report.write-alias (&optional (stream *standard-output*))
+    (format stream "имя группы; наличие алиасов; группа опций ; опция; имя алиаса; ед. измерения;")
+    (mapcar #'(lambda (gr)
+                (if (null (catalog-keyoptions gr))
+                    (format stream "~&~a; нет;" (name gr))
+                    (mapcar #'(lambda (alias)
+                                (let ((alias-temp (remove-if #'null
+                                                             (mapcar #'(lambda (v)
+                                                                         (if (not (equal (type-of v)
+                                                                                         'keyword))
+                                                                         (stripper v)))
+                                                                     alias))))
+                                  (format stream "~&\"~a\";~a;~{\" ~a \";~}"
+                                          (stripper (name gr))
+                                          (if alias-temp "есть" "нет")
+                                          alias-temp)))
+                            (catalog-keyoptions gr))))
+            (storage.get-groups-list)))
+
+(defun report.write-keyoptions (&optional (stream *standard-output*))
+    (format stream "имя группы; наличие ключевых опций; группа опций ; опция;")
+    (mapcar #'(lambda (gr)
+                (if (null (keyoptions gr))
+                    (format stream "~&~a; нет;" (name gr))
+                    (mapcar #'(lambda (alias)
+                                (let ((alias-temp (remove-if #'null
+                                                             (mapcar #'(lambda (v)
+                                                                         (if (not (equal (type-of v)
+                                                                                         'keyword))
+                                                                             (stripper v)))
+                                                                     alias))))
+                                  (format stream "~&\"~a\";~a;~{\" ~a \";~}"
+                                          (stripper (name gr))
+                                          (if alias-temp "есть" "нет")
+                                          alias-temp)))
+                            (keyoptions gr))))
+            (storage.get-groups-list)))
+
+
+
+(defun report.do-alias-reports ()
+  (progn
+    (let ((name (format nil "reports/aliases-report-~a.csv" (time.encode.backup-filename))))
+      (create-report name #'report.write-alias)
+      "AliAS REPORT DONE"))
+  (progn
+    (let ((name (format nil "reports/keyoptions-report-~a.csv" (time.encode.backup-filename))))
+      (create-report name #'report.write-keyoptions)
+      "KEYOPTIONS REPORT DONE")))
+
+;; (defun report.write-pictures (&optional (stream *standard-output*))
+;;   (format stream "артикул;имя;файл;ширина;высота;размер;")
+;;   (mapcar #'(lambda (product)
+;;               (let* ((articul (articul product))
+;;                      (path-art  (ppcre:regex-replace  "(\\d{1,3})(\\d{0,})"  (format nil "~a" articul)  "\\1/\\1\\2" )))
+;;                 (mapcar #'(lambda (pic)
+;;                             (let ((src-pic-path
+;;                                    (format nil "~a/~a/~a/~a"
+;;                                            *path-to-product-pics* "big" path-art pic)))
+;;                               (format stream "~a;\"~a\";" articul p))
+;;                         (get-pics articul))
+;;                 ))
+;;               (products  (gethash "aksessuary-dlya-kuhni" (storage *global-storage*)))))
+;;               (let* ((articul (articul product))
+;;                      (path-art  (ppcre:regex-replace  "(\\d{1,3})(\\d{0,})"  (format nil "~a" articul)  "\\1/\\1\\2" ))
+;;                      (pic (car (get-pics articul)))
+;;                      (src-pic-path (format nil "~a/~a/~a/~a"
+;;                                            *path-to-product-pics* "big" path-art pic)))
+;;                 (if pic
+;;                     (multiple-value-bind (w h) (images-get-dimensions dest-pic-path)
+;;                       (with-open-file
+;;                           (stream filename :direction :output :if-exists :supersede :external-format :cp1251)
+;;                         (print (file-length stream))
+;;       (funcall report-func stream)
+;;       )))
+;;                       (when (< 300 h)
+;;                         (wlog (format nil "~a: ~aх~a" articul w h))
+;;                         (rename-convert src-pic-path dest-pic-path 225 300)
+;;                         )))))
+
