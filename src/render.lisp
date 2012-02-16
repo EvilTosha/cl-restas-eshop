@@ -395,6 +395,7 @@
                                                             (render.relink object))))
                              :keyoptions (render.get-keyoptions object)
                              :active (active object)
+														 :vintage is-vintage
                              ;; :descr (descr object)
                              :shortdescr (seo-text object)
                              :bestproducts (soy.product:similar-products
@@ -422,11 +423,8 @@
                              :addoneclick (if (not (preorder object))
                                               (soy.buttons:add-one-click (list :articul (articul object))))))
     (default-page
-        (if  is-vintage
-             (soy.product:vintage-card product-view)
-             (soy.product:content product-view)
-             )
-        :keywords (render.get-keywords object nil)
+				(soy.product:content product-view)
+				:keywords (render.get-keywords object nil)
         :description (format nil "купить ~a в ЦиFры 320-8080 по лучшей цене с доставкой по Санкт-Петербургу"
                              (name-seo object))
         :title (string-convertion-for-title
