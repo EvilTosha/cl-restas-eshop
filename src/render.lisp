@@ -346,6 +346,7 @@
   (let* ((pics (get-pics (articul object)))
          (diff-percent (servo.diff-percentage (price object) (siteprice object)))
          (is-vintage (null (active object)))
+				 (is-available (servo.available-for-order-p object))
          (product-view))
     (setf product-view (list :menu (new-classes.menu object)
                              :breadcrumbs (soy.product:breadcrumbs (new-classes.breadcrumbs object))
@@ -396,6 +397,7 @@
                              :keyoptions (render.get-keyoptions object)
                              :active (active object)
 														 :vintage is-vintage
+														 :available is-available
                              ;; :descr (descr object)
                              :shortdescr (seo-text object)
                              :bestproducts (soy.product:similar-products

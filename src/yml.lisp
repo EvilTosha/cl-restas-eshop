@@ -23,14 +23,6 @@
              (storage *global-storage*))
     *yml-group-ids*))
 
-
-;; (maphash #'(lambda (k v)
-;;              (print (list k v)))
-;;          (yml-groups))
-
-(defun yml.is-available (product)
-  t)
-
 (defun yml.is-yml-show (product)
   (and (equal 'product (type-of product))
        (not (null (new-classes.parent product)))
@@ -65,20 +57,6 @@
                    (setf result t)))
              (daily *main-page.storage*))
     result))
-
-
-;; (defun yml.get-delivery-price (cart)
-;;   (let ((result 300))
-;;     (mapcar #'(lambda (v)
-;;                 (let* ((product (gethash (getf v :articul) (storage *global-storage*)))
-;;                        (d (yml.get-product-delivery-price1 product)))
-;;                   (if (= d 500)
-;;                       (setf result 500))
-;;                   (if (and (= d 0)
-;;                            (= result 300))
-;;                       (setf result 0))))
-;;             cart)
-;;     result))
 
 (defun yml.get-delivery-price (cart)
   (let ((result 300)
@@ -116,54 +94,15 @@
               (equal key "holodilniki-i-morozilniki")
               (equal key "duhovki")
               (let ((diagonal))
-                 (with-option1 product "Экран" "Диагональ экрана, дюйм"
-                               (setf diagonal (getf option :value)))
-                 (if (equal diagonal "")
-                     (setf diagonal nil))
-                 (setf diagonal (ceiling (arnesi:parse-float diagonal)))
-                 (> diagonal 32)))
+								(with-option1 product "Экран" "Диагональ экрана, дюйм"
+															(setf diagonal (getf option :value)))
+								(if (equal diagonal "")
+										(setf diagonal nil))
+								(setf diagonal (ceiling (arnesi:parse-float diagonal)))
+								(> diagonal 32)))
           (setf result 500)
-          (if (or
-                  ;; (equal key "planshetnie-komputery")
-                  ;; (equal key "cifrovye-fotoapparaty")
-                  ;; (equal key "noutbuki")
-                  ;; (equal key "netbuki")
-                  ;; (equal key "lcd-televizory")
-                  (yml.is-daily-product product))
-              (setf result 0)
-              (if (or nil
-                   ;; (equal key "aksessuary-dlya-bytovoi-tehniki")
-                   ;; (equal key "blendery")
-                   ;; (equal key "mixery")
-                   ;; (equal key "sokovyzhimalki")
-                   ;; (equal key "elektrochainiki-i-termopoty")
-                   ;; (equal key "kofemolki")
-                   ;; (equal key "kofevarki")
-                   ;; (equal key "kuhonnie-vesy")
-                   ;; (equal key "izmelchiteli")
-                   ;; (equal key "kuhonnye-kombainy")
-                   ;; (equal key "myasorubki")
-                   ;; (equal key "blinnicy")
-                   ;; (equal key "hlebopechki")
-                   ;; (equal key "mikrovolnovye-pechi")
-                   ;; (equal key "aerogrili")
-                   ;; (equal key "electrovarki")
-                   ;; (equal key "parovarki")
-                   ;; (equal key "pylesosy")
-                   ;; (equal key "shveinye-mashiny")
-                   ;; (equal key "buterbrodnicy")
-                   ;; (equal key "friturnicy")
-                   ;; (equal key "tostery")
-                   ;; (equal key "utyugi")
-                   ;; (equal key "britvy")
-                   ;; (equal key "epilyatory")
-                   ;; (equal key "feny")
-                   ;; (equal key "gigiena-i-zdorovie")
-                   ;; (equal key "shipci")
-                   ;; (equal key "trimmery")
-                   ;; (equal key "vesi-napolnie")
-                    )
-                  (setf result 150)))))
+          (when (yml.is-daily-product product)
+						(setf result 0))))
     result))
 
 
@@ -205,14 +144,14 @@
                                                ;;для селективного исключения товаров по значению специальной опции
                                                (let ((yml-show))
                                                  (with-option1 product "Secret" "YML"
-                                                              (setf yml-show (getf option :value)))
+																															 (setf yml-show (getf option :value)))
                                                  (if (and (not (null yml-show))
                                                           (string= "No"
                                                                    (stripper yml-show)))
                                                      nil
                                                      t)))
                                     :collect (yml:offer (list :articul (articul product)
-                                                              :notAvailable (not (yml.is-available product))
+                                                              :available (servo.available-for-order-p product)
                                                               :deliveryprice (yml.get-product-delivery-price1 product)
                                                               :price (siteprice product)
                                                               :category (gethash
@@ -225,7 +164,7 @@
                                                                               (encode-uri (car pics))))
                                                               :name   (let ((yml-name))
                                                                         (with-option1 product "Secret" "Yandex"
-                                                                                     (setf yml-name (getf option :value)))
+																																											(setf yml-name (getf option :value)))
                                                                         (if (or (null yml-name)
                                                                                 (string= ""
                                                                                          (stripper yml-name))
@@ -233,8 +172,7 @@
                                                                                          (stripper yml-name)))
                                                                             (name-seo product)
                                                                             yml-name))
-                                                              :description nil
-                                                              )))))))
+                                                              :description nil)))))))
 
 
 (defun yml-page-for-parser ()
@@ -274,7 +212,7 @@
                                                ;;для селективного исключения товаров по значению специальной опции
                                                (let ((yml-show))
                                                  (with-option1 product "Secret" "YML"
-                                                              (setf yml-show (getf option :value)))
+																															 (setf yml-show (getf option :value)))
                                                  (if (and (not (null yml-show))
                                                           (string= "No"
                                                                    (stripper yml-show)))
@@ -293,9 +231,9 @@
                                                               :name   (let ((yml-name)
                                                                             (parser-name))
                                                                         (with-option1 product "Secret" "Yandex"
-                                                                                     (setf yml-name (getf option :value)))
+																																											(setf yml-name (getf option :value)))
                                                                         (with-option1 product "Secret" "Parser"
-                                                                                     (setf parser-name (getf option :value)))
+																																											(setf parser-name (getf option :value)))
                                                                         (if (or (null parser-name)
                                                                                 (string= "" parser-name))
                                                                             (if (or (null yml-name)
@@ -306,14 +244,13 @@
                                                                                 (name product)
                                                                                 yml-name)
                                                                             parser-name))
-                                                              :description nil
-                                                              )))))))
+                                                              :description nil)))))))
 
 
 (defun yml-name-test (product)
   (let ((yml-name))
     (with-option1 product "Secret" "Yandex"
-                 (setf yml-name (getf option :value)))
+									(setf yml-name (getf option :value)))
     (if (or (null yml-name)
             (string= ""
                      (stripper yml-name))
@@ -325,7 +262,7 @@
 (defun yml-show-test (product)
   (let ((yml-show))
     (with-option1 product "Secret" "UML"
-                 (setf yml-show (getf option :value)))
+									(setf yml-show (getf option :value)))
     (if (and (not (null yml-show))
              (string= "No"
                       (stripper yml-show)))
@@ -349,7 +286,7 @@
                                   num-key)))))
 
 (defun make-yml-offers()
-   (loop
+	(loop
      :for product
      :being :the hash-values
      :in (storage *global-storage*)
@@ -364,7 +301,7 @@
                 ;;для селективного исключения товаров по значению специальной опции
                 (let ((yml-show))
                   (with-option1 product "Secret" "UML"
-                               (setf yml-show (getf option :value)))
+																(setf yml-show (getf option :value)))
                   (if (and (not (null yml-show))
                            (string= "No"
                                     (stripper yml-show)))
@@ -384,7 +321,7 @@
                                       (encode-uri (car pics))))
                       :name   (let ((yml-name))
                                 (with-option1 product "Secret" "Yandex"
-                                             (setf yml-name (getf option :value)))
+																							(setf yml-name (getf option :value)))
                                 (if (or (null yml-name)
                                         (string= ""
                                                  (stripper yml-name))
@@ -392,18 +329,17 @@
                                                  (stripper yml-name)))
                                     (name product)
                                     yml-name))
-                      :description nil
-                      ))))
+                      :description nil))))
 
 
 (defun make-yml-data()
   (yml:xml
-        (list :datetime (time.get-date-time)
-              :marketname "ЦиFры 320-8080"
-              :marketcompany "ЦиFры 320-8080"
-              :marketurl "http://www.320-8080.ru/"
-              :categoryes (make-yml-categoryes)
-              :offers (format nil "~{~a~}" (make-yml-offers)))))
+	 (list :datetime (time.get-date-time)
+				 :marketname "ЦиFры 320-8080"
+				 :marketcompany "ЦиFры 320-8080"
+				 :marketurl "http://www.320-8080.ru/"
+				 :categoryes (make-yml-categoryes)
+				 :offers (format nil "~{~a~}" (make-yml-offers)))))
 
 
 (defun create-yml-file ()
@@ -411,15 +347,3 @@
     (with-open-file
         (stream filename :direction :output :if-exists :supersede)
       (format stream "~a" (make-yml-data)))))
-
-
-
-;; (yml.get-delivery-price
-;;  (newcart-cart-products (list
-;;                          (list (cons :id "145982")
-;;                                (cons :count 1))
-;;                          (list (cons :id "173057")
-;;                                (cons :count 1))
-;;                          ;; (list (cons :id "165822")
-;;                                ;; (cons :count 1))
-;;                          )))

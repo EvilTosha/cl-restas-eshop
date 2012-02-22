@@ -347,8 +347,8 @@
   (let ((t-storage))
     (sb-ext:gc :full t)
     (let ((*global-storage* (make-instance 'global-storage)))
-      (unserialize-from-file (pathname (format nil "~atest/grs26.bkp" (user-homedir-pathname))) (make-instance 'group))
-      (unserialize-from-file (pathname (format nil "~atest/tt26.bkp" (user-homedir-pathname))) (make-instance 'product))
+      (unserialize-from-file (pathname (format nil "~atest/grs27.bkp" (user-homedir-pathname))) (make-instance 'group))
+      (unserialize-from-file (pathname (format nil "~atest/tt27.bkp" (user-homedir-pathname))) (make-instance 'product))
       (unserialize-from-file (pathname (format nil "~atest/filters" (user-homedir-pathname))) (make-instance 'filter))
       (wlog "Making lists")
       (storage.make-lists)
@@ -600,7 +600,7 @@
    (:name seo-text            :initform nil                             :disabled nil   :type textedit                  :serialize t)
    (:name keyoptions          :initform nil                             :disabled nil   :type keyoptions                :serialize t)
    (:name catalog-keyoptions  :initform nil                             :disabled nil   :type catalog-keyoptions        :serialize t)
-   (:name life-time           :initform 0                               :disabled nil   :type time                      :serialize t)))
+   (:name life-time           :initform 0                               :disabled nil   :type int                       :serialize t)))
 
 
 (new-classes.make-class-and-methods

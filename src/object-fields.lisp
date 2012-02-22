@@ -14,28 +14,14 @@
 
 (defun object-fields.string-replace-newlines (string)
   "Processing string and replace newline characters with #Newline"
-  ;; (format nil "~{~a~}"
-  ;;         (map 'list #'(lambda (char)
-  ;;                        (if (char-equal #\Newline char)
-  ;;                            (format nil "#Newline")
-  ;;                            (format nil "~a" char)))
-  ;;              string)))
-  ;; replace newlines with keyword && delete @CR
-  (regex-replace-all (format nil "~a" #\Return)
+	(regex-replace-all (format nil "~a" #\Return)
                      (regex-replace-all "\\n" string "#Newline")
                      ""))
 
 
 (defun object-fields.string-delete-newlines (string)
   "Замена символов перевода каретки на пробел (актуально при сериализации имен групп)"
-  ;; (format nil "~{~a~}"
-  ;;         (map 'list #'(lambda (char)
-  ;;                        (if (char-equal #\Newline char)
-  ;;                            (format nil " ")
-  ;;                            (format nil "~a" char)))
-  ;;              string))
-  ;; было очень долго
-  (substitute #\  #\Newline string))
+  (substitute #\Space #\Newline string))
 
 (defun object-fields.string-add-newlines (string)
   "Adding newline characters instead of #Newline"
