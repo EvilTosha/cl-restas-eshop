@@ -873,7 +873,7 @@
 
 (defmethod servo.available-for-order-p ((object product))
 	;; life-time is given in days
-	(< (get-universal-time) (+ (date-modified object) (* 60 60 24 (life-time (parent object))))))
+	(< (get-universal-time) (+ (date-modified object) (* 60 60 24 (life-time (storage.main-parent object))))))
 
 (defun servo.string-replace-chars (string char-list &key (replacement nil) (test #'char=))
 	"Replacing all chars in char-list from string"

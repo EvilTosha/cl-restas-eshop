@@ -600,7 +600,7 @@
    (:name seo-text            :initform nil                             :disabled nil   :type textedit                  :serialize t)
    (:name keyoptions          :initform nil                             :disabled nil   :type keyoptions                :serialize t)
    (:name catalog-keyoptions  :initform nil                             :disabled nil   :type catalog-keyoptions        :serialize t)
-   (:name life-time           :initform 0                               :disabled nil   :type int                       :serialize t)))
+   (:name life-time           :initform 100                             :disabled nil   :type int                       :serialize t)))
 
 
 (new-classes.make-class-and-methods

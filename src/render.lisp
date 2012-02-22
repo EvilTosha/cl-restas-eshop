@@ -423,7 +423,8 @@
                                                                                      ;; :deliveryprice (delivery-price object)
                                                                                      )))
                              :addoneclick (if (not (preorder object))
-                                              (soy.buttons:add-one-click (list :articul (articul object))))))
+                                              (soy.buttons:add-one-click (list :articul (articul object)
+																																							 :available is-available)))))
     (default-page
 				(soy.product:content product-view)
 				:keywords (render.get-keywords object nil)
