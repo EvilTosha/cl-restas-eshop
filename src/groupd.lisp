@@ -1,6 +1,7 @@
 (in-package #:eshop)
 
 (defparameter *groupd.storage* (make-hash-table :test #'equal))
+(defparameter *groupd.man.storage* (make-hash-table :test #'equal))
 
 (defun groupd.restore ()
   (let ((t-storage))
@@ -20,7 +21,7 @@
                (list "-q3" (format nil "~a/mainPage/~a" *path-to-dropbox* filename)) :wait nil :output :stream)))
     (with-open-stream (stream (sb-ext:process-output proc))
       (setf header-line (read-line stream nil))
-      ;; (print header-line)
+      (print header-line)
       (loop
          :for line = (read-line stream nil)
          :until (or (null line)
@@ -36,7 +37,19 @@
                )))))
 
 
-
 (defmethod groupd.is-groupd ((object product))
   ;; (wlog (articul object))
   (gethash (format nil "~a" (articul object)) *groupd.storage*))
+
+(defun groupd.man.restore ()
+  (let ((t-storage))
+    ;; (wlog "Start (main-page-restore):")
+    (let ((*groupd.man.storage* (make-hash-table :test #'equal)))
+      (groupd.load *groupd.man.storage* "man_sale.xls")
+      (setf t-storage *groupd.man.storage*))
+    (setf  *groupd.man.storage* t-storage)
+    (wlog "DONE")))
+
+(defmethod groupd.man.is-groupd ((object product))
+  ;; (wlog (articul object))
+  (gethash (format nil "~a" (articul object)) *groupd.man.storage*))

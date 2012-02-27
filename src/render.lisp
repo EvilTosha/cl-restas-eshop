@@ -205,6 +205,7 @@
                                   (delta-price object)))
             :bestprice (> (delta-price object) 0)
             :groupd (groupd.is-groupd object)
+            :groupd_man (groupd.man.is-groupd object)
             :firstpic (car pics)
             :promotiontext (concatenate 'string
                                         (let ((value))
@@ -355,6 +356,7 @@
                              :storeprice (price object)
                              :bestprice (> (delta-price object) 0)
                              :groupd (groupd.is-groupd object)
+                             :groupd_man (groupd.man.is-groupd object)
                              :bonuscount (if (and (bonuscount object)
                                                   (not (equal (bonuscount object) 0)))
                                              (* (bonuscount object) 10))
@@ -395,7 +397,7 @@
                                                             (render.relink object))))
                              :keyoptions (render.get-keyoptions object)
                              :active (active object)
-														 :vintage is-vintage
+                             :vintage is-vintage
                              ;; :descr (descr object)
                              :shortdescr (seo-text object)
                              :bestproducts (soy.product:similar-products
@@ -410,6 +412,7 @@
                              ;;          (not (string= "" (stripper (descr object)))))
                              ;;     (and (shortdescr object)
                              ;;          (not (string= "" (stripper (shortdescr object))))))
+                             :available t
                              :predzakaz (preorder object)
                              :addproductcart (if (preorder object)
                                                  (soy.buttons:add-predzakaz (list :articul (articul object)))

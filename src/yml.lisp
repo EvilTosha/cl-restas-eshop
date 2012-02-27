@@ -129,7 +129,9 @@
                   ;; (equal key "noutbuki")
                   ;; (equal key "netbuki")
                   ;; (equal key "lcd-televizory")
-                  (yml.is-daily-product product))
+                  (yml.is-daily-product product)
+                  ;; (< 500 (siteprice product))
+                  )
               (setf result 0)
               (if (or nil
                    ;; (equal key "aksessuary-dlya-bytovoi-tehniki")
