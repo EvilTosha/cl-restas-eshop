@@ -446,3 +446,5 @@
           (setf (getf result :fullfilter) new-full)
           (setf (getf result :raw-fullfilter) new-raw)))
     result))
+
+;; test

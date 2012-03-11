@@ -206,6 +206,7 @@
             :bestprice (> (delta-price object) 0)
             :groupd (groupd.is-groupd object)
             :groupd_man (groupd.man.is-groupd object)
+            :groupd_woman (groupd.woman.is-groupd object)
             :firstpic (car pics)
             :promotiontext (concatenate 'string
                                         (let ((value))
@@ -347,6 +348,7 @@
   (let* ((pics (get-pics (articul object)))
          (diff-percent (servo.diff-percentage (price object) (siteprice object)))
          (is-vintage (null (active object)))
+         (is-available t ) ;;(servo.available-for-order-p object))
          (product-view))
     (setf product-view (list :menu (new-classes.menu object)
                              :breadcrumbs (soy.product:breadcrumbs (new-classes.breadcrumbs object))
@@ -357,6 +359,7 @@
                              :bestprice (> (delta-price object) 0)
                              :groupd (groupd.is-groupd object)
                              :groupd_man (groupd.man.is-groupd object)
+                             :groupd_woman (groupd.woman.is-groupd object)
                              :bonuscount (if (and (bonuscount object)
                                                   (not (equal (bonuscount object) 0)))
                                              (* (bonuscount object) 10))
@@ -381,8 +384,8 @@
                                                     value)
                                                   " "
                                                    (if (= 0 (yml.get-product-delivery-price1 object))
-                                                       "(бесплатная доставка)"
-                                                                                                   (if (= 150 (yml.get-product-delivery-price1 object))
+                                                       " (бесплатная доставка)"
+                                                       (if (= 150 (yml.get-product-delivery-price1 object))
                                                 "(скидка на доставку 50%)")))
                              :others (soy.product:others
                                       (list :others (mapcar #'(lambda (x)
@@ -398,6 +401,7 @@
                              :keyoptions (render.get-keyoptions object)
                              :active (active object)
                              :vintage is-vintage
+                             :available is-available
                              ;; :descr (descr object)
                              :shortdescr (seo-text object)
                              :bestproducts (soy.product:similar-products
@@ -424,7 +428,8 @@
                                                                                      ;; :deliveryprice (delivery-price object)
                                                                                      )))
                              :addoneclick (if (not (preorder object))
-                                              (soy.buttons:add-one-click (list :articul (articul object))))))
+                                              (soy.buttons:add-one-click (list :articul (articul object)
+                                                                               :available is-available)))))
     (default-page
 				(soy.product:content product-view)
 				:keywords (render.get-keywords object nil)

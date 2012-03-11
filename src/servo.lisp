@@ -414,20 +414,20 @@
                                 ret)))))
 
 
- (defun replace-all (string part replacement &key (test #'char=))
-   "Returns a new string in which all the occurences of the part
+(defun replace-all (string part replacement &key (test #'char=))
+	"Returns a new string in which all the occurences of the part
  is replaced with replacement."
-   (with-output-to-string (out)
-     (loop with part-length = (length part)
-        for old-pos = 0 then (+ pos part-length)
-        for pos = (search part string
-                          :start2 old-pos
-                          :test test)
-        do (write-string string out
+	(with-output-to-string (out)
+		(loop with part-length = (length part)
+			 for old-pos = 0 then (+ pos part-length)
+			 for pos = (search part string
+												 :start2 old-pos
+												 :test test)
+			 do (write-string string out
                          :start old-pos
                          :end (or pos (length string)))
-        when pos do (write-string replacement out)
-        while pos)))
+			 when pos do (write-string replacement out)
+			 while pos)))
 
 
  (defun merge-plists (a b)
@@ -872,4 +872,25 @@
     (format nil "~a" uri)))
 
 (defmethod servo.available-for-order-p ((object product))
-	(< (get-universal-time) (+ (date-modified object) (life-time (parent object)))))
+	;; life-time is given in days
+	(< (get-universal-time) (+ (date-modified object) (* 60 60 24 (life-time (storage.main-parent object))))))
+
+(defun servo.string-replace-chars (string char-list &key (replacement nil) (test #'char=))
+	"Replacing all chars in char-list from string"
+	(coerce
+	 (remove-if #'null
+							(map 'list (lambda (c)
+													 (if (some (lambda (c1) (funcall test c c1))
+																		 char-list)
+															 replacement
+															 c))
+									 string))
+	 'string))
+
+(defun servo.is-valid-string (s &optional (whitespace-check t)
+															(unwanted-chars (list #\Space #\Tab #\Newline)))
+	(and s (string/= s "") (if whitespace-check
+														 (string/= "" (servo.string-replace-chars s unwanted-chars))
+														 t)
+			 ;; for returning t if valid (not number)
+			 t))

@@ -2,6 +2,7 @@
 
 (defparameter *groupd.storage* (make-hash-table :test #'equal))
 (defparameter *groupd.man.storage* (make-hash-table :test #'equal))
+(defparameter *groupd.woman.storage* (make-hash-table :test #'equal))
 
 (defun groupd.restore ()
   (let ((t-storage))
@@ -53,3 +54,16 @@
 (defmethod groupd.man.is-groupd ((object product))
   ;; (wlog (articul object))
   (gethash (format nil "~a" (articul object)) *groupd.man.storage*))
+
+(defun groupd.woman.restore ()
+  (let ((t-storage))
+    ;; (wlog "Start (main-page-restore):")
+    (let ((*groupd.woman.storage* (make-hash-table :test #'equal)))
+      (groupd.load *groupd.woman.storage* "woman_sale.xls")
+      (setf t-storage *groupd.woman.storage*))
+    (setf  *groupd.woman.storage* t-storage)
+    (wlog "DONE")))
+
+(defmethod groupd.woman.is-groupd ((object product))
+  ;; (wlog (articul object))
+  (gethash (format nil "~a" (articul object)) *groupd.woman.storage*))
