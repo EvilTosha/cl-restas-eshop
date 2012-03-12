@@ -5,9 +5,9 @@
   `(defclass ,name ()
      ,(mapcar #'(lambda (field)
                   `(,(getf field :name)
-                     :initarg ,(intern (format nil "~a" (getf field :name)) :keyword)
-                     :initform ,(getf field :initform)
-                     :accessor ,(getf field :name)))
+										:initarg ,(intern (format nil "~a" (getf field :name)) :keyword)
+										:initform ,(getf field :initform)
+										:accessor ,(getf field :name)))
               class-fields)))
 
 
@@ -19,9 +19,9 @@
        (mapcar #'(lambda (field)
                    `(,(intern (string-upcase
                                (format nil "object-fields.~a-field-view" (getf field :type))))
-                      (,(getf field :name)  object)
-                      ,(format nil "~a" (getf field :name))
-                      ,(getf field :disabled)))
+										 (,(getf field :name)  object)
+										 ,(format nil "~a" (getf field :name))
+										 ,(getf field :disabled)))
                class-fields))))
 
 
@@ -35,7 +35,7 @@
                      `(setf (,(getf field :name) object)
                             (,(intern (string-upcase
                                        (format nil "object-fields.~a-field-get-data" (getf field :type))))
-                              (getf post-data-plist ,(intern (string-upcase (format nil "~a" (getf field :name))) :keyword))))))
+														 (getf post-data-plist ,(intern (string-upcase (format nil "~a" (getf field :name))) :keyword))))))
                class-fields))))
 
 
@@ -43,12 +43,12 @@
 (defmethod new-classes.decode (in-string (dummy group-filter))
   (if (or (string= in-string "") (null in-string))
       nil
-      (let ((*package* (find-package :eshop)))
-            (let* ((tmp (read-from-string in-string)))
-              (make-instance 'group-filter
-                             :name (getf tmp :name)
-                             :base (getf tmp :base)
-                             :advanced (getf tmp :advanced))))))
+		(let ((*package* (find-package :eshop)))
+			(let* ((tmp (read-from-string in-string)))
+				(make-instance 'group-filter
+											 :name (getf tmp :name)
+											 :base (getf tmp :base)
+											 :advanced (getf tmp :advanced))))))
 
 ;;макрос для создания метода десериализации класса из файла, по данным имени класса и списку полей
 (defmacro new-classes.make-unserialize-method (name class-fields)
@@ -59,81 +59,81 @@
           ;;создаем объект с прочитанными из файла полями
           ((item
             ,(let ((res (append (list `make-instance) (list `(quote ,name)))))
-                  (mapcar
-                   #'(lambda (field)
-                       (setf res
-                             (append res
-                                     (let ((name (intern (string-upcase (format nil "~a" (getf field :name))) :keyword))
-                                           (initform (getf field :initform)))
-                                       `(,name
-                                         (let ((val (cdr (assoc ,name raw))))
-                                            (if val
-                                                val
-                                                ,initform)))))))
-                   class-fields)
-                  res)))
+							 (mapcar
+								#'(lambda (field)
+										(setf res
+													(append res
+																	(let ((name (intern (string-upcase (format nil "~a" (getf field :name))) :keyword))
+																				(initform (getf field :initform)))
+																		`(,name
+																			(let ((val (cdr (assoc ,name raw))))
+																				(if val
+																						val
+																						,initform)))))))
+								class-fields)
+							 res)))
         item))
     (defmethod unserialize-from-file (filepath (dummy ,name))
       (let ((num 0))
         (with-open-file (file filepath)
-          (let ((curline "")
-                (needconc nil))
-            (loop for line = (read-line file nil 'EOF)
-               until (eq line 'EOF)
-               do
-                 ;; (print (subseq line 0 20))
-                 (let ((str line)
-                       (last-sym (if (= 0 (length line))
-                                     "."
-                                     (subseq line (- (length line) 1))))
-                       (item (unserialize (decode-json-from-string line)
-                                          dummy)))
-                   ;; (print str)
-                   ;; (format t "~%########################### ~a ~%" last-sym)
-                   ;; (if (string= "}" last-sym)
-                   ;;     (progn
-                   ;;       (when needconc
-                   ;;         (setf str (format nil "~a~a" curline str)))
-                   ;;       (setf needconc nil)
-                   ;;       (setf curline "")
-                   ;;       (let ((start (search ",\"optgroups\":" str))
-                   ;;             (fin (search "}]}]" str)))
-                   ;;         (when (and start fin)
-                   ;;           (setf str (format nil "~a~a"
-                   ;;                             (subseq str 0 start)
-                   ;;                             (subseq str (+ 4 fin)))))
-                           ;; (print str)
-                   ;; (setf item (unserialize (decode-json-from-string line)
-                                           ;; dummy)))
-                   (incf num)
-                   (if (equal (mod num 1000) 0)
-                       (wlog (key item)))
-                   (storage.add-new-object item (key item)))
-                 )))))))
-                       ;; ;;else
-                       ;; (if needconc
-                       ;;     (setf curline (format nil "~a~a" curline str))
-                       ;;     (progn
-                       ;;       (setf curline str)
-                       ;;       (setf needconc t))))))))))))
+												(let ((curline "")
+															(needconc nil))
+													(loop for line = (read-line file nil 'EOF)
+																until (eq line 'EOF)
+																do
+																;; (print (subseq line 0 20))
+																(let ((str line)
+																			(last-sym (if (= 0 (length line))
+																										"."
+																									(subseq line (- (length line) 1))))
+																			(item (unserialize (decode-json-from-string line)
+																												 dummy)))
+																	;; (print str)
+																	;; (format t "~%########################### ~a ~%" last-sym)
+																	;; (if (string= "}" last-sym)
+																	;;     (progn
+																	;;       (when needconc
+																	;;         (setf str (format nil "~a~a" curline str)))
+																	;;       (setf needconc nil)
+																	;;       (setf curline "")
+																	;;       (let ((start (search ",\"optgroups\":" str))
+																	;;             (fin (search "}]}]" str)))
+																	;;         (when (and start fin)
+																	;;           (setf str (format nil "~a~a"
+																	;;                             (subseq str 0 start)
+																	;;                             (subseq str (+ 4 fin)))))
+																	;; (print str)
+																	;; (setf item (unserialize (decode-json-from-string line)
+																	;; dummy)))
+																	(incf num)
+																	(if (equal (mod num 1000) 0)
+																			(wlog (key item)))
+																	(storage.add-new-object item (key item)))
+																)))))))
+;; ;;else
+;; (if needconc
+;;     (setf curline (format nil "~a~a" curline str))
+;;     (progn
+;;       (setf curline str)
+;;       (setf needconc t))))))))))))
 
 (defun new-classes.unserialize-optgroups (filepath)
   (let ((num 0))
     (with-open-file (file filepath)
-      (loop for line = (read-line file nil 'EOF)
-         until (eq line 'EOF)
-         do
-           (let* ((item (servo.alist-to-plist (decode-json-from-string line)))
-                  (key (format nil "~a" (getf item :key)))
-                  (optgroups (getf item :optgroups))
-                  (product (gethash key (storage *global-storage*))))
-             (incf num)
-             (when product
-               (setf (optgroups product) optgroups)
-               (setf (optgroups product) (new-classes.get-transform-optgroups product)))
-             (if (not product)
-                 (wlog key))
-             )))
+										(loop for line = (read-line file nil 'EOF)
+													until (eq line 'EOF)
+													do
+													(let* ((item (servo.alist-to-plist (decode-json-from-string line)))
+																 (key (format nil "~a" (getf item :key)))
+																 (optgroups (getf item :optgroups))
+																 (product (gethash key (storage *global-storage*))))
+														(incf num)
+														(when product
+															(setf (optgroups product) optgroups)
+															(setf (optgroups product) (new-classes.get-transform-optgroups product)))
+														(if (not product)
+																(wlog key))
+														)))
     num))
 
 
@@ -146,12 +146,12 @@
                   (optgroups item)))
     ;;преобразуем значение :options в plist (2 уровень)
     (setf optgroups (mapcar #'(lambda (optgroup)
-                          (let ((optgroup-plist
-                                 (mapcar #'(lambda (option)
-                                             (servo.alist-to-plist option))
-                                         (getf optgroup :options))))
-                            (list :name (getf optgroup :name) :options optgroup-plist)))
-                      optgroups))
+																(let ((optgroup-plist
+																			 (mapcar #'(lambda (option)
+																									 (servo.alist-to-plist option))
+																							 (getf optgroup :options))))
+																	(list :name (getf optgroup :name) :options optgroup-plist)))
+														optgroups))
     optgroups))
 
 
@@ -210,7 +210,7 @@
                                              (incf num)
                                              (if (oddp num)
                                                  (string-downcase v)
-                                                 v))
+																							 v))
                                          (vendors-seo item)))))
     ;;convert vendors-seo from list to hashtable
     (setf (vendors-seo item) (servo.list-to-hashtasble
@@ -222,8 +222,8 @@
                       ;;в случае если на месте ключей уже лежат группы
                       (if (equal (type-of parent-key) 'group)
                           parent-key
-                          (if parent-key
-                              (gethash parent-key (storage *global-storage*)))))
+												(if parent-key
+														(gethash parent-key (storage *global-storage*)))))
                   parents))
     ;; удаляем nil для битых ключей
     ;; TODO обрабатывать исключение если ключи не были найдены
@@ -255,11 +255,11 @@
              (not (atom (car keys)))
              (not (atom (caar keys))))
         (setf (catalog-keyoptions item) (mapcar #'(lambda (item)
-                                            (list :optgroup (cdr (assoc :optgroup item))
-                                                  :optname (cdr (assoc :optname item))
-                                                  :showname (cdr (assoc :showname item))
-                                                  :units (cdr (assoc :units item))))
-                                        (catalog-keyoptions item)))))
+																										(list :optgroup (cdr (assoc :optgroup item))
+																													:optname (cdr (assoc :optname item))
+																													:showname (cdr (assoc :showname item))
+																													:units (cdr (assoc :units item))))
+																								(catalog-keyoptions item)))))
   ;;TODO эта проверка нужна для постобработки групп дессериализованных их старых быкапов, когда фулфильтры хранились прямо в fullfilter
   (when (and (null (raw-fullfilter item))
              (fullfilter item)
@@ -292,63 +292,12 @@
 
 (defmethod new-classes.post-unserialize ((item article)))
 
-
-;;макрос для создания метода сериализации
-(defmacro new-classes.make-serialize-method (name class-fields)
-  `(list
-    (defmethod serialize-entity ((object ,name))
-      (format nil "{~{~a~^,~}}"
-              (remove-if #'null
-                         ,(cons
-                           `list
-                           (mapcar #'(lambda (field)
-                                       `(let* ((field-value (,(getf field :name) object))
-                                              (encoded-value (when field-value
-                                                               (,(intern (string-upcase
-                                                                          (format nil "object-fields.~a-field-serialize" (getf field :type))))
-                                                                 field-value))))
-                                          (when (and field-value
-                                                     (string/= (format nil "~a" field-value) "")
-                                                     (not (equal field-value ,(getf field :initform)))
-                                                     encoded-value)
-                                            (format nil "~a:~a"
-                                                    (encode-json-to-string (quote ,(getf field :name)))
-                                                    encoded-value))))
-                                   (remove-if-not #'(lambda (field)
-                                                      (getf field :serialize))
-                                                  class-fields))))))
-    (defmethod serialize-to-file ((object ,name) pathname)
-      (with-open-file (file pathname
-                            :direction :output
-                            :if-exists :supersede
-                            :external-format :utf-8)
-        (format file "~a" (serialize-entity object))))))
-
-(defun new-classes.serialize-list-to-file (object-list filepath)
-  (let ((total 0))
-    (with-open-file (file filepath
-                          :direction :output
-                          :if-exists :supersede
-                          :external-format :utf-8)
-      (mapcar #'(lambda (object)
-                  (format file "~a~%" (serialize-entity object))
-                  (incf total))
-              object-list))
-    (wlog (format nil "Total serialized: ~a" total))))
-
-(defun new-classes.serialize-all ()
-  (let ((bkp-dir (format nil "~atest/" (user-homedir-pathname))))
-    (wlog "start products serialized")
-    (new-classes.serialize-list-to-file (storage.get-products-list) (pathname (format nil "~a~a" bkp-dir "tt27.bkp")))
-    (wlog "start groups serialized")
-    (new-classes.serialize-list-to-file (storage.get-groups-list) (pathname (format nil "~a~a" bkp-dir "grs27.bkp")))))
-
 (defun new-classes.unserialize-all ()
   (let ((t-storage))
     (sb-ext:gc :full t)
     (let ((*global-storage* (make-instance 'global-storage)))
-      (unserialize-from-file (pathname (format nil "~atest/grs27.bkp" (user-homedir-pathname))) (make-instance 'group))
-      (unserialize-from-file (pathname (format nil "~atest/tt27.bkp" (user-homedir-pathname))) (make-instance 'product))
+      (unserialize-from-file (pathname (format nil "~atest/grs28.bkp" (user-homedir-pathname))) (make-instance 'group))
+      (unserialize-from-file (pathname (format nil "~atest/tt28.bkp" (user-homedir-pathname))) (make-instance 'product))
       (unserialize-from-file (pathname (format nil "~atest/filters" (user-homedir-pathname))) (make-instance 'filter))
       (wlog "Making lists")
       (storage.make-lists)
@@ -424,7 +373,7 @@
     (maphash #'(lambda (k v)
                  (declare (ignore k))
                  (if (equal (key v) "lcd-televizory")
-                           (wlog (raw-fullfilter v)))
+										 (wlog (raw-fullfilter v)))
                  (when (and (equal (type-of v) 'group)
                             (raw-fullfilter v))
                    (let ((item (gethash (key v) original-storage)))
@@ -452,11 +401,11 @@
                    (let ((item (gethash (key v) original-storage)))
                      (when item
                        (setf (catalog-keyoptions item) (mapcar #'(lambda (item)
-                                            (list :optgroup (cdr (assoc :optgroup item))
-                                                  :optname (cdr (assoc :optname item))
-                                                  :showname (cdr (assoc :showname item))
-                                                  :units (cdr (assoc :units item))))
-                                        (catalog-keyoptions v)))
+																																	 (list :optgroup (cdr (assoc :optgroup item))
+																																				 :optname (cdr (assoc :optname item))
+																																				 :showname (cdr (assoc :showname item))
+																																				 :units (cdr (assoc :units item))))
+																															 (catalog-keyoptions v)))
                        ;; (setf (catalog-keyoptions item) (catalog-keyoptions v))
                        ;; (new-classes.post-unserialize item)
                        ))))
@@ -472,12 +421,12 @@
       (progn
         (if (equal (type-of in) 'product)
             (push (list :key (articul in) :val (name-seo in)) out)
-            (push (list :key (key in) :val (name in)) out))
+					(push (list :key (key in) :val (name in)) out))
         (setf in (new-classes.parent in))
         (new-classes.breadcrumbs in out))
-      ;; else -  end of recursion
-      (list :breadcrumbelts (butlast out)
-            :breadcrumbtail (car (last out)))))
+		;; else -  end of recursion
+		(list :breadcrumbelts (butlast out)
+					:breadcrumbtail (car (last out)))))
 
 (defun new-classes.get-root-parent (item)
   (if (and item
@@ -485,7 +434,7 @@
       (let ((parent (new-classes.parent item)))
         (if (or (null item) (null parent))
             item
-            (new-classes.get-root-parent parent)))))
+					(new-classes.get-root-parent parent)))))
 
 
 (defun new-classes.menu-sort (a b)
@@ -493,9 +442,9 @@
   (if (or (null (order a))
           (null (order b)))
       nil
-      ;; else
-      (< (order a)
-         (order b))))
+		;; else
+		(< (order a)
+			 (order b))))
 
 
 ;;TODO временно убрана проверка на пустые группы, тк это поле невалидно
@@ -517,25 +466,25 @@
                                  :name (name val)
                                  :icon (icon val)
                                  :subs (loop
-                                          :for child
-                                          :in (sort
-                                               (remove-if #'(lambda (g)
-                                                              (or
-                                                               ;; (empty g)
-                                                               (not (active g))))
-                                                          (groups val))
-                                               #'menu-sort)
-                                          :collect
-                                          (list :key  (key child) :name (name child)))
+																				:for child
+																				:in (sort
+																						 (remove-if #'(lambda (g)
+																														(or
+																														 ;; (empty g)
+																														 (not (active g))))
+																												(groups val))
+																						 #'menu-sort)
+																				:collect
+																				(list :key  (key child) :name (name child)))
                                  ))
-                          ;; else - this is ordinal
-                          (leftmenu:ordinal (list :divider (notevery #'(lambda (divider)
-                                                                         (string/= (key val) divider))
-                                                                     divider-list)
-                                                  :key  (key val)
-                                                  :name (name val)
-                                                  :icon (icon val)))
-                          ))
+												;; else - this is ordinal
+												(leftmenu:ordinal (list :divider (notevery #'(lambda (divider)
+																																			 (string/= (key val) divider))
+																																	 divider-list)
+																								:key  (key val)
+																								:name (name val)
+																								:icon (icon val)))
+												))
                   (sort root-groups #'new-classes.menu-sort))))
     (leftmenu:main (list :elts src-lst))))
 
@@ -547,7 +496,7 @@
   (eval `(new-classes.make-view-method ,name ,list-fields))
   (eval `(new-classes.make-edit-method ,name ,list-fields))
   (eval `(new-classes.make-unserialize-method ,name ,list-fields))
-  (eval `(new-classes.make-serialize-method ,name ,list-fields)))
+  (eval `(backup.make-serialize-method ,name ,list-fields)))
 
 
 (new-classes.make-class-and-methods
@@ -617,9 +566,10 @@
   (defun new-classes.get-instance (type)
     (let ((type-string (format nil "~a" type)))
       (cond
-        ((equal "product" type-string)
-         product-instance)
-        ((equal "group" type-string)
-         group-instance)
-        ((equal "filter" type-string)
-         filter-instance)))))
+			 ((equal "product" type-string)
+				product-instance)
+			 ((equal "group" type-string)
+				group-instance)
+			 ((equal "filter" type-string)
+				filter-instance)))))
+
