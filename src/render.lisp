@@ -181,6 +181,41 @@
 (defmethod restas:render-object ((designer eshop-render) (object group-filter))
   (render.render object))
 
+(defun render.gen-uspale-product (prod)
+	(when prod
+		(let* ((articul (articul prod))
+					 (name (name-seo prod))
+					 (group (new-classes.parent prod))
+					 (pic (car (get-pics articul)))
+					 (siteprice (siteprice prod)))
+			(list
+			 ;;TODO: :rating
+			 ;;TODO: :badge
+			 :grouplink (key group)
+			 :groupname (name group)
+			 :articul articul
+			 :pic (car (get-pics articul))
+			 :name (name-seo prod)
+			 :showditeprice (get-format-price (siteprice prod))
+			 :showprice (get-format-price (price prod))
+			 :buttonaddcart (soy.buttons:add-product-cart (list
+																										 :articul articul
+																										 :name name
+																										 :pic pic
+																										 :siteprice siteprice))))))
+
+(defun render.prepare-upsale-block (name items)
+	(list :name name
+				:items (mapcar (lambda (item)
+												 (render.gen-uspale-product item))
+											 items)))
+
+;; test
+(defmethod render.prepare-upsale-full ((object group))
+	(list :groupnameskl (sklonenie (name object) 2)
+				:upsaleblocks (list (render.prepare-upsale-block "blockname1" *test-product-list*))))
+
+;; end test
 
 
 (defmethod render.view ((object product))
@@ -204,7 +239,7 @@
                                (+ (siteprice object)
                                   (delta-price object)))
             :bestprice (> (delta-price object) 0)
-            :groupd (groupd.is-groupd object)
+						:groupd (groupd.is-groupd object)
             :groupd_man (groupd.man.is-groupd object)
             :groupd_woman (groupd.woman.is-groupd object)
             :firstpic (car pics)
@@ -369,7 +404,10 @@
                                                    (delta-price object)))
                              :equalprice (= (delta-price object) 0)
                              :diffprice (delta-price object)
-                             :procent diff-percent
+														 ;;test
+														 :upsaleinfo (soy.product:upsale (render.prepare-upsale-full (new-classes.parent object)))
+														 ;;end test
+														 :procent diff-percent
                              :subst (format nil "/~a" (articul object))
                              :pics (cdr pics)
                              :firstpic (if (null pics) nil (car pics))

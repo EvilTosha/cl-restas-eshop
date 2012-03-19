@@ -30,7 +30,7 @@
 (restas:define-route admin-templates-route ("/administration-super-panel/templates" :method :post)
   (show-admin-page "templates"))
 
-(restas:define-route admin-templates-route ("/administration-super-panel/cron-jobs" :method :post)
+(restas:define-route admin-cron-route ("/administration-super-panel/cron-jobs" :method :post)
   (show-admin-page "cron-jobs"))
 
 (restas:define-route admin-parenting-key-route ("/administration-super-panel/parenting" :method :post)
@@ -423,7 +423,6 @@
                                (intern (string-upcase (format nil "keyoption-og-~a" cnt)) :keyword)))
                (optname (getf post-data
                               (intern (string-upcase (format nil "keyoption-on-~a" cnt)) :keyword))))
-
            (when (and (string/= "" optgroup) (string/= "" optname))
              (push (list :optgroup optgroup :optname optname) keyoptions))))
     (setf result (append result (list :keyoptions (nreverse keyoptions))))

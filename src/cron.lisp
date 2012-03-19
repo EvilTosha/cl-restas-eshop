@@ -62,3 +62,5 @@
 
 ;; making timer for backups
 (cl-cron:make-cron-job #'backup.serialize-all :minute 0 :hour 17)
+
+(cl-cron:start-cron)
