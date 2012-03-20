@@ -164,8 +164,8 @@
                               (format stream "\"~a\";\"~a\";http://www.320-8080.ru/~a?vendor=~a;~a;~a;~%"
                                       (stripper (name v))
                                       (stripper vendor)
-                                      (key v)
-                                      (stripper vendor)
+                                      (hunchentoot:url-encode (key v))
+                                      (hunchentoot:url-encode (stripper vendor))
                                        "yes"
                                        (let ((desc (gethash (string-downcase vendor) (vendors-seo v))))
                                          (if (and (not (null desc))
