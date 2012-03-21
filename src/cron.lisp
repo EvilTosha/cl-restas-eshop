@@ -58,9 +58,3 @@
 											 job-list)))
 						 cl-cron::*cron-jobs-hash*)
 		(soy.admin:cron-job-list (list :output output :jobs job-list))))
-
-
-;; making timer for backups
-(cl-cron:make-cron-job #'backup.serialize-all :minute 0 :hour 17)
-
-(cl-cron:start-cron)

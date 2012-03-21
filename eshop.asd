@@ -1,5 +1,5 @@
 (defsystem eshop
-    :depends-on (#:restas #:cl-json #:arnesi #:closure-template #:log5 #:cl-cron)
+    :depends-on (#:restas #:cl-json #:arnesi #:closure-template #:log5)
     :components
     ((:module "src"
               :components
@@ -38,11 +38,15 @@
                (:file "static-pages" :depends-on ("spike"))
                (:file "list-filters" :depends-on ("static-pages"))
                (:file "object-fields" :depends-on ("list-filters"))
-							 (:file "backup" :depends-on ("object-fields"))
-							 (:file "cron" :depends-on ("backup"))
-							 (:file "new-classes" :depends-on ("backup"))
+               (:file "backup" :depends-on ("object-fields"))
+               (:file "new-classes" :depends-on ("backup"))
                (:file "admin-gateway" :depends-on ("new-classes" "cron"))
-							 (:file "gateway" :depends-on ("admin-gateway"))
+               (:file "gateway" :depends-on ("admin-gateway"))
                (:file "email" :depends-on ("gateway"))
                (:file "groupd" :depends-on ("email"))
+               (:module "cl-cron"
+                        :components ((:file "packages")
+                                     (:file "cl-cron"))
+                        :depends-on ("new-classes"))
+               (:file "cron" :depends-on ("cl-cron"))
                ))))
