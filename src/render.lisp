@@ -196,7 +196,7 @@
 			 :articul articul
 			 :pic (car (get-pics articul))
 			 :name (name-seo prod)
-			 :showditeprice (get-format-price (siteprice prod))
+			 :showsiteprice (get-format-price (siteprice prod))
 			 :showprice (get-format-price (price prod))
 			 :buttonaddcart (soy.buttons:add-product-cart (list
 																										 :articul articul
@@ -211,9 +211,16 @@
 											 items)))
 
 ;; test
+(defparameter *test-product-list* (list (gethash "172140" (storage *global-storage*))
+																				(gethash "180437" (storage *global-storage*))
+																				(gethash "178732" (storage *global-storage*))
+																				(gethash "180532" (storage *global-storage*))))
+
 (defmethod render.prepare-upsale-full ((object group))
 	(list :groupnameskl (sklonenie (name object) 2)
-				:upsaleblocks (list (render.prepare-upsale-block "blockname1" *test-product-list*))))
+				:upsaleblocks (list (render.prepare-upsale-block "blockname1" *test-product-list*)
+														(render.prepare-upsale-block "blockname2" *test-product-list*)
+														(render.prepare-upsale-block "blockname1" *test-product-list*))))
 
 ;; end test
 
