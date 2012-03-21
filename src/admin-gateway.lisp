@@ -30,6 +30,9 @@
 (restas:define-route admin-templates-route ("/administration-super-panel/templates" :method :post)
   (show-admin-page "templates"))
 
+(restas:define-route admin-cron-route ("/administration-super-panel/cron-jobs" :method :post)
+  (show-admin-page "cron-jobs"))
+
 (restas:define-route admin-parenting-key-route ("/administration-super-panel/parenting" :method :post)
   (show-admin-page "parenting"))
 
@@ -91,7 +94,8 @@
                "<li><a href=\"/administration-super-panel/actions\">actions</a></li>"
                "<li><a href=\"/administration-super-panel/pics\">pics</a></li>"
                "<li><a href=\"/administration-super-panel/info\">info</a></li>"
-               "<li><a href=\"/administration-super-panel/templates\">templates</a></li>"))))
+               "<li><a href=\"/administration-super-panel/templates\">templates</a></li>"
+							 "<li><a href=\"/administration-super-panel/cron-jobs\">cron-jobs</a></li>"))))
 
 (defun admin.test-get-post-parse ()
   "parsing get & post parameters for testing"
@@ -398,6 +402,8 @@
                               (admin-gateway.pics-deleting new-post-data))
                              ((string= key "templates")
                               (admin-gateway.compile-template new-post-data))
+														 ((string= key "cron-jobs")
+                              (cron.html-print-job-list new-post-data))
                              (t (format nil "~a" key)))))))))
 
 
@@ -417,7 +423,6 @@
                                (intern (string-upcase (format nil "keyoption-og-~a" cnt)) :keyword)))
                (optname (getf post-data
                               (intern (string-upcase (format nil "keyoption-on-~a" cnt)) :keyword))))
-
            (when (and (string/= "" optgroup) (string/= "" optname))
              (push (list :optgroup optgroup :optname optname) keyoptions))))
     (setf result (append result (list :keyoptions (nreverse keyoptions))))
