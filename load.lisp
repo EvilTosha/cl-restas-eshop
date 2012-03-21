@@ -47,7 +47,7 @@
    "log5" ;; логирование | logging framework http://common-lisp.net/project/log5/
    ;; "cl-store" ;; сохранение данных | Serialization Package http://common-lisp.net/project/cl-store/
    "drakma-1.2.4" ;;http клиент для тестов
-	 "cl-cron" ;; http://www.trailoflight.net/cl-cron/
+	 ;; "cl-cron" ;; http://www.trailoflight.net/cl-cron/
 	 ))
 
 

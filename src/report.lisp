@@ -164,8 +164,8 @@
                               (format stream "\"~a\";\"~a\";http://www.320-8080.ru/~a?vendor=~a;~a;~a;~%"
                                       (stripper (name v))
                                       (stripper vendor)
-                                      (key v)
-                                      (stripper vendor)
+                                      (hunchentoot:url-encode (key v))
+                                      (hunchentoot:url-encode (stripper vendor))
                                        "yes"
                                        (let ((desc (gethash (string-downcase vendor) (vendors-seo v))))
                                          (if (and (not (null desc))
@@ -572,6 +572,32 @@
       (push filter (filters group)))
     filter
     ))
+
+(defun create-ipad3-filter (group)
+  (let* ((key (format nil "~a-~a" (key group) "ipad3"))
+         (filter)
+         (tmp-filter (car (remove-if-not #'(lambda (v) (equal (key v) key))
+                                    (filters group)))))
+    (if (not tmp-filter)
+        (setf filter (make-instance 'filter))
+        (setf filter tmp-filter))
+    (setf (name filter) "IPad 3")
+    (setf (func filter)
+          #'(lambda (p)
+              (let ((value))
+                (with-option1 p "Общие характеристики" "Модель"
+                              (setf value (getf option :value)))
+                (if (null value)
+                    nil
+                    (string= (string-downcase (format nil "~a" value)) "ipad new")))))
+    (setf (key filter) key)
+    (setf (parents filter) (list group))
+    (when (not tmp-filter)
+      (setf (gethash key (storage *global-storage*)) filter)
+      (push filter (filters group)))
+    filter
+    ))
+
 
 
 (defun create-man-sale-filter (group)
