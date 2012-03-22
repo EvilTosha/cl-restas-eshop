@@ -91,10 +91,15 @@
 												 name)))
 		(bordeaux-threads:make-thread func :name thread-name)))
 
+(defun run-job-with-log (job key &optional (log-file *cron-log-file*))
+	(when log-file
+		(with-open-file (stream log-file :direction :output :if-exists :append :if-does-not-exist :create)
+			(eshop::servo.run-with-log #'cl-cron::run-cron-thread :params (list (job-func job) :job-key key) :stream stream))))
+
 (defun run-job-if-time (key job)
   "runs the cron-job object in a separate thread if it is its time"
   (if (time-to-run-job job)
-      (run-cron-thread (job-func job) :job-key key)))
+      (run-job-with-log job key)))
 
 (defun run-job-if-boot (key job)
   "runs the cron-job object in a separate thread if it is a boot job"
