@@ -891,3 +891,18 @@
 														 t)
 			 ;; for returning t if valid (not number)
 			 t))
+
+(defun servo.run-with-log (function &key (params nil params-supplied-p) (stream *standard-output*))
+	(format stream "~&~a Start ~a~%" (time.get-full-human-time) function)
+	(let ((successful t))
+		(handler-case
+				(if params-supplied-p
+						(apply function params)
+						(funcall function))
+			(error (e)
+				(progn
+					(format stream "~&~a ERROR: ~a~%" (time.get-full-human-time) e)
+					(setf successful nil))))
+		(if successful
+			(format stream "~&~a Finish ~a~%" (time.get-full-human-time) function)
+			(format stream "~&~a ~a finished with error~%" (time.get-full-human-time) function))))
