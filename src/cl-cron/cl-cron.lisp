@@ -104,7 +104,7 @@
 (defun run-job-if-boot (key job)
   "runs the cron-job object in a separate thread if it is a boot job"
   (if (job-@boot job)
-      (run-cron-thread (job-func job) :job-key key)))
+      (run-job-with-log (job-func job) key)))
 
 (defun cron-dispatcher ()
   "function that dispatches the jobs that are ready to be run"
@@ -115,7 +115,7 @@
     (maphash #'run-job-if-time *cron-jobs-hash*)
     (bordeaux-threads:release-lock *cron-dispatcher-processing*)))
 
-(defun start-cron (&optional (thread-name (format nil "Cron-thread~a" (gensym))))
+(defun start-cron ()
   "function that starts cron by first loading the cron file defined in the variable, then it runs any cron-job that has the job-only-at-boot property set to t. Finally, it starts a thread that runs cron-dispatcher"
   (cond (*cron-dispatcher-thread*
 	 (log-cron-message "You attempted to call start-cron while cron is already loaded and running..."))
@@ -123,13 +123,12 @@
 	 (if *cron-load-file*
 	     (load *cron-load-file* :verbose nil :print nil :if-does-not-exist nil))
 	 (maphash #'run-job-if-boot *cron-jobs-hash*)
-	 (setf *cron-dispatcher-thread* (bordeaux-threads:make-thread #'cron-dispatcher
-																																:name thread-name)))))
+	 (setf *cron-dispatcher-thread* (run-cron-thread #'cron-dispatcher)))))
 
 (defun restart-cron()
   "function that starts up cron but without loading the file or running any of the boot only cron jobs in the list"
   (if (not *cron-dispatcher-thread*)
-      (setf *cron-dispatcher-thread* (bordeaux-threads:make-thread #'cron-dispatcher))
+      (setf *cron-dispatcher-thread* (run-cron-thread #'cron-dispatcher))
       (log-cron-message "You attempted to call restart-cron while cron is already loaded and running...")))
 
 (defun stop-cron ()
