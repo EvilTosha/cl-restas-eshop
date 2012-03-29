@@ -412,7 +412,7 @@
                              :equalprice (= (delta-price object) 0)
                              :diffprice (delta-price object)
 														 ;;test
-														 :upsaleinfo (soy.product:upsale (render.prepare-upsale-full (new-classes.parent object)))
+														 ;;:upsaleinfo (soy.product:upsale (render.prepare-upsale-full (new-classes.parent object)))
 														 ;;end test
 														 :procent diff-percent
                              :subst (format nil "/~a" (articul object))

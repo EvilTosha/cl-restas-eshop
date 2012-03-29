@@ -108,7 +108,8 @@
        (list :name name :value value))))
 
 (defun object-fields.textedit-field-get-data (string)
-  string)
+	"Replace #\Replace (#\Newline remains)"
+  (servo.string-replace-chars string (list #\Return)))
 
 (defun object-fields.textedit-field-serialize (text)
   (object-fields.string-field-serialize (object-fields.string-replace-newlines text)))
