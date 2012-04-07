@@ -1,0 +1,14 @@
+[START_OPTIONS]
+release = 0
+dbg-on = 1
+swank-port = 4005
+server-port = 8080
+
+[PATHS]
+path-to-src = cl-restas-eshop/src
+path-to-last-backup = Dropbox/eshop-backups/
+path-to-templates = Dropbox/httpls/release
+path-to-articles = Dropbox/content/articles
+path-to-dropbox = Dropbox/
+path-to-logs = eshop-logs/
+path-to-backups = eshop-logs/backups/

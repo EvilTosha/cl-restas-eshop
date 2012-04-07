@@ -3,9 +3,13 @@
 (defvar *swank-port* 4005)
 (defvar *server-port* 8080)
 
+(defparameter *path-to-libs* (sb-unix::posix-getenv "LIBS_PATH"))
+(defparameter *path-to-eshop* (sb-unix::posix-getenv "ESHOP_PATH"))
+(defparameter *path-to-config* (sb-unix::posix-getenv "CONFIG_PATH"))
+
 ;; регестрация путей для asdf
 (load (format nil "~a~a/~a" (user-homedir-pathname) *path-to-eshop-home* "load.lisp"))
-(load.register-libs *path-to-eshop-home*)
+(load.register-libs)
 
 ;; старт сервера swank
 (asdf:load-system :swank)
