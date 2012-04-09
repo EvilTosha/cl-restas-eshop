@@ -33,17 +33,17 @@
      (remf url-parameters :page)
      (remf url-parameters :sort)
      (loop :for sort-field :in variants :by #'cddr :collect
-					 (let ((key (string-downcase (format nil "~a" sort-field))))
-						 (setf (getf url-parameters :sort) key)
-						 (if (string= (string-downcase (format nil "~a" sort-field))
-													(getf ,request-get-plist :sort))
-								 (list :key key
-											 :name (getf variants sort-field)
-											 :url (make-get-str url-parameters)
-											 :active t)
-							 (list :key key
-										 :url (make-get-str url-parameters)
-										 :name (getf variants sort-field)))))))
+				(let ((key (string-downcase (format nil "~a" sort-field))))
+					(setf (getf url-parameters :sort) key)
+					(if (string= (string-downcase (format nil "~a" sort-field))
+											 (getf ,request-get-plist :sort))
+							(list :key key
+										:name (getf variants sort-field)
+										:url (make-get-str url-parameters)
+										:active t)
+							(list :key key
+										:url (make-get-str url-parameters)
+										:name (getf variants sort-field)))))))
 
 
 (defmethod rightblocks ((object group) (parameters list))
@@ -51,19 +51,19 @@
         (catalog:rightblock2)
         (if (not (equal 'group (type-of object)))
             ""
-					(progn
-						(let ((vndr (getf parameters :vendor)))
-							(if (null vndr)
-									;; show group descr
-									(let ((descr (seo-text object)))
-										(if (null descr)
-												""
-											(catalog:seotext (list :text descr))))
-								;; show vendor descr
-								(let ((descr (gethash (string-downcase vndr) (vendors-seo object))))
-									(if (null descr)
-											""
-										(catalog:seotext (list :text descr))))))))))
+						(progn
+							(let ((vndr (getf parameters :vendor)))
+								(if (null vndr)
+										;; show group descr
+										(let ((descr (seo-text object)))
+											(if (null descr)
+													""
+													(catalog:seotext (list :text descr))))
+										;; show vendor descr
+										(let ((descr (gethash (string-downcase vndr) (vendors-seo object))))
+											(if (null descr)
+													""
+													(catalog:seotext (list :text descr))))))))))
 
 
 (defmacro with-option (product optgroup-name option-name body)
@@ -109,8 +109,8 @@
 					 (value-t (getf request-plist (intern (string-upcase (format nil "~a-t" (symbol-name ,key))) :keyword)))
 					 (value-x 0))
 			 (with-option1 product
-										 ,optgroup-name ,option-name
-										 (setf value-x (getf option :value)))
+				 ,optgroup-name ,option-name
+				 (setf value-x (getf option :value)))
 			 (when (null value-x)
 				 (setf value-x "0"))
 			 (when (null value-f)
@@ -163,8 +163,8 @@
 				(request-flag t)
 				(value-x nil))
 		(with-option1 product
-									option-group-name option-name
-									(setf value-x (getf option :value)))
+			option-group-name option-name
+			(setf value-x (getf option :value)))
 		;; (format t "~&Значение опции: ~a ключ: ~a " value-x key-name)
 		(mapcar #'(lambda (option-value)
 								(let ((value-p (getf request-plist
@@ -195,7 +195,7 @@
 					 (key-name (symbol-name ,key)))
 			 (if (string= ,dummy-var "")
 					 (filter-with-check-options key-name option-group-name product request-plist filter-options)
-				 (filter-with-check-values key-name option-group-name ,dummy-var product request-plist filter-options)))))
+					 (filter-with-check-values key-name option-group-name ,dummy-var product request-plist filter-options)))))
 
 
 (defmacro with-radio (key optgroup-name option-name)
@@ -203,33 +203,33 @@
 		 (let ((value-p (getf request-plist (intern (string-upcase (format nil "~a" (symbol-name ,key))) :keyword)))
 					 (value-x ""))
 			 (with-option1 product
-										 ,optgroup-name ,option-name
-										 (setf value-x (getf option :value)))
+				 ,optgroup-name ,option-name
+				 (setf value-x (getf option :value)))
 			 (cond
-				((null value-p)
-				 t)
-				((null value-x)
-				 nil)
-				(t
-				 (progn
-					 (setf value-p (parse-integer value-p))
-					 (let ((opt-val (nth value-p filter-options)))
-						 (if (string= opt-val "Любой")
-								 t
-							 (string= value-x opt-val)))))))))
+				 ((null value-p)
+					t)
+				 ((null value-x)
+					nil)
+				 (t
+					(progn
+						(setf value-p (parse-integer value-p))
+						(let ((opt-val (nth value-p filter-options)))
+							(if (string= opt-val "Любой")
+									t
+									(string= value-x opt-val)))))))))
 
 
 (defun paginator-page-line (request-get-plist start stop current)
 	(loop :for i from start :to stop :collect
-				(let ((plist request-get-plist)
-							(is-current-page nil))
-					(setf (getf plist :page) (format nil "~a" i))
-					(setf is-current-page (= current i))
-					(format nil "<a href=\"?~a\">~:[~;<big><b>~]~a~:[~;</b></big>~]</a>"
-									(make-get-str plist)
-									is-current-page
-									i
-									is-current-page))))
+		 (let ((plist request-get-plist)
+					 (is-current-page nil))
+			 (setf (getf plist :page) (format nil "~a" i))
+			 (setf is-current-page (= current i))
+			 (format nil "<a href=\"?~a\">~:[~;<big><b>~]~a~:[~;</b></big>~]</a>"
+							 (make-get-str plist)
+							 is-current-page
+							 i
+							 is-current-page))))
 
 (defun paginator (request-get-plist sequence &optional (pagesize 15))
 	(let ((page (getf request-get-plist :page))
@@ -275,9 +275,9 @@
 	(if (or (null (order a))
 					(null (order b)))
 			nil
-		;; else
-		(< (order a)
-			 (order b))))
+			;; else
+			(< (order a)
+				 (order b))))
 
 
 (defun default-page (&optional (content nil) &key keywords description title no-need-cart)
@@ -291,10 +291,10 @@
 									 :footer (root:footer)
 									 :content (if content
 																content
-															(format nil "<pre>'~a' ~%'~a' ~%'~a'</pre>"
-																			(request-str)
-																			(hunchentoot:request-uri *request*)
-																			(hunchentoot:header-in* "User-Agent"))))))
+																(format nil "<pre>'~a' ~%'~a' ~%'~a'</pre>"
+																				(request-str)
+																				(hunchentoot:request-uri *request*)
+																				(hunchentoot:header-in* "User-Agent"))))))
 
 
 (defun checkout-page (&optional (content nil))
@@ -302,23 +302,23 @@
 									 :footer (root:footer)
 									 :content (if content
 																content
-															"test page"))))
+																"test page"))))
 
 (defun checkout-thankes-page (&optional (content nil))
 	(root:main (list :header (root:short-linked-header)
 									 :footer (root:footer)
 									 :content (if content
 																content
-															"test page"))))
+																"test page"))))
 
 (defun static-page ()
 	(let ((∆ (find-package (intern (string-upcase (subseq (request-str) 1)) :keyword))))
 		(default-page
-			(static:main
-			 (list :menu (menu)
-						 :breadcrumbs (funcall (find-symbol (string-upcase "breadcrumbs") ∆))
-						 :subcontent  (funcall (find-symbol (string-upcase "subcontent") ∆))
-						 :rightblock  (funcall (find-symbol (string-upcase "rightblock") ∆)))))))
+				(static:main
+				 (list :menu (menu)
+							 :breadcrumbs (funcall (find-symbol (string-upcase "breadcrumbs") ∆))
+							 :subcontent  (funcall (find-symbol (string-upcase "subcontent") ∆))
+							 :rightblock  (funcall (find-symbol (string-upcase "rightblock") ∆)))))))
 
 
 (defun request-str ()
@@ -328,15 +328,15 @@
 				 (request-list (split-sequence:split-sequence #\/ request-str))
 				 (request-get-plist (if (null (cadr request-parted-list))
 																nil
-															;; else
-															(let ((result))
-																(loop :for param :in (split-sequence:split-sequence #\& (cadr request-parted-list)) :do
-                                      (let ((split (split-sequence:split-sequence #\= param)))
-                                        (setf (getf result (intern (string-upcase (car split)) :keyword))
-                                              (if (null (cadr split))
-                                                  ""
-																								(cadr split)))))
-																result))))
+																;; else
+																(let ((result))
+																	(loop :for param :in (split-sequence:split-sequence #\& (cadr request-parted-list)) :do
+																		 (let ((split (split-sequence:split-sequence #\= param)))
+																			 (setf (getf result (intern (string-upcase (car split)) :keyword))
+																						 (if (null (cadr split))
+																								 ""
+																								 (cadr split)))))
+																	result))))
 		(values request-str request-list request-get-plist)))
 
 
@@ -356,8 +356,8 @@
 (defun make-get-str (request-get-plist)
 	(format nil "~{~a~^&~}"
 					(loop :for cursor :in request-get-plist by #'cddr collect
-								(format nil "~a=~a" (string-downcase cursor) (getf request-get-plist cursor))
-								)))
+						 (format nil "~a=~a" (string-downcase cursor) (getf request-get-plist cursor))
+						 )))
 
 
 
@@ -371,43 +371,43 @@
 																			(declare (ignore c))
 																			(invoke-restart 'set-nil)))
 																 )
-																(restart-case (parse-integer id-string)
-																							(set-nil ()
-																											 nil)))))
+										(restart-case (parse-integer id-string)
+											(set-nil ()
+												nil)))))
 		group_id))
 
 (defun strip ($string)
 	(cond ((vectorp $string) (let (($ret nil))
 														 (loop
-															for x across $string collect x
-															do (if (not
-																			(or
-																			 (equal x #\')
-																			 (equal x #\")
-																			 (equal x #\!)
-																			 (equal x #\%)
-																			 (equal x #\\)
-																			 (equal x #\/)
-																			 ))
-																		 (push x $ret)))
+																for x across $string collect x
+																do (if (not
+																				(or
+																				 (equal x #\')
+																				 (equal x #\")
+																				 (equal x #\!)
+																				 (equal x #\%)
+																				 (equal x #\\)
+																				 (equal x #\/)
+																				 ))
+																			 (push x $ret)))
 														 (coerce (reverse $ret) 'string)))
 				((listp $string)   (if (null $string)
 															 ""
-														 $string))))
+															 $string))))
 
 (defun stripper ($string)
 	(cond ((vectorp $string) (let (($ret nil))
 														 (loop
-															for x across $string collect x
-															do (if (not
-																			(or
-																			 (equal x #\')
-																			 (equal x #\")
-																			 (equal x #\\)
-																			 (equal x #\~)
-																			 (equal x #\Newline)
-																			 ))
-																		 (push x $ret)))
+																for x across $string collect x
+																do (if (not
+																				(or
+																				 (equal x #\')
+																				 (equal x #\")
+																				 (equal x #\\)
+																				 (equal x #\~)
+																				 (equal x #\Newline)
+																				 ))
+																			 (push x $ret)))
 														 (let ((ret (coerce (reverse $ret) 'string)))
 															 (when (equal 0 (length ret))
 																 (return-from stripper ""))
@@ -418,29 +418,29 @@
 	"Returns a new string in which all the occurences of the part
  is replaced with replacement."
 	(with-output-to-string (out)
-												 (loop with part-length = (length part)
-															 for old-pos = 0 then (+ pos part-length)
-															 for pos = (search part string
-																								 :start2 old-pos
-																								 :test test)
-															 do (write-string string out
-																								:start old-pos
-																								:end (or pos (length string)))
-															 when pos do (write-string replacement out)
-															 while pos)))
+		(loop with part-length = (length part)
+			 for old-pos = 0 then (+ pos part-length)
+			 for pos = (search part string
+												 :start2 old-pos
+												 :test test)
+			 do (write-string string out
+												:start old-pos
+												:end (or pos (length string)))
+			 when pos do (write-string replacement out)
+			 while pos)))
 
 
 (defun merge-plists (a b)
 	(let* ((result (copy-list a)))
 		(loop while (not (null b)) do
-          (setf (getf result (pop b)) (pop b)))
+				 (setf (getf result (pop b)) (pop b)))
 		result))
 
 
 (defun reverse-plist (inlist)
 	(let ((result))
 		(loop :for i :in inlist by #'cddr do
-					(setf (getf result i) (getf inlist i)))
+			 (setf (getf result i) (getf inlist i)))
 		result))
 
 
@@ -451,25 +451,23 @@
 (defun slice (cnt lst)
 	(let ((ret))
 		(tagbody re
-						 (push (loop
-										:for elt :in lst
-										:repeat cnt
-										:collect
-										(pop lst)) ret)
-						 (unless (null lst)
-							 (go re)))
+			 (push (loop
+								:for elt :in lst
+								:repeat cnt
+								:collect
+								(pop lst)) ret)
+			 (unless (null lst)
+				 (go re)))
 		(reverse ret)))
 
 
 (defun cut (cnt lst)
 	(values (loop
-					 :for elt :in lst
-					 :repeat cnt
-					 :collect
-					 (pop lst))
+						 :for elt :in lst
+						 :repeat cnt
+						 :collect
+						 (pop lst))
 					lst))
-
-
 
 
 (defun get-procent (base real)
@@ -484,13 +482,12 @@
 	(let* ((articul-str (format nil "~a" articul))
 				 (path-art  (ppcre:regex-replace  "(\\d{1,3})(\\d{0,})"  articul-str  "\\1/\\1\\2" ))
 				 (path (format nil "~a/big/~a/*.jpg" *path-to-product-pics* path-art)))
-		;; (wlog path)
 		(loop
-		 :for pic
-		 :in (ignore-errors (directory path))
-		 :collect (format nil "~a.~a"
-											(pathname-name pic)
-											(pathname-type pic)))))
+			 :for pic
+			 :in (ignore-errors (directory path))
+			 :collect (format nil "~a.~a"
+												(pathname-name pic)
+												(pathname-type pic)))))
 
 
 
@@ -510,14 +507,14 @@
 					 count)
 				(setf count (length input-list)))
 		(setf result (loop
-									:for n
-									:from 1 to count
-									:collect (let* ((pos (random (length current-list)))
-																	(element (nth pos current-list)))
-														 (setf current-list (remove-if #'(lambda (v)
-																															 (equal v element))
-																													 current-list))
-														 element)))
+										:for n
+										:from 1 to count
+										:collect (let* ((pos (random (length current-list)))
+																		(element (nth pos current-list)))
+															 (setf current-list (remove-if #'(lambda (v)
+																																 (equal v element))
+																														 current-list))
+															 element)))
 		result))
 
 
@@ -527,7 +524,7 @@
 																							(funcall getter a)
 																							(funcall getter b))
 																		 t
-																	 nil))))
+																		 nil))))
 
 (defmethod get-filter-function-option (malformed-filter-list)
 	(let ((option nil))
@@ -555,13 +552,13 @@
 		(let ((result-products))
 			(mapcar #'(lambda (product)
 									(when (loop
-												 :for function :in functions
-												 :finally (return t)
-												 :do (unless (funcall (car function)
-																							product
-																							request-get-plist
-																							(cdr function))
-															 (return nil)))
+													 :for function :in functions
+													 :finally (return t)
+													 :do (unless (funcall (car function)
+																								product
+																								request-get-plist
+																								(cdr function))
+																 (return nil)))
 										(push product result-products)))
 							(remove-if-not #'(lambda (product)
 																 (active product))
@@ -585,13 +582,13 @@
 		(let ((result-products))
 			(mapcar #'(lambda (product)
 									(when (loop
-												 :for function :in functions
-												 :finally (return t)
-												 :do (unless (funcall (car function)
-																							product
-																							request-get-plist
-																							(cdr function))
-															 (return nil)))
+													 :for function :in functions
+													 :finally (return t)
+													 :do (unless (funcall (car function)
+																								product
+																								request-get-plist
+																								(cdr function))
+																 (return nil)))
 										(push product result-products)))
 							product-list)
 			result-products)))
@@ -601,11 +598,11 @@
 				 (request-parted-list (split-sequence:split-sequence #\? request-full-str))
 				 (request-get-plist (let ((result))
 															(loop :for param :in (split-sequence:split-sequence #\& (cadr request-parted-list)) :do
-																		(let ((split (split-sequence:split-sequence #\= param)))
-																			(setf (getf result (intern (string-upcase (car split)) :keyword))
-																						(if (null (cadr split))
-																								""
-                                              (cadr split)))))
+																 (let ((split (split-sequence:split-sequence #\= param)))
+																	 (setf (getf result (intern (string-upcase (car split)) :keyword))
+																				 (if (null (cadr split))
+																						 ""
+																						 (cadr split)))))
 															result)))
 		request-get-plist))
 
@@ -616,25 +613,25 @@
 				(showflag nil))
 		;; проверку нужно ли раскрывать hidden блока
 		(cond
-		 ((equal :radio (nth 2 elt))
-			(loop
-			 :for nameelt
-			 :in  (nth 3 elt)
-			 :for i from 0
-			 :do (if (string= (format nil "~a" i)
-												(getf request-get-plist (intern
-																								 (string-upcase key))))
-							 (setf showflag t))))
-		 ((equal :checkbox (nth 2 elt))
-			(loop
-			 :for nameelt
-			 :in  (nth 3 elt)
-			 :for i from 0
-			 :do (if  (string= "1" (getf request-get-plist (intern
-																											(string-upcase
-																											 (format nil "~a-~a" key i))
-																											:keyword)))
-							 (setf showflag t)))))
+			((equal :radio (nth 2 elt))
+			 (loop
+					:for nameelt
+					:in  (nth 3 elt)
+					:for i from 0
+					:do (if (string= (format nil "~a" i)
+													 (getf request-get-plist (intern
+																										(string-upcase key))))
+									(setf showflag t))))
+			((equal :checkbox (nth 2 elt))
+			 (loop
+					:for nameelt
+					:in  (nth 3 elt)
+					:for i from 0
+					:do (if  (string= "1" (getf request-get-plist (intern
+																												 (string-upcase
+																													(format nil "~a-~a" key i))
+																												 :keyword)))
+									 (setf showflag t)))))
 		showflag))
 
 
@@ -671,16 +668,16 @@
 												:ishidden ishidden
 												:elts (let ((elts (nth 3 elt)))
 																(loop :for nameelt :in elts
-																			:for i from 0 :collect
-																			(fullfilter:radioelt
-																			 (list :key key
-																						 :value i
-																						 :name nameelt
-																						 :checked (string= (format nil "~a" i)
-																															 (getf request-get-plist (intern
-																																												(string-upcase key)
-																																												:keyword)))
-																						 )))))))
+																	 :for i from 0 :collect
+																	 (fullfilter:radioelt
+																		(list :key key
+																					:value i
+																					:name nameelt
+																					:checked (string= (format nil "~a" i)
+																														(getf request-get-plist (intern
+																																										 (string-upcase key)
+																																										 :keyword)))
+																					)))))))
 								((equal :checkbox (nth 2 elt))
 								 (fullfilter:box
 									(list :key key
@@ -688,23 +685,23 @@
 												:ishidden ishidden
 												:elts (let ((values (nth 3 elt)))
 																(loop :for value :in values
-																			:for i from 0 :collect
-																			(fullfilter:checkboxelt
-																			 (list :value value
-																						 :key key
-																						 :i i
-																						 :checked (string= "1" (getf request-get-plist (intern
-																																														(string-upcase
-																																														 (format nil "~a-~a" key i))
-																																														:keyword)))
-																						 )))))))
+																	 :for i from 0 :collect
+																	 (fullfilter:checkboxelt
+																		(list :value value
+																					:key key
+																					:i i
+																					:checked (string= "1" (getf request-get-plist (intern
+																																												 (string-upcase
+																																													(format nil "~a-~a" key i))
+																																												 :keyword)))
+																					)))))))
 								(t ""))))
 		(if ishidden
 				(fullfilter:hiddencontainer (list :key key
 																					:name name
 																					:contents contents
 																					:isshow (if-need-to-show-hidden-block elt request-get-plist)))
-			contents)))
+				contents)))
 
 
 (defmethod vendor-controller ((object group) request-get-plist)
@@ -765,42 +762,42 @@
 (defun servo.alist-to-plist (alist)
   (if (not (equal (type-of alist) 'cons))
       alist
-		;;else
-		(loop
-		 :for (key . value)
-		 :in alist
-		 :nconc (list (servo.anything-to-keyword key) value))))
+			;;else
+			(loop
+				 :for (key . value)
+				 :in alist
+				 :nconc (list (servo.anything-to-keyword key) value))))
 
 
 (defun servo.plist-to-unique (plist)
   "Remove duplacating keys"
   (let ((result))
     (loop
-		 :while plist
-		 :do (let ((key (car plist))
-							 (value (cadr plist)))
-					 (setf (getf result key)
-								 (if (getf result key)
-										 (append
-											(if (eq (type-of (getf result key)) 'cons)
-													(getf result key)
-												(list (getf result key)))
-											(list value))
-									 ;;else
-									 value)))
-		 (setf plist (cddr plist)))
+			 :while plist
+			 :do (let ((key (car plist))
+								 (value (cadr plist)))
+						 (setf (getf result key)
+									 (if (getf result key)
+											 (append
+												(if (eq (type-of (getf result key)) 'cons)
+														(getf result key)
+														(list (getf result key)))
+												(list value))
+											 ;;else
+											 value)))
+			 (setf plist (cddr plist)))
     result))
 
 (defun servo.list-to-hashtasble (list)
   "Converting list (hash1 val1 hash2 val2...) to hashtable"
   (let ((res (make-hash-table :test #'equal)))
     (loop
-		 for x from 0 to (- (length list) 1)
-		 when (not (oddp x))
-		 do
-		 (let ((key (nth x list))
-					 (value (nth (+ 1 x) list)))
-			 (setf (gethash key res) value)))
+			 for x from 0 to (- (length list) 1)
+			 when (not (oddp x))
+			 do
+				 (let ((key (nth x list))
+							 (value (nth (+ 1 x) list)))
+					 (setf (gethash key res) value)))
     res))
 
 
@@ -810,20 +807,20 @@
   "Returns difference in percents. (1 - part / full) * 100%"
   (if (or (null full) (null part) (equal 0 full))
       nil
-		(format nil "~1$" (* (- 1 (/ part full)) 100))))
+			(format nil "~1$" (* (- 1 (/ part full)) 100))))
 
 (defun servo.diff-price (product-1 product-2)
   (if (/= (siteprice product-1) 0)
 			(abs (/ (- (siteprice product-1) (siteprice product-2))
 							(siteprice product-1)))
-    ;;infinity
-    999999))
+			;;infinity
+			999999))
 
 (defun servo.get-option (product opgroup optname)
   (let ((res))
     (with-option1 product
-									opgroup optname
-									(setf res (getf option :value)))
+			opgroup optname
+			(setf res (getf option :value)))
     res))
 
 (defun servo.get-product-vendor (product)
@@ -842,7 +839,7 @@
                                    (let ((diff
                                           (if (equal (servo.get-product-vendor a) vendor)
                                               1
-																						coef)))
+																							coef)))
 																		 (cons (* diff (servo.diff-price product a))
 																					 a)))
 															 (copy-list (products (new-classes.parent product)))))))
@@ -883,14 +880,29 @@
 													 (if (some (lambda (c1) (funcall test c c1))
 																		 char-list)
 															 replacement
-														 c))
+															 c))
 									 string))
 	 'string))
 
 (defun servo.is-valid-string (s &optional (whitespace-check t)
-																(unwanted-chars (list #\Space #\Tab #\Newline)))
+															(unwanted-chars (list #\Space #\Tab #\Newline)))
 	(and s (string/= s "") (if whitespace-check
 														 (string/= "" (servo.string-replace-chars s unwanted-chars))
-													 t)
+														 t)
 			 ;; for returning t if valid (not number)
 			 t))
+
+(defun servo.run-with-log (function &key (params nil params-supplied-p) (stream *standard-output*))
+	(format stream "~&~a Start ~a~%" (time.get-full-human-time) function)
+	(let ((successful t))
+		(handler-case
+				(if params-supplied-p
+						(apply function params)
+						(funcall function))
+			(error (e)
+				(progn
+					(format stream "~&~a ERROR: ~a~%" (time.get-full-human-time) e)
+					(setf successful nil))))
+		(if successful
+			(format stream "~&~a Finish ~a~%" (time.get-full-human-time) function)
+			(format stream "~&~a ~a finished with error~%" (time.get-full-human-time) function))))

@@ -74,3 +74,9 @@
       (cl-fad:copy-file product-path (format nil "~aproducts.bkp" dropbox-backup-path) :overwrite t)
       (cl-fad:copy-file group-path   (format nil "~agroups.bkp" dropbox-backup-path) :overwrite t))))
 
+
+(defun backup.last-product-backup-pathname ()
+	(car (last (cl-fad:list-directory "/home/eviltosha/eshop-logs/backups/products/"))))
+
+(defun backup.last-group-backup-pathname ()
+	(car (last (cl-fad:list-directory "/home/eviltosha/eshop-logs/backups/groups/"))))

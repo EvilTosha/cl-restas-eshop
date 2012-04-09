@@ -109,7 +109,7 @@
 (defun time.get-full-human-time ()
   (multiple-value-bind (second minute hour date month year) (time.get-decode-timestamp)
     (format nil
-            "~a.~2,'0d.~2,'0d ~a:~a:~a"
+            "~a.~2,'0d.~2,'0d ~2,'0d:~2,'0d:~2,'0d"
             year month date hour minute second)))
 
 ;; декодирование даты вида 26.08.2011

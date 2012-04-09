@@ -1,6 +1,6 @@
 ;;; -*- Mode: LISP; Syntax: COMMON-LISP; Package: CL-CRON;
 
-;;;    Copyright (c) 2009, Mackram Ghassan Raydan 
+;;;    Copyright (c) 2009, Mackram Ghassan Raydan
 ;;;    This file is part of cl-cron.
 
 ;;;    cl-cron is free software: you can redistribute it and/or modify
@@ -20,10 +20,10 @@
 (in-package :cl-cron)
 
 
-(defparameter *day-list* 
+(defparameter *day-list*
   '(:monday :tuesday :wednesday :thursday :friday :saturday :sunday))
 
-(defparameter *month-list* 
+(defparameter *month-list*
   '(:january :february :march :april :may :june :july :august :september :october :november :december))
 
 
@@ -37,7 +37,7 @@
    (function-symbol :accessor job-func :initarg :job-func)))
 
 
-(defparameter *cron-jobs-hash* (make-hash-table) 
+(defparameter *cron-jobs-hash* (make-hash-table)
   "contains a hash of all corn-job objects that need to be run")
 
 (defparameter *cron-dispatcher-thread* nil
@@ -52,12 +52,12 @@
 (defparameter *cron-log-file* "./cl-cron.log"
   "a parameter to set the cron file log location.")
 
-(defun make-cron-job (function-symbol &key (minute :every) (step-min 1) (hour :every) (step-hour 1) (day-of-month :every) 
+(defun make-cron-job (function-symbol &key (minute :every) (step-min 1) (hour :every) (step-hour 1) (day-of-month :every)
 		      (step-dom 1) (month :every) (step-month 1) (day-of-week :every) (step-dow 1) (boot-only nil) (hash-key nil))
   "creates a new instance of a cron-job object and appends it to the cron-jobs-list after processing its time. Note that if you wish to use multiple values for each parameter you need to provide a list of numbers or use the gen-list function. You can not have a list of symbols when it comes to month or day-of-week. Please note that as by ANSI Common Lisp for the month variable the possible values are between 1 and 12 inclusive with January=1 and for day of week the possible values are between 0 and 6 with Monday=0. Returns the hash-key"
   (if (eql hash-key nil) (setf hash-key (gensym "cron")))
   (setf (gethash hash-key *cron-jobs-hash*)
-	(make-instance 'cron-job 
+	(make-instance 'cron-job
 		       :job-minute (get-minutes minute step-min)
 		       :job-hour (get-hours hour step-hour)
 		       :job-dom (get-days-of-month day-of-month step-dom)
@@ -84,15 +84,27 @@
 	 (member umonth (job-month job))
 	 (not (job-@boot job)))))
 
+(defun run-cron-thread (func &key (name (format nil "Cron-thread-~a" (gensym))) job-key)
+	"runs thred with specified function and name/key(for jobs)"
+	(let ((thread-name (if job-key
+												 (format nil "Cron-job-~a" job-key)
+												 name)))
+		(bordeaux-threads:make-thread func :name thread-name)))
+
+(defun run-job-with-log (job-func key &optional (log-file *cron-log-file*))
+	(when log-file
+		(with-open-file (stream log-file :direction :output :if-exists :append :if-does-not-exist :create)
+			(eshop::servo.run-with-log #'cl-cron::run-cron-thread :params (list job-func :job-key key) :stream stream))))
+
 (defun run-job-if-time (key job)
   "runs the cron-job object in a separate thread if it is its time"
   (if (time-to-run-job job)
-      (bordeaux-threads:make-thread (job-func job))))
+      (run-job-with-log (job-func job) key)))
 
 (defun run-job-if-boot (key job)
   "runs the cron-job object in a separate thread if it is a boot job"
   (if (job-@boot job)
-      (bordeaux-threads:make-thread (job-func job))))
+      (run-job-with-log (job-func job) key)))
 
 (defun cron-dispatcher ()
   "function that dispatches the jobs that are ready to be run"
@@ -111,12 +123,12 @@
 	 (if *cron-load-file*
 	     (load *cron-load-file* :verbose nil :print nil :if-does-not-exist nil))
 	 (maphash #'run-job-if-boot *cron-jobs-hash*)
-	 (setf *cron-dispatcher-thread* (bordeaux-threads:make-thread #'cron-dispatcher)))))
+	 (setf *cron-dispatcher-thread* (run-cron-thread #'cron-dispatcher)))))
 
 (defun restart-cron()
   "function that starts up cron but without loading the file or running any of the boot only cron jobs in the list"
   (if (not *cron-dispatcher-thread*)
-      (setf *cron-dispatcher-thread* (bordeaux-threads:make-thread #'cron-dispatcher))
+      (setf *cron-dispatcher-thread* (run-cron-thread #'cron-dispatcher))
       (log-cron-message "You attempted to call restart-cron while cron is already loaded and running...")))
 
 (defun stop-cron ()
@@ -151,7 +163,7 @@
 	    (let ((expanded-list (expand-internal-lists unit)))
 	      (if (and (mapcan #'numberp expanded-list))
 		  (elements-within-step expanded-list step-unit)
-		  (log-cron-message (format nil "~A could not expand the list of data you provided since it contained symbols." ',tag-name)))))	      
+		  (log-cron-message (format nil "~A could not expand the list of data you provided since it contained symbols." ',tag-name)))))
 	   ((and (consp unit) (mapcan #'numberp unit))
 	    (elements-within-step unit step-unit))
 	   (t
@@ -161,7 +173,7 @@
 (def-cron-get-methods get-hours (gen-list 0 23))
 (def-cron-get-methods get-days-of-month (gen-list 1 31))
 (def-cron-get-methods get-months (gen-list 1 12) t *month-list* 1)
-(def-cron-get-methods get-days-of-week (gen-list 0 6) t *day-list*) 
+(def-cron-get-methods get-days-of-week (gen-list 0 6) t *day-list*)
 
 (defun gen-list (start-list end-list &optional (increment 1))
   "functions that returns a list of numbers starting with start-list and ending with end-list"
@@ -171,27 +183,20 @@
 
 (defun min-list (lst)
   "finds the minimum element of a list"
-  (cond ((endp (cdr lst))
-	 (car lst))
-	(t
-	 (min (car lst) (min-list (cdr lst))))))
+  (apply #'min lst))
 
 (defun max-list (lst)
   "finds the minimum element of a list"
-  (cond ((endp (cdr lst))
-	 (car lst))
-	(t
-	 (max (car lst) (max-list (cdr lst))))))
-	 
+	(apply #'max lst))
+
 (defun expand-internal-lists (lst)
   "function that takes a list and returns a list but with all internal lists expanded"
-  (if (null lst)
-      nil
-      (let ((elt (car lst))
-	    (rest (expand-internal-lists (cdr lst))))
-	(if (consp elt)
-	    (append elt rest)
-	    (cons elt rest)))))
+  (when lst
+		(let ((elt (car lst))
+					(rest (expand-internal-lists (cdr lst))))
+			(if (consp elt)
+					(append elt rest)
+					(cons elt rest)))))
 
 (defun elements-within-step (lst step)
   "function that returns a list of elements that are within a step from each other starting with the first element in the list"
@@ -201,14 +206,14 @@
   (let ((seconds (decode-universal-time time)))
     (- 60 seconds)))
 
-	    
+
 (defun log-cron-message (message &optional (type "error"))
   "Simply log the message sent with type as well"
-  (if *cron-log-file*
+  (when *cron-log-file*
       (with-open-file (out *cron-log-file* :direction :output :if-exists :append :if-does-not-exist :create)
-	(format out "[~A] ~A ~1%" type message))))
-			
+				(format out "[~A] ~A ~1%" type message))))
 
 
 
-  
+
+
