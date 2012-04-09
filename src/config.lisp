@@ -61,6 +61,7 @@
 	;; START_OPTIONS section
 	(config.config-option-processing "START_OPTIONS" "release" "bool")
 	(config.config-option-processing "START_OPTIONS" "dbg-on" "bool")
+	(config.config-option-processing "START_OPTIONS" "catch-errors" "bool")
 	(config.config-option-processing "START_OPTIONS" "swank-port" "int")
 	(config.config-option-processing "START_OPTIONS" "server-port" "int")
 	;; PATHS section

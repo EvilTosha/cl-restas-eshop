@@ -76,7 +76,7 @@
 
 
 (defun backup.last-product-backup-pathname ()
-	(car (last (cl-fad:list-directory "/home/eviltosha/eshop-logs/backups/products/"))))
+	(merge-pathnames #P"products.bkp" (config.get-option "PATHS" "path-to-last-backup")))
 
 (defun backup.last-group-backup-pathname ()
-	(car (last (cl-fad:list-directory "/home/eviltosha/eshop-logs/backups/groups/"))))
+	(merge-pathnames #P"groups.bkp" (config.get-option "PATHS" "path-to-last-backup")))

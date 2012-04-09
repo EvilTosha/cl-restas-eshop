@@ -1,8 +1,10 @@
 [START_OPTIONS]
 release = 0
 dbg-on = 1
+catch-errors = 0
 swank-port = 4005
 server-port = 8080
+
 
 [PATHS]
 path-to-src = cl-restas-eshop/src
