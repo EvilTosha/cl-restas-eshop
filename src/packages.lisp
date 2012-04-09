@@ -11,8 +11,10 @@
           :cl-fad)
   (:import-from :arnesi :parse-float)
   (:import-from :alexandria :read-file-into-string)
-  (:export :*eshop-config*
-					 :config.parse-config
+  (:export :config.parse-config
+					 :config.get-option
+					 :config.set-option
+					 :config.has-option-p
 					 :compile-templates
 					 :name
 					 :unserialize
