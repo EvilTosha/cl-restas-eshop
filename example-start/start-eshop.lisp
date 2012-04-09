@@ -43,9 +43,11 @@
                                       "slamly@gmail.com"))
 
 ;; запуск Restas
-(restas:start '#:eshop :port *server-port*)
-(restas:debug-mode-on)
-(setf hunchentoot:*catch-errors-p* nil)
+(restas:start '#:eshop :port (eshop:config.get-option "START_OPTIONS" "server-port"))
+(if (eshop:config.get-option "START_OPTIONS" "dbg-on")
+		(restas:debug-mode-on)
+		(restas:debug-mode-off))
+(setf hunchentoot:*catch-errors-p* (eshop:config.get-option "START_OPTIONS" "catch-errors"))
 
 
 
