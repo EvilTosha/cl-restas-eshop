@@ -394,7 +394,7 @@
                   (format t "~& (equal key \"~a\")" (key v))))
    (groups group)))
 
-(mapcar #'(lambda (v)
-            (yml.test-groups (gethash v (storage *global-storage*))))
-        (list "melkaya-bitovaya-tehnika"
-              "krasota-i-zdorovie"))
+;; (mapcar #'(lambda (v)
+;;             (yml.test-groups (gethash v (storage *global-storage*))))
+;;         (list "melkaya-bitovaya-tehnika"
+;;               "krasota-i-zdorovie"))
