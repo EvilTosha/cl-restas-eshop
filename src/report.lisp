@@ -69,16 +69,18 @@
   ))
 
 (defun write-groups (stream)
-  (format stream "~a;~a;~a;~a;~%"
+  (format stream "~a;~a;~a;~a;~a;~a;~%"
           "Название категории"
           "url страницы"
           "Active"
-          "seo-text")
+          "seo-text"
+          "продуктов"
+          "активных")
   (maphash #'(lambda (k v)
                (declare (ignore k))
                (when (equal (type-of v)
                               'group)
-                 (format stream "\"~a\";http://www.320-8080.ru/~a;~a;~a;~%"
+                 (format stream "\"~a\";http://www.320-8080.ru/~a;~a;~a;~a;~a;~%"
                            (stripper (name v))
                            (key v)
                            (if (active v)
@@ -87,7 +89,9 @@
                            (if (and (not (null (seo-text v)))
                                        (not (string= "" (stripper (seo-text v)))))
                                   "yes"
-                                  "no"))
+                                  "no")
+                           (length (products v))
+                           (length (remove-if-not #'active (products v))))
                    ))
            (storage *global-storage*)))
 
@@ -147,12 +151,14 @@
 
 
 (defun write-vendors (stream)
-  (format stream "~a;~a;~a;~a;~a;~%"
+  (format stream "~a;~a;~a;~a;~a;~a;~a;~%"
           "Название категории"
           "Брэнд"
           "url страницы"
           "Active"
-          "seo-text")
+          "seo-text"
+          "продуктов"
+          "активных")
   (maphash #'(lambda (k v)
                (declare (ignore k))
                (when (and (equal (type-of v)
@@ -161,17 +167,25 @@
 
                  (maphash #'(lambda (vendor num)
                               (declare (ignore num))
-                              (format stream "\"~a\";\"~a\";http://www.320-8080.ru/~a?vendor=~a;~a;~a;~%"
-                                      (stripper (name v))
-                                      (stripper vendor)
-                                      (hunchentoot:url-encode (key v))
-                                      (hunchentoot:url-encode (stripper vendor))
-                                       "yes"
-                                       (let ((desc (gethash (string-downcase vendor) (vendors-seo v))))
-                                         (if (and (not (null desc))
-                                                  (not (string= "" desc)))
-                                             "yes"
-                                             "no"))))
+                              ;; (print (key v))
+                              (let ((products
+                                     (remove-if-not #'(lambda (p)
+                                                        (vendor-filter-controller p (list :vendor vendor)))
+                                                    (products v))))
+                                (format stream "\"~a\";\"~a\";http://www.320-8080.ru/~a?vendor=~a;~a;~a;~a;~a;~%"
+                                        (stripper (name v))
+                                        (stripper vendor)
+                                        (hunchentoot:url-encode (key v))
+                                        (hunchentoot:url-encode (stripper vendor))
+                                        "yes"
+                                        (let ((desc (gethash (string-downcase vendor) (vendors-seo v))))
+                                          (if (and (not (null desc))
+                                                   (not (string= "" desc)))
+                                              "yes"
+                                              "no"))
+                                        (length products)
+                                        (length (remove-if-not #'active products)))
+                                      ))
                            ;; (producersall (make-producers v)))
                            (storage.get-vendors (storage.get-filtered-products v #'atom)))
                  ))
@@ -244,12 +258,12 @@
                                "Siteprice > Price"))))
 
 
-                          ;; (setf (active (gethash "160420" (storage *global-storage*))) nil)
-                          ;; (serialize (gethash "160420" (storage *global-storage*)))
-                          ;; (setf (active (gethash "165359" (storage *global-storage*))) nil)
-                          ;; (serialize (gethash "165359" (storage *global-storage*)))
-                          ;; (setf (active (gethash "165360" (storage *global-storage*))) nil)
-                          ;; (serialize (gethash "165360" (storage *global-storage*)))
+;; (setf (active (gethash "160420" (storage *global-storage*))) nil)
+;; (serialize (gethash "160420" (storage *global-storage*)))
+;; (setf (active (gethash "165359" (storage *global-storage*))) nil)
+;; (serialize (gethash "165359" (storage *global-storage*)))
+;; (setf (active (gethash "165360" (storage *global-storage*))) nil)
+;; (serialize (gethash "165360" (storage *global-storage*)))
 ;; (setf (active (gethash "157499" (storage *global-storage*))) nil)
 ;; (serialize (gethash "157499" (storage *global-storage*)))
 ;; (setf (active (gethash "153599" (storage *global-storage*))) nil)
