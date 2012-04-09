@@ -354,7 +354,7 @@
                                  ))
 													;; else - this is ordinal
 													(leftmenu:ordinal (list :divider (notevery #'(lambda (divider)
-																																				 (string/= (key val) divider))
+						  																													 (string/= (key val) divider))
 																																		 divider-list)
 																									:key  (key val)
 																									:name (name val)
@@ -411,7 +411,7 @@
    (:name active              :initform nil                             :disabled nil   :type bool                      :serialize t)
    (:name empty               :initform nil                             :disabled t     :type bool                      :serialize nil)
    (:name order               :initform 1000                            :disabled nil   :type int                       :serialize t)
-   (:name ymlshow             :initform nil                             :disabled t     :type bool                      :serialize t)
+   (:name ymlshow             :initform nil                             :disabled nil   :type bool                      :serialize t)
    (:name pic                 :initform nil                             :disabled nil   :type string                    :serialize t)
    (:name icon                :initform nil                             :disabled nil   :type string                    :serialize t)
    (:name delivery-price      :initform nil                             :disabled nil   :type int                       :serialize t)
