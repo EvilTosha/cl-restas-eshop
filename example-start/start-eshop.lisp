@@ -3,20 +3,34 @@
 (defvar *swank-port* 4005)
 (defvar *server-port* 8080)
 
+(defparameter *path-to-libs* (sb-unix::posix-getenv "LIBS_PATH"))
+(defparameter *path-to-eshop* (sb-unix::posix-getenv "ESHOP_PATH"))
+(defparameter *path-to-config* (sb-unix::posix-getenv "CONFIG_PATH"))
+
 ;; регестрация путей для asdf
-(load (format nil "~a~a/~a" (user-homedir-pathname) *path-to-eshop-home* "load.lisp"))
-(load.register-libs *path-to-eshop-home*)
+(load (format nil "~a~a" *path-to-eshop* "load.lisp"))
+(load.register-libs)
 
-;; старт сервера swank
+
+;; load swank libs
 (asdf:load-system :swank)
-;; для того чтобы загружался esrap
-(load (format nil "~a~a~a" (user-homedir-pathname) "cl-restas-eshop/" #P"libs/slime-archimag/contrib/swank-indentation.lisp"))
 
+;; для того чтобы загружался esrap
+(load (format nil "~a~a" *path-to-libs* "slime-archimag/contrib/swank-indentation.lisp"))
+
+;; load eshop
+(asdf:load-system :eshop)
+
+;; parse config
+(eshop:config.parse-config *path-to-config*)
+
+;; swank server start
 (print swank::*application-hints-tables*)
 (setq swank:*use-dedicated-output-stream* nil)
-(swank:create-server :coding-system "utf-8-unix" :dont-close t :port *swank-port*)
-
-(asdf:load-system :eshop)
+(swank:create-server :coding-system "utf-8-unix"
+										 :dont-close t
+										 :port (py-configparser:get-option eshop:*eshop-config*
+																											 "START_OPTIONS" "swank-port"))
 
 ;; нумерация заказов
 (setf eshop::*order-id* 1)

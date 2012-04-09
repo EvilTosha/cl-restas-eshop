@@ -1,10 +1,11 @@
 (defsystem eshop
-    :depends-on (#:restas #:cl-json #:arnesi #:closure-template #:log5)
-    :components
-    ((:module "src"
+	:depends-on (#:restas #:cl-json #:arnesi #:closure-template #:log5 #:py-configparser)
+	:components
+	((:module "src"
               :components
-              ((:file "packages")
-               (:file "time" :depends-on ("packages"))
+							((:file "packages")
+							 (:file "config" :depends-on ("packages"))
+							 (:file "time" :depends-on ("config"))
 							 (:file "eshop-config" :depends-on ("time"))
                (:file "errors" :depends-on ("eshop-config"))
                (:file "log" :depends-on ("errors"))
@@ -49,4 +50,7 @@
                                      (:file "cl-cron"))
                         :depends-on ("new-classes"))
                (:file "cron" :depends-on ("cl-cron"))
-               ))))
+               ))
+	 (:module "content" :depends-on ("src")
+						:components
+						((:file "content-load")))))
