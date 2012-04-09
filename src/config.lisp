@@ -1,5 +1,17 @@
 (in-package #:eshop)
 
+(defparameter *eshop-config* (make-instance 'py-configparser:config))
+
+(defun config.get-option (section option)
+	;; for correct work not only with strings
+	(py-configparser:get-option *eshop-config* section option :expand nil))
+
+(defun config.set-option (section option value)
+	(py-configparser:set-option *eshop-config* section option value))
+
+(defun config.has-option-p (section option)
+	(py-configparser:has-option-p *eshop-config* section option))
+
 (defun config.path-processing (path-string &optional check-existance)
 	"Check if file at path-string exists, and convert to pathname.
    If path-string starts with /, function assumes that it's global name, otherwise path from homedir"
@@ -20,21 +32,23 @@
 (defun config.int-processing (int-string)
 	(parse-integer int-string))
 
-(defparameter *eshop-config* (make-instance 'py-configparser:config))
+(defun config.string-processing (string)
+	string)
 
 (defun config.config-option-processing (section option type)
-	(if (py-configparser:has-option-p *eshop-config* section option)
+	(if (config.has-option-p section option)
 			(progn
 				(format t "Processing ~a/~a option..." section option)
-				(py-configparser:set-option *eshop-config* section option
-																		(let ((option-value
-																					 (py-configparser:get-option *eshop-config* section option)))
-																		(cond
-																			((string= type "path") (config.path-processing option-value))
-																			((string= type "bool") (config.bool-processing option-value))
-																			((string= type "int") (config.int-processing option-value)))))
-				(format t "   ~a~%" (py-configparser:get-option *eshop-config* section option)))
-				;; option doesn't exist
+				(config.set-option section option
+													 (let ((option-value
+																	(config.get-option section option)))
+														 (cond
+															 ((string= type "path") (config.path-processing option-value))
+															 ((string= type "bool") (config.bool-processing option-value))
+															 ((string= type "int") (config.int-processing option-value))
+															 ((string= type "string") (config.string-processing option-value)))))
+				(format t "   ~a~%" (config.get-option section option)))
+			;; option doesn't exist
 			(error (format nil "Option ~a/~a doesn't exist" section option))))
 
 

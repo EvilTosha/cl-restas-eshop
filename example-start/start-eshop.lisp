@@ -29,8 +29,7 @@
 (setq swank:*use-dedicated-output-stream* nil)
 (swank:create-server :coding-system "utf-8-unix"
 										 :dont-close t
-										 :port (py-configparser:get-option eshop:*eshop-config*
-																											 "START_OPTIONS" "swank-port"))
+										 :port (eshop:config.get-option "START_OPTIONS" "swank-port"))
 
 ;; нумерация заказов
 (setf eshop::*order-id* 1)
@@ -48,16 +47,9 @@
 (restas:debug-mode-on)
 (setf hunchentoot:*catch-errors-p* nil)
 
-;; (eshop::restore-skls-from-files)
-;; ;; (eshop::articles.restore)
-;; (eshop::main-page.restore)
-;; ;; (eshop::restore-from-files)
-;; ;; (eshop::static-pages.restore)
-;; (let ((*package* (find-package :eshop)))
-;;   (eshop::new-classes.unserialize-all))
-;;   ;;(eshop::new-classes.dbg-unserialize-products))
-;; (eshop::static-pages.restore)
 
+
+;; content
 
 (eshop::restore-skls-from-files)
 (eshop::articles.restore)
