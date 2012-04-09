@@ -52,16 +52,25 @@
 
 
 ;; content
-
-(eshop::restore-skls-from-files)
-(eshop::articles.restore)
-(eshop::main-page.restore)
-(let ((*package* (find-package :eshop)))
-  (eshop::new-classes.unserialize-all)
-  (eshop::new-classes.unserialize-optgroups
-   (pathname (format nil "~atest/topts2.bkp" (user-homedir-pathname)))))
-(eshop::static-pages.restore)
-(eshop::gateway.restore-history)
-(eshop::report.set-salefilter)
-(eshop::dtd)
-(eshop::groupd.restore)
+;; (eshop::restore-from-files)
+;; (eshop::static-pages.restore)
+;; (let ((*package* (find-package :eshop)))
+;;   (eshop::restore-skls-from-files)
+;;   (eshop::articles.restore)
+;;   (eshop::main-page.restore)
+;;   (eshop::new-classes.unserialize-all)
+;;   (eshop::static-pages.restore)
+;;   (eshop::gateway.restore-history)
+;;   (eshop::report.set-salefilter)
+;;   (eshop::dtd)
+;;   (eshop::groupd.restore)
+;;   ;; (groupd.man.restore)
+;;   ;; (groupd.woman.restore)
+;;   ;; (report.set-man-salefilter)
+;;   ;; (report.set-woman-salefilter)
+;;   ;; (eshop::create-bestprice-filter (gethash "noutbuki" (eshop::storage eshop::*global-storage*)))
+;;   ;; (eshop::create-bestprice-filter (gethash "netbuki" (eshop::storage eshop::*global-storage*)))
+;;   (eshop::create-ipad3-filter (gethash "planshetnie-komputery" (eshop::storage eshop::*global-storage*)))
+;;   ;; making timer for backups
+;;   (cl-cron:make-cron-job #'backup.serialize-all :minute 0 :hour 17)
+;;   (cl-cron:start-cron))
