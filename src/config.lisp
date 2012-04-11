@@ -20,7 +20,7 @@
 														(format nil "~a~a" (user-homedir-pathname) path-string)))))
 		(when (and check-existance (not (file-exists-p path)))
 			(error (format nil "File ~a doesn't exist" path)))
-		(ensure-directories-exist path)
+		;; (ensure-directories-exist path)
 		path))
 
 (defun config.bool-processing (bool-string)
@@ -73,3 +73,5 @@
 	(config.config-option-processing "PATHS" "path-to-logs" "path")
 	(config.config-option-processing "PATHS" "path-to-backups" "path")
 	t)
+
+(config.parse-config)

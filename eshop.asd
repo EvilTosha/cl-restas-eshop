@@ -14,8 +14,7 @@
 						 (:file "routes" :depends-on ("servo"))
 						 (:file "render" :depends-on ("routes"))
 						 (:file "cart" :depends-on ("render"))
-						 (:file "generics" :depends-on ("cart"))
-						 (:file "search" :depends-on ("generics"))
+						 (:file "search" :depends-on ("cart"))
 						 (:file "xls" :depends-on ("search"))  ;;необходима xls2csv | sudo apt-get install catdoc
 						 (:file "yml" :depends-on ("xls"))
 						 (:file "articles" :depends-on ("yml"))
@@ -31,8 +30,7 @@
 						 (:file "filters" :depends-on ("storage"))
 						 (:file "oneclickcart" :depends-on ("filters"))
 						 (:file "images" :depends-on ("oneclickcart")) ;; imagemagic
-						 (:file "spike" :depends-on ("images"))
-						 (:file "static-pages" :depends-on ("spike"))
+						 (:file "static-pages" :depends-on ("images"))
 						 (:file "list-filters" :depends-on ("static-pages"))
 						 (:file "object-fields" :depends-on ("list-filters"))
 						 (:file "backup" :depends-on ("object-fields"))
@@ -46,4 +44,4 @@
 																	 (:file "cl-cron"))
 											:depends-on ("new-classes"))
 						 (:file "cron" :depends-on ("cl-cron"))
-               ))))
+						 ))))

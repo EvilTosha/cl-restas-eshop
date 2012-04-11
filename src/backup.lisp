@@ -1,7 +1,6 @@
 (in-package #:eshop)
 
-;;; Backup functions and macros'
-
+;;; Backup functions and macros
 
 (defmacro backup.make-serialize-method (name class-fields)
   "Macros for creating serialize methods"

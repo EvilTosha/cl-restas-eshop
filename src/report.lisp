@@ -237,40 +237,6 @@
 
 
 
-
-(defun error-price-report ()
-  (let ((products (remove-if-not #'(lambda (v) (< (price v) (siteprice v)))
-                                 (remove-if-not #'eshop::active (wolfor-stuff::get-products-list)))))
-    (when products
-      (gateway-send-error-mail (list "web_design@alpha-pc.com"
-                                     "wolforus@gmail.com"
-                                     "slamly@gmail.com")
-                               (format nil "~&Цена на сайте выше цены в магазине: ~a<br/>~{~&~a<br/>~}"
-                                       (length products)
-                                       (mapcar #'(lambda (v)
-                                                   (format nil "~&<a href=\"http://www.320-8080.ru/~a\">~a</a>:~a | siteprice:~a price:~a"
-                                                           (articul v)
-                                                     (articul v)
-                                                     (name v)
-                                                     (siteprice v)
-                                                     (price v)))
-                                               products))
-                               "Siteprice > Price"))))
-
-
-;; (setf (active (gethash "160420" (storage *global-storage*))) nil)
-;; (serialize (gethash "160420" (storage *global-storage*)))
-;; (setf (active (gethash "165359" (storage *global-storage*))) nil)
-;; (serialize (gethash "165359" (storage *global-storage*)))
-;; (setf (active (gethash "165360" (storage *global-storage*))) nil)
-;; (serialize (gethash "165360" (storage *global-storage*)))
-;; (setf (active (gethash "157499" (storage *global-storage*))) nil)
-;; (serialize (gethash "157499" (storage *global-storage*)))
-;; (setf (active (gethash "153599" (storage *global-storage*))) nil)
-;; (serialize (gethash "153599" (storage *global-storage*)))
-
-
-
 (defparameter *special-products* (make-hash-table :test #'equal))
 
 

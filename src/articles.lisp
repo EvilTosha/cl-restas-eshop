@@ -84,12 +84,9 @@
 
 ;;шаблоны
 (defun articles.update ()
-  (mapcar #'(lambda (fname)
-              (let ((pathname (pathname (format nil "~a/~a" *path-to-tpls* fname))))
-                (closure-template:compile-template :common-lisp-backend pathname)))
-          '("index.html"
-            "articles.soy"
-            "footer.html")))
+	(mapcar #'servo.compile-soy (list "index.html"
+																		"articles.soy"
+																		"footer.html")))
 
 
 (defun articles.sort (unsort-articles)

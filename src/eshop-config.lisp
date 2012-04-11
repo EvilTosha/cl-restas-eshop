@@ -8,8 +8,6 @@
 (export '*path-to-articles*)
 (defparameter *path-to-static-pages* (format nil "~aDropbox/content/static-pages" (user-homedir-pathname)))
 (export '*path-to-static-pages*)
-(defparameter *path-to-tpls* (format nil "~aDropbox/httpls/release" (user-homedir-pathname)))
-(export '*path-to-tpls*)
 (defparameter *path-to-bkps* (format nil "~aDropbox/htbkps" (user-homedir-pathname)))
 (export '*path-to-bkps*)
 (defparameter *path-to-conf* (format nil "~aDropbox/htconf" (user-homedir-pathname)))
@@ -53,7 +51,7 @@
 
 (defun compile-templates ()
   (mapcar #'(lambda (fname)
-              (let ((pathname (pathname (format nil "~a/~a" *path-to-tpls* fname))))
+              (let ((pathname (merge-pathnames (pathname fname) (config.get-option "PATHS" "path-to-templates"))))
                 (wlog (format nil "~&compile-template: ~a" pathname))
                 (closure-template:compile-template :common-lisp-backend pathname)))
           '(

@@ -36,8 +36,5 @@
 
 ;;обновление шаблонов для отображения
 (defun static-pages.update ()
-  (mapcar #'(lambda (fname)
-              (let ((pathname (pathname (format nil "~a/~a" *path-to-tpls* fname))))
-                (closure-template:compile-template :common-lisp-backend pathname)))
-          '("index.html")))
+	(mapcar #'servo.compile-soy (list "index.html")))
 

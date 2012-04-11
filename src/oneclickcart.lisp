@@ -1,13 +1,9 @@
 (in-package #:eshop)
 
  ;;обновление страницы
- (defun oneclickcart-update ()
-   (mapcar #'(lambda (fname)
-               (let ((pathname (pathname (format nil "~a/~a" *path-to-tpls* fname))))
-                 (closure-template:compile-template :common-lisp-backend pathname)))
-           '("oneclickcart.soy"
-             "buttons.soy")))
-
+(defun oneclickcart-update ()
+	(mapcar #'servo.compile-soy (list "oneclickcart.soy"
+																		"buttons.soy")))
 
 
 (defun oneclick-sendmail (phone articul name email)

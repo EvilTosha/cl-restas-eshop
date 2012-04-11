@@ -751,7 +751,7 @@
 
 (defun servo.compile-soy (&rest tmpl-name)
   (mapcar #'(lambda (fname)
-              (let ((pathname (pathname (format nil "~a/~a" *path-to-tpls* fname))))
+              (let ((pathname (merge-pathnames (pathname fname) (config.get-option "PATHS" "path-to-templates"))))
                 (closure-template:compile-template :common-lisp-backend pathname)))
           tmpl-name))
 

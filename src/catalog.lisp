@@ -11,10 +11,7 @@
 
 ;;шаблоны
 (defun catalog.catalog-update ()
-  (mapcar #'(lambda (fname)
-              (let ((pathname (pathname (format nil "~a/~a" *path-to-tpls* fname))))
-                (closure-template:compile-template :common-lisp-backend pathname)))
-          '("new-catalog.soy")))
+	(mapcar #'servo.compile-soy (list "new-catalog.soy")))
 
 (defun catalog.sitemap-entity (error404  &optional col1 col2)
   (soy.new-catalog:catalog-main
