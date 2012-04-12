@@ -52,8 +52,6 @@
 
 
 ;; content
-(eshop::restore-from-files)
-(eshop::static-pages.restore)
 (let ((*package* (find-package :eshop)))
   (eshop::restore-skls-from-files)
   (eshop::articles.restore)
@@ -72,5 +70,5 @@
   ;; (eshop::create-bestprice-filter (gethash "netbuki" (eshop::storage eshop::*global-storage*)))
   (eshop::create-ipad3-filter (gethash "planshetnie-komputery" (eshop::storage eshop::*global-storage*)))
   ;; making timer for backups
-  (cl-cron:make-cron-job #'backup.serialize-all :minute 0 :hour 17)
+  (cl-cron:make-cron-job #'eshop::backup.serialize-all :minute 0 :hour 17)
   (cl-cron:start-cron))
