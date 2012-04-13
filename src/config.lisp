@@ -65,16 +65,18 @@
 	(config.config-option-processing "START_OPTIONS" "swank-port" "int")
 	(config.config-option-processing "START_OPTIONS" "server-port" "int")
 	;; PATHS section
-	(config.config-option-processing "PATHS" "path-to-src" "path")
 	(config.config-option-processing "PATHS" "path-to-last-backup" "path")
 	(config.config-option-processing "PATHS" "path-to-templates" "path")
 	(config.config-option-processing "PATHS" "path-to-articles" "path")
 	(config.config-option-processing "PATHS" "path-to-pics" "path")
 	(config.config-option-processing "PATHS" "path-to-static-pages" "path")
-	(config.config-option-processing "PATHS" "path-to-sitemap" "path")
-	(config.config-option-processing "PATHS" "path-to-conf" "path")
 	(config.config-option-processing "PATHS" "path-to-dropbox" "path")
 	(config.config-option-processing "PATHS" "path-to-logs" "path")
 	(config.config-option-processing "PATHS" "path-to-backups" "path")
+	;; CRITICAL section
+	;; these paths should be different on developer and release servers
+	(config.config-option-processing "CRITICAL" "path-to-conf" "path")
+	(config.config-option-processing "CRITICAL" "path-to-sitemap" "path")
+	(config.config-option-processing "CRITICAL" "path-to-dropbox-backup" "path")
 	t)
 

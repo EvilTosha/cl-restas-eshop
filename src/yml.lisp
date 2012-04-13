@@ -383,7 +383,7 @@
 
 
 (defun create-yml-file ()
-  (let ((filename (format nil "~ayml.xml" (config.get-option "PATHS" "path-to-conf"))))
+  (let ((filename (format nil "~ayml.xml" (config.get-option "CRITICAL" "path-to-conf"))))
     (with-open-file
         (stream filename :direction :output :if-exists :supersede)
       (format stream "~a" (make-yml-data)))))
