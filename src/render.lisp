@@ -214,11 +214,6 @@
 (defun render.get-upsale-products (gr)
 	(get-randoms-from-list (remove-if-not #'active (products gr)) 4))
 
-;; test
-;; (defparameter *test-product-list* (list (gethash "172140" (storage *global-storage*))
-;; 																				(gethash "180437" (storage *global-storage*))
-;; 																				(gethash "178732" (storage *global-storage*))
-;; 																				(gethash "180532" (storage *global-storage*))))
 
 (defmethod render.prepare-upsale-full ((object group))
   (list :groupnameskl (sklonenie (name object) 2)
@@ -261,7 +256,7 @@
                                           value)
                                         " "
                                         (if (= 0 (yml.get-product-delivery-price1 object))
-                                            "(бесплатная доставка)"
+                                            " "
                                             (if (= 150 (yml.get-product-delivery-price1 object))
                                                 "(скидка на доставку 50%)")))
             :keyopts (render.get-catalog-keyoptions object)

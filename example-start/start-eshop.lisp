@@ -51,7 +51,6 @@
 
 
 ;; content
-;; (eshop::restore-from-files)
 (eshop::static-pages.restore)
 (let ((*package* (find-package :eshop)))
   (eshop::restore-skls-from-files)

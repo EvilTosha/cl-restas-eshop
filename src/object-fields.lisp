@@ -115,6 +115,21 @@
   (object-fields.string-field-serialize (object-fields.string-replace-newlines text)))
 
 
+;;textedit-raw, текстовое поле для правки кода
+(defun object-fields.textedit-raw-field-view (value name disabled)
+  (if disabled
+      (object-fields.string-field-view value name disabled)
+      (soy.class_forms:texteditor-raw
+       (list :name name :value value))))
+
+(defun object-fields.textedit-raw-field-get-data (string)
+	"Replace #\Replace (#\Newline remains)"
+  (servo.string-replace-chars string (list #\Return)))
+
+(defun object-fields.textedit-raw-field-serialize (text)
+  (object-fields.string-field-serialize (object-fields.string-replace-newlines text)))
+
+
 ;;textedit-hashtable, hashtable of texteditfields
 (defun object-fields.textedit-hashtable-field-view (value name disabled)
   (object-fields.string-field-view value name disabled))
