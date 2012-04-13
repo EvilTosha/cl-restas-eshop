@@ -4,17 +4,12 @@
 ;; PATH
 (defparameter *path-to-dropbox* (format nil "~aDropbox" (user-homedir-pathname)))
 (export '*path-to-dropbox*)
-(defparameter *path-to-conf* (format nil "~aDropbox/htconf" (user-homedir-pathname)))
-(export '*path-to-conf*)
 (defparameter *path-to-logs* (format nil "~aeshop-logs" (user-homedir-pathname)))
 (export '*path-to-logs*)
 
 ;; ORDER
 (defparameter *path-order-id-file* "order-id.txt")
 (export '*path-order-id-file*)
-;; sitemap
-(defparameter *path-sitemap* (format nil "~aDropbox/htconf" (user-homedir-pathname)))
-(export '*path-sitemap*)
 
 ;; Список email для рассылки писем от ошибках выгрузки 1с
 (defvar *conf.emails.gateway.warn* (list "Supplers@alpha-pc.com"
