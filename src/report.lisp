@@ -651,9 +651,9 @@
          (path-art  (ppcre:regex-replace  "(\\d{1,3})(\\d{0,})"  (format nil "~a" articul)  "\\1/\\1\\2" ))
          (pic (car (get-pics articul)))
          (dest-pic-path (format nil "~a/~a/~a/~a"
-                                *path-to-product-pics* "goods" path-art pic))
+                                (config.get-option "PATHS" "path-to-pics") "goods" path-art pic))
          (src-pic-path (format nil "~a/~a/~a/~a"
-                               *path-to-product-pics* "big" path-art pic)))
+                               (config.get-option "PATHS" "path-to-pics") "big" path-art pic)))
     (if pic
         (multiple-value-bind (w h) (images-get-dimensions dest-pic-path)
           (when (< 300 h)
@@ -769,7 +769,7 @@
     (mapcar #'(lambda (pic)
                 (let ((src-pic-path
                        (format nil "~a/~a/~a/~a"
-                               *path-to-product-pics* "big" path-art pic)))
+                               (config.get-option "PATHS" "path-to-pics") "big" path-art pic)))
                   ;; (multiple-value-bind (w h) (images-get-dimensions src-pic-path)
                   (with-open-file
                       (stream-file src-pic-path)
@@ -794,7 +794,7 @@
                               (mapcar #'(lambda (pic)
                                           (let ((src-pic-path
                                                  (format nil "~a/~a/~a/~a"
-                                                         *path-to-product-pics* "big" path-art pic)))
+                                                         (config.get-option "PATHS" "path-to-pics") "big" path-art pic)))
                                             ;; (multiple-value-bind (w h) (images-get-dimensions src-pic-path)
                                             (with-open-file
                                                 (stream-file src-pic-path)

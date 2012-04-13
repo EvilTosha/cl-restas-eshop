@@ -11,7 +11,7 @@
 
 ;;шаблоны
 (defun catalog.catalog-update ()
-	(mapcar #'servo.compile-soy (list "new-catalog.soy")))
+	(apply #'servo.compile-soy (list "new-catalog.soy")))
 
 (defun catalog.sitemap-entity (error404  &optional col1 col2)
   (soy.new-catalog:catalog-main

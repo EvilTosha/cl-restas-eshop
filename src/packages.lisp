@@ -15,10 +15,10 @@
 					 :config.get-option
 					 :config.set-option
 					 :config.has-option-p
-					 :compile-templates
+					 :servo.compile-soy
+					 ;;old
 					 :name
 					 :unserialize
-					 :*path-to-bkps*
 					 :*path-to-pics*
 					 :*path-to-conf*))
 

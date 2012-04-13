@@ -2,7 +2,7 @@
 
  ;;обновление страницы
 (defun oneclickcart-update ()
-	(mapcar #'servo.compile-soy (list "oneclickcart.soy"
+	(apply #'servo.compile-soy (list "oneclickcart.soy"
 																		"buttons.soy")))
 
 

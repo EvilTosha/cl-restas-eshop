@@ -25,7 +25,7 @@
       (wlog "START:RESTOR:static-pages")
       (sb-ext:gc :full t) ;; запуск сборщика мусора
       (let ((*storage-articles* (make-hash-table :test #'equal)))
-        (static-pages.process-dir *path-to-static-pages* "static")
+        (static-pages.process-dir (config.get-option "PATHS" "path-to-static-pages") "static")
         (setf t-storage *storage-articles*))
       (setf static-pages.*storage* t-storage)
       (maphash #'(lambda (k v)
@@ -36,5 +36,5 @@
 
 ;;обновление шаблонов для отображения
 (defun static-pages.update ()
-	(mapcar #'servo.compile-soy (list "index.html")))
+	(apply #'servo.compile-soy (list "index.html")))
 

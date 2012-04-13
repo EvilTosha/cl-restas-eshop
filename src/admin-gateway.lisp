@@ -68,7 +68,7 @@
 
 ;;шаблоны
 (defun admin-compile-templates ()
-	(mapcar #'servo.compile-soy (list "admin.soy"
+	(apply #'servo.compile-soy (list "admin.soy"
 																		"class_forms.soy"
 																		"admin-table.soy")))
 

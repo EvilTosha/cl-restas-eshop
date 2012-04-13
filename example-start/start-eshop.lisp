@@ -50,7 +50,6 @@
 (setf hunchentoot:*catch-errors-p* (eshop:config.get-option "START_OPTIONS" "catch-errors"))
 
 
-
 ;; content
 ;; (eshop::restore-from-files)
 (eshop::static-pages.restore)

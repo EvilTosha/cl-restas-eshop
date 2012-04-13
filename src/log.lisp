@@ -26,7 +26,7 @@
 
 (log5:start-sender 'debug-console
                    (log5:stream-sender :location *standard-output*)
-                   :category-spec '(or test debug-console)
+                   :category-spec '(or info test debug-console)
                    :output-spec '(log5:message))
 
 

@@ -11,7 +11,7 @@
 
 ;;обновление главной страницы
 (defun main-page-update ()
-	(mapcar #'servo.compile-soy (list  ;;"index.html"
+	(apply #'servo.compile-soy (list  ;;"index.html"
 															 "main-page.soy")))
 
 

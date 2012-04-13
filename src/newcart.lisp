@@ -19,7 +19,7 @@
 
 ;;шаблоны
 (defun newcart-compile-templates ()
-	(mapcar #'servo.compile-soy (list "index.html"
+	(apply #'servo.compile-soy (list "index.html"
 																		"newcart.soy"
 																		"footer.html")))
 
