@@ -30,22 +30,22 @@
     (pathname (concatenate 'string  *path-to-dropbox* "/htimgs/img/favicon.ico")))
 
 (restas:define-route request-route-static-robots ("/robots.txt")
-	(merge-pathnames "/robots.txt" (config.get-option "PATHS" "path-to-conf")))
+	(merge-pathnames "robots.txt" (config.get-option "PATHS" "path-to-conf")))
 
 (restas:define-route request-route-static-yml ("/yml.xml")
-  (merge-pathnames "/yml.xml" (config.get-option "PATHS" "path-to-conf")))
+  (merge-pathnames "yml.xml" (config.get-option "PATHS" "path-to-conf")))
 
 (restas:define-route request-route-static-sitemap ("/sitemap.xml")
-	(merge-pathnames "/sitemap.xml" (config.get-option "PATHS" "path-to-conf")))
+	(merge-pathnames "sitemap.xml" (config.get-option "PATHS" "path-to-conf")))
 
 (restas:define-route request-route-static-sitemap-index ("/sitemap-index.xml")
-	(merge-pathnames "/sitemap-index.xml" (config.get-option "PATHS" "path-to-conf")))
+	(merge-pathnames "sitemap-index.xml" (config.get-option "PATHS" "path-to-conf")))
 
 (restas:define-route request-route-static-sitemap1 ("/sitemap1.xml")
-	(merge-pathnames "/sitemap1.xml" (config.get-option "PATHS" "path-to-conf")))
+	(merge-pathnames "sitemap1.xml" (config.get-option "PATHS" "path-to-conf")))
 
 (restas:define-route request-route-static-sitemap2 ("/sitemap2.xml")
-	(merge-pathnames "/sitemap2.xml" (config.get-option "PATHS" "path-to-conf")))
+	(merge-pathnames "sitemap2.xml" (config.get-option "PATHS" "path-to-conf")))
 
 
 
