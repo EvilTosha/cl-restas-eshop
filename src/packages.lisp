@@ -15,22 +15,15 @@
 					 :config.get-option
 					 :config.set-option
 					 :config.has-option-p
-					 :compile-templates
+					 :servo.compile-soy
+					 ;;old
 					 :name
 					 :unserialize
-					 :plist-representation
-					 :*path-to-bkps*
 					 :*path-to-pics*
-					 :*path-to-conf*
-					 :*path-to-tpls*))
+					 :*path-to-conf*))
 
-
-(defpackage #:wolfor-stuff
-  (:use #:cl
-        #:eshop))
 
 (defpackage #:eshop-test
   (:use #:cl
-        #:eshop
-        #:wolfor-stuff))
+        #:eshop))
 

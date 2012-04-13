@@ -19,12 +19,9 @@
 
 ;;шаблоны
 (defun newcart-compile-templates ()
-  (mapcar #'(lambda (fname)
-              (let ((pathname (pathname (format nil "~a/~a" *path-to-tpls* fname))))
-                (closure-template:compile-template :common-lisp-backend pathname)))
-          '("index.html"
-            "newcart.soy"
-            "footer.html")))
+	(apply #'servo.compile-soy (list "index.html"
+																		"newcart.soy"
+																		"footer.html")))
 
 (newcart-update)
 

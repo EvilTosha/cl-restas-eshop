@@ -16,7 +16,7 @@
 (restas:define-route request-static-route-pic ("/pic/*")
   (let* ((full-uri (format nil "~a" (restas:request-full-uri)))
          (path-to-img (ppcre:regex-replace ".*/pic/(\\w{1,})/(\\d{1,3})(\\d{0,})/(.*)$" full-uri "\\1/\\2/\\2\\3/\\4")))
-    (pathname (format nil "~a/~a" *path-to-product-pics* path-to-img))))
+    (pathname (format nil "~a/~a" (config.get-option "PATHS" "path-to-pics") path-to-img))))
 
 (restas:define-route request-static-route-css ("/css/*")
   (let ((full-uri (format nil "~a" (restas:request-full-uri))))
@@ -90,11 +90,6 @@
             t)
         nil)))
 
-;; (defun test-route-storage-object ()
-;;   (gethash (cadr (request-list)) *storage*))
-
-
-
 (defun route-storage-object (key)
   (gethash key (storage *global-storage*)))
 
@@ -127,40 +122,6 @@
       :keywords "Купить компьютер и другую технику вы можете в Цифрах. Цифровая техника в Интернет-магазине 320-8080.ru"
       :description "каталог, компьютеры, купить компьютер, компьютерная техника, Петербург, Спб, Питер, Санкт-Петербург, продажа компьютеров, магазин компьютерной техники, магазин компьютеров, интернет магазин компьютеров, интернет магазин компьютерной техники, продажа компьютерной техники, магазин цифровой техники, цифровая техника, Цифры, 320-8080"
       :title "Каталог интернет-магазина: купить компьютер, цифровую технику, комплектующие в Санкт-Петербурге"))
-
-;; STATIC
-;; (defparameter *static-pages* (list ;;"delivery"
-;;                                    ;;"about"
-;;                                    ;;"faq"
-;;                                    ;; "kakdobratsja"
-;;                                    ;; "kaksvjazatsja"
-;;                                    ;; "levashovsky"
-;;                                    ;; "partners"
-;;                                    ;; "payment"
-;;                                    ;; "servicecenter"
-;;                                    ;; "otzyvy"
-;;                                    ;; "pricesc"
-;;                                    ;; "warrantyservice"
-;;                                    ;; "warranty"
-;;                                    ;; "moneyback"
-;;                                    ;; "dilers"
-;;                                    ;; "corporate"
-;;                                    ;; "vacancy"
-;;                                    ;; "bonus"
-;;                                    ;; "burunduk"
-;;                                    ;; "listservice"
-;;                                    ;; "suslik"
-;;                                    ;; "god_kills_a_kitten"
-;;                                    ))
-
-
-;; (defmacro static ()
-;;   `(progn ,@(mapcar #'(lambda (x)
-;;                         `(restas:define-route ,(intern (string-upcase x) *package*) (,x)
-;;                            (static-page)))
-;;                     *static-pages*)))
-
-;; (static)
 
 
 ;; CART & CHECKOUTS & THANKS

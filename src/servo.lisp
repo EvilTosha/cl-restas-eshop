@@ -481,7 +481,7 @@
 (defun get-pics (articul)
 	(let* ((articul-str (format nil "~a" articul))
 				 (path-art  (ppcre:regex-replace  "(\\d{1,3})(\\d{0,})"  articul-str  "\\1/\\1\\2" ))
-				 (path (format nil "~a/big/~a/*.jpg" *path-to-product-pics* path-art)))
+				 (path (format nil "~a/big/~a/*.jpg" (config.get-option "PATHS" "path-to-pics") path-art)))
 		(loop
 			 :for pic
 			 :in (ignore-errors (directory path))
@@ -751,7 +751,8 @@
 
 (defun servo.compile-soy (&rest tmpl-name)
   (mapcar #'(lambda (fname)
-              (let ((pathname (pathname (format nil "~a/~a" *path-to-tpls* fname))))
+              (let ((pathname (merge-pathnames (pathname fname) (config.get-option "PATHS" "path-to-templates"))))
+								(log5:log-for info "~%compile template: ~a~&" pathname)
                 (closure-template:compile-template :common-lisp-backend pathname)))
           tmpl-name))
 

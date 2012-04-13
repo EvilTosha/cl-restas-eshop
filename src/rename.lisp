@@ -78,7 +78,7 @@
          :for folder
          :in (list "big" "goods" "middle" "minigoods" "small")
          :do (rename-in-folder product
-                               (format nil "~a/~a/~a" *path-to-product-pics* folder path-art))))))
+                               (format nil "~a/~a/~a" (config.get-option "PATHS" "path-to-pics") folder path-art))))))
 
 
 (defun rename-force-product-all-pics (product)
@@ -88,7 +88,7 @@
        :for folder
        :in (list "big" "goods" "middle" "minigoods" "small")
        :do (rename-in-folder product
-                             (format nil "~a/~a/~a" *path-to-product-pics* folder path-art)))))
+                             (format nil "~a/~a/~a" (config.get-option "PATHS" "path-to-pics") folder path-art)))))
 
 
 ;; берет картинки из указанной папки и конвертирует в 5 папок для продукта
@@ -117,7 +117,7 @@
                 (rename-convert
                  (format nil "~a" pic)
                  (format nil "~a/~a/~a/~a.jpg"
-                         *path-to-product-pics*
+                         (config.get-option "PATHS" "path-to-pics")
                          folder
                          path-art
                          new-name)
@@ -243,7 +243,7 @@
     (loop
        :for dir
        :in dirs
-       :do (rename-remove-folder (format nil "~a/~a/~a" *path-to-product-pics* dir path-art)))))
+       :do (rename-remove-folder (format nil "~a/~a/~a" (config.get-option "PATHS" "path-to-pics") dir path-art)))))
 
 
 

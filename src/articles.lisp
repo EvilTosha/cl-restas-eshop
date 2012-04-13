@@ -70,13 +70,12 @@
             files)))
 
 
-;;
 (defun articles.restore ()
   (let ((t-storage))
       (wlog "start loadc articles....{")
       (sb-ext:gc :full t)
       (let ((*storage-articles* (make-hash-table :test #'equal)))
-        (process-articles-dir *path-to-articles* "article")
+        (process-articles-dir (config.get-option "PATHS" "path-to-articles") "article")
         (setf t-storage *storage-articles*))
       (setf *storage-articles* t-storage)
       (sb-ext:gc :full t)
@@ -84,12 +83,9 @@
 
 ;;шаблоны
 (defun articles.update ()
-  (mapcar #'(lambda (fname)
-              (let ((pathname (pathname (format nil "~a/~a" *path-to-tpls* fname))))
-                (closure-template:compile-template :common-lisp-backend pathname)))
-          '("index.html"
-            "articles.soy"
-            "footer.html")))
+	(apply #'servo.compile-soy (list "index.html"
+																		"articles.soy"
+																		"footer.html")))
 
 
 (defun articles.sort (unsort-articles)

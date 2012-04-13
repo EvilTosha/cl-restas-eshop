@@ -68,12 +68,9 @@
 
 ;;шаблоны
 (defun admin-compile-templates ()
-  (mapcar #'(lambda (fname)
-              (let ((pathname (pathname (format nil "~a/~a" *path-to-tpls* fname))))
-                (closure-template:compile-template :common-lisp-backend pathname)))
-          '("admin.soy"
-            "class_forms.soy"
-            "admin-table.soy")))
+	(apply #'servo.compile-soy (list "admin.soy"
+																		"class_forms.soy"
+																		"admin-table.soy")))
 
 ;;обновление главной страницы
 (defun admin-update ()
@@ -278,7 +275,9 @@
   (let ((name (getf new-post-data :name))
          (output))
     (setf output
-          (if (file-exists-p (pathname (format nil "~a/~a" *path-to-tpls* name)))
+          (if (file-exists-p (pathname (merge-pathnames
+																				(pathname name)
+																				(config.get-option "PATHS" "path-to-templates"))))
               (handler-case
                   (progn
                     (servo.compile-soy name)

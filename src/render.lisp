@@ -210,6 +210,10 @@
                          (render.gen-uspale-product item))
                        items)))
 
+
+(defun render.get-upsale-products (gr)
+	(get-randoms-from-list (remove-if-not #'active (products gr)) 4))
+
 ;; test
 ;; (defparameter *test-product-list* (list (gethash "172140" (storage *global-storage*))
 ;; 																				(gethash "180437" (storage *global-storage*))
@@ -218,9 +222,9 @@
 
 (defmethod render.prepare-upsale-full ((object group))
   (list :groupnameskl (sklonenie (name object) 2)
-        :upsaleblocks (list (render.prepare-upsale-block "blockname1" *test-product-list*)
-                            (render.prepare-upsale-block "blockname2" *test-product-list*)
-                            (render.prepare-upsale-block "blockname1" *test-product-list*))))
+        :upsaleblocks (mapcar #'(lambda (gr)
+																	(render.prepare-upsale-block (name gr) (render.get-upsale-products gr)))
+															(upsale-links object))))
 
 ;; end test
 
@@ -391,7 +395,8 @@
          (diff-percent (servo.diff-percentage (price object) (siteprice object)))
          (is-vintage (null (active object)))
          (is-available t ) ;;(servo.available-for-order-p object))
-         (product-view))
+         (product-view)
+				 (group (new-classes.parent object)))
     (setf product-view (list :menu (new-classes.menu object)
                              :breadcrumbs (soy.product:breadcrumbs (new-classes.breadcrumbs object))
                              :articul (articul object)
@@ -412,7 +417,9 @@
                              :equalprice (= (delta-price object) 0)
                              :diffprice (delta-price object)
                              ;;test
-                             :upsaleinfo (soy.product:upsale (render.prepare-upsale-full (new-classes.parent object)))
+                             :upsaleinfo (if (upsale-links group)
+																						 (soy.product:upsale (render.prepare-upsale-full group))
+																						 nil)
                              ;;end test
                              :procent diff-percent
                              :subst (format nil "/~a" (articul object))

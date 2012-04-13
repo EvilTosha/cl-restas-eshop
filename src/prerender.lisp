@@ -43,7 +43,7 @@
              (if (and (not height) (not width))
                  (multiple-value-bind
                        (width height)
-                     (images-get-dimensions (format nil "~a/~a" *path-to-product-pics* path*))
+                     (images-get-dimensions (format nil "~a/~a" (config.get-option "PATHS" "path-to-pics") path*))
                    (setf style (images-style-for-resize width height 600))))
              (format nil "<a href=\"/~a\" title=\"~a\">~%
                                    <img src=\"/pic/~a\" alt=\"~a\" style=\"~a\"/>~%

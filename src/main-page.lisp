@@ -11,14 +11,8 @@
 
 ;;обновление главной страницы
 (defun main-page-update ()
-  (mapcar #'(lambda (fname)
-              (let ((pathname (pathname (format nil "~a/~a" *path-to-tpls* fname))))
-                (closure-template:compile-template :common-lisp-backend pathname)))
-          '(
-            ;;"index.html"
-            "main-page.soy"
-            )))
-
+	(apply #'servo.compile-soy (list  ;;"index.html"
+															 "main-page.soy")))
 
 
 ;; Имя берется из объявления

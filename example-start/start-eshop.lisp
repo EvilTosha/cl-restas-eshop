@@ -50,14 +50,12 @@
 (setf hunchentoot:*catch-errors-p* (eshop:config.get-option "START_OPTIONS" "catch-errors"))
 
 
-
 ;; content
 (let ((*package* (find-package :eshop)))
   (eshop::restore-skls-from-files)
   (eshop::articles.restore)
   (eshop::main-page.restore)
   (eshop::new-classes.unserialize-all)
-  (eshop::static-pages.restore)
   (eshop::gateway.restore-history)
   (eshop::report.set-salefilter)
   (eshop::dtd)

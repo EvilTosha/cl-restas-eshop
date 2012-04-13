@@ -422,7 +422,8 @@
    (:name raw-fullfilter      :initform nil                             :disabled nil   :type textedit-raw              :serialize t)
    (:name vendors-seo         :initform (make-hash-table :test #'equal) :disabled t     :type textedit-hashtable        :serialize t)
    (:name seo-text            :initform nil                             :disabled nil   :type textedit                  :serialize t)
-   (:name keyoptions          :initform nil                             :disabled nil   :type keyoptions                :serialize t)
+	 (:name upsale-links        :initform nil                             :disabled nil   :type group-list                :serialize t)
+	 (:name keyoptions          :initform nil                             :disabled nil   :type keyoptions                :serialize t)
    (:name catalog-keyoptions  :initform nil                             :disabled nil   :type catalog-keyoptions        :serialize t)
    (:name life-time           :initform 100                             :disabled nil   :type int                       :serialize t)))
 

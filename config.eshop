@@ -7,10 +7,12 @@ server-port = 8080
 
 
 [PATHS]
-path-to-src = cl-restas-eshop/src
+path-to-src = cl-restas-eshop/src/
 path-to-last-backup = Dropbox/eshop-backups/
-path-to-templates = Dropbox/httpls/release
-path-to-articles = Dropbox/content/articles
+path-to-templates = Dropbox/httpls/release/
+path-to-articles = Dropbox/content/articles/
+path-to-pics = htpics1/
+path-to-static-pages = Dropbox/content/static-pages/
 path-to-dropbox = Dropbox/
 path-to-logs = eshop-logs/
 path-to-backups = eshop-logs/backups/

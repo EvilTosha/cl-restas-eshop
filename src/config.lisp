@@ -20,7 +20,7 @@
 														(format nil "~a~a" (user-homedir-pathname) path-string)))))
 		(when (and check-existance (not (file-exists-p path)))
 			(error (format nil "File ~a doesn't exist" path)))
-		(ensure-directories-exist path)
+		;; (ensure-directories-exist path)
 		path))
 
 (defun config.bool-processing (bool-string)
@@ -69,7 +69,10 @@
 	(config.config-option-processing "PATHS" "path-to-last-backup" "path")
 	(config.config-option-processing "PATHS" "path-to-templates" "path")
 	(config.config-option-processing "PATHS" "path-to-articles" "path")
+	(config.config-option-processing "PATHS" "path-to-pics" "path")
+	(config.config-option-processing "PATHS" "path-to-static-pages" "path")
 	(config.config-option-processing "PATHS" "path-to-dropbox" "path")
 	(config.config-option-processing "PATHS" "path-to-logs" "path")
 	(config.config-option-processing "PATHS" "path-to-backups" "path")
 	t)
+

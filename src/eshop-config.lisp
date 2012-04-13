@@ -4,20 +4,8 @@
 ;; PATH
 (defparameter *path-to-dropbox* (format nil "~aDropbox" (user-homedir-pathname)))
 (export '*path-to-dropbox*)
-(defparameter *path-to-articles* (format nil "~aDropbox/content/articles" (user-homedir-pathname)))
-(export '*path-to-articles*)
-(defparameter *path-to-static-pages* (format nil "~aDropbox/content/static-pages" (user-homedir-pathname)))
-(export '*path-to-static-pages*)
-(defparameter *path-to-tpls* (format nil "~aDropbox/httpls/release" (user-homedir-pathname)))
-(export '*path-to-tpls*)
-(defparameter *path-to-bkps* (format nil "~aDropbox/htbkps" (user-homedir-pathname)))
-(export '*path-to-bkps*)
 (defparameter *path-to-conf* (format nil "~aDropbox/htconf" (user-homedir-pathname)))
 (export '*path-to-conf*)
-(defparameter *path-to-pics* (format nil "~ahtpics" (user-homedir-pathname)))
-(export '*path-to-pics*)
-(defparameter *path-to-product-pics* (format nil "~ahtpics1" (user-homedir-pathname)))
-(export '*path-to-product-pics*)
 (defparameter *path-to-logs* (format nil "~aeshop-logs" (user-homedir-pathname)))
 (export '*path-to-logs*)
 
@@ -51,13 +39,14 @@
 (defun wlog (s)
   (format t "~&~a> ~a" (time.get-date-time) s))
 
+(config.parse-config)
+
 (defun compile-templates ()
   (mapcar #'(lambda (fname)
-              (let ((pathname (pathname (format nil "~a/~a" *path-to-tpls* fname))))
+              (let ((pathname (merge-pathnames (pathname fname) (config.get-option "PATHS" "path-to-templates"))))
                 (wlog (format nil "~&compile-template: ~a" pathname))
                 (closure-template:compile-template :common-lisp-backend pathname)))
-          '(
-            "index.html"            "product.soy"            "product-accessories.html"
+          '("index.html"            "product.soy"            "product-accessories.html"
             "product-reviews.html"  "product-simulars.html"   "product-others.html"
             "catalog.html"          "catalog-in.html"         "catalog-staff.html"
             "footer.html"
