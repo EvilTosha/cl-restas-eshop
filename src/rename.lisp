@@ -201,7 +201,7 @@
 
 ;;конвертация всех картинок из папок с артикулами
 (defun rename-convert-all (&key (from (format nil "~a/big-images/" *path-to-dropbox*))
-                           (backup "/home/webadmin/source-big-images-bkps/"))
+                           (backup (config.get-option "PATHS" "path-to-big-images-backup")))
   (if (and (directory-exists-p from)
            (directory-exists-p backup))
       (progn

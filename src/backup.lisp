@@ -64,10 +64,10 @@
                           (format nil "~agroups/group-~a.bkp" backup-dir date-time)))))
     (ensure-directories-exist product-path)
     (ensure-directories-exist group-path)
-    (wlog "start products serializing")
+		(log5:log-for info "~%start products serializing to ~a~&" product-path)
     (backup.serialize-list-to-file (storage.get-products-list) product-path)
-    (wlog "start groups serializing")
-    (backup.serialize-list-to-file (storage.get-groups-list) group-path)
+		(log5:log-for info "~%start groups serializing to ~a~&" group-path)
+		(backup.serialize-list-to-file (storage.get-groups-list) group-path)
     ;; copying to Dropbox
     (when push-to-dropbox
 			(let ((dropbox-backup-path (config.get-option "CRITICAL" "path-to-dropbox-backup")))

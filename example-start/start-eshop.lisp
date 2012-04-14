@@ -50,26 +50,31 @@
 (setf hunchentoot:*catch-errors-p* (eshop:config.get-option "START_OPTIONS" "catch-errors"))
 
 
-;; content
-(eshop::static-pages.restore)
 (let ((*package* (find-package :eshop)))
-  (eshop::restore-skls-from-files)
-  (eshop::articles.restore)
-  (eshop::main-page.restore)
-  (eshop::new-classes.unserialize-all)
-  ;; (eshop::static-pages.restore)
-  (eshop::gateway.restore-history)
+	;;; content
+	(eshop::restore-skls-from-files)
+	(when (eshop:config.get-option "START_OPTIONS" "load-content")
+		(eshop::static-pages.restore)
+		(eshop::articles.restore)
+		(eshop::main-page.restore))
+	(when (eshop:config.get-option "START_OPTIONS" "load-storage")
+		(eshop::new-classes.unserialize-all)
+		(eshop::gateway.restore-history))
   (eshop::report.set-salefilter)
-  (eshop::dtd)
-  (eshop::groupd.restore)
+	(when (eshop:config.get-option "START_OPTIONS" "load-xls")
+		(eshop::dtd)
+		(eshop::groupd.restore))
+	(when (eshop:config.get-option "START_OPTIONHS" "run-cron-jobs")
+		;; making timer for backups
+		(cl-cron:make-cron-job #'eshop::backup.serialize-all :minute 0 :hour 17)
+		(cl-cron:start-cron))
+  ;;; business logic
   ;; (groupd.man.restore)
   ;; (groupd.woman.restore)
   ;; (report.set-man-salefilter)
   ;; (report.set-woman-salefilter)
   ;; (eshop::create-bestprice-filter (gethash "noutbuki" (eshop::storage eshop::*global-storage*)))
   ;; (eshop::create-bestprice-filter (gethash "netbuki" (eshop::storage eshop::*global-storage*)))
-  (eshop::create-ipad3-filter (gethash "planshetnie-komputery" (eshop::storage eshop::*global-storage*)))
-  ;; making timer for backups
-  ;; (cl-cron:make-cron-job #'eshop::backup.serialize-all :minute 0 :hour 17)
-  ;; (cl-cron:start-cron)
-	)
+  (eshop::create-ipad3-filter (gethash "planshetnie-komputery" (eshop::storage eshop::*global-storage*))))
+
+(log5:log-for eshop::info "ESHOP load finished")
