@@ -15,7 +15,7 @@
 
 
 (log5:start-sender 'general-file
-                   (log5:stream-sender :location (format nil "~a/general.log" *path-to-logs*))
+                   (log5:stream-sender :location (merge-pathnames "general.log" (config.get-option "PATHS" "path-to-logs")))
                    :category-spec '(or info warn+)
                    :output-spec '(human-time log5:category log5:message))
 
@@ -31,7 +31,7 @@
 
 
 (log5:start-sender 'debug-file
-                   (log5:stream-sender :location (format nil "~a/debug.log" *path-to-logs*))
+                   (log5:stream-sender :location (merge-pathnames "debug.log" (config.get-option "PATHS" "path-to-logs")))
                    :category-spec '(or debug-file)
                    :output-spec '(log5:message))
 

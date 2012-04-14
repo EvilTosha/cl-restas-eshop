@@ -64,6 +64,10 @@
 	(config.config-option-processing "START_OPTIONS" "catch-errors" "bool")
 	(config.config-option-processing "START_OPTIONS" "swank-port" "int")
 	(config.config-option-processing "START_OPTIONS" "server-port" "int")
+	(config.config-option-processing "START_OPTIONS" "load-storage" "bool")
+	(config.config-option-processing "START_OPTIONS" "load-xls" "bool")
+	(config.config-option-processing "START_OPTIONS" "load-content" "bool")
+	(config.config-option-processing "START_OPTIONS" "run-cron-jobs" "bool")
 	;; PATHS section
 	(config.config-option-processing "PATHS" "path-to-last-backup" "path")
 	(config.config-option-processing "PATHS" "path-to-templates" "path")
@@ -73,6 +77,7 @@
 	(config.config-option-processing "PATHS" "path-to-dropbox" "path")
 	(config.config-option-processing "PATHS" "path-to-logs" "path")
 	(config.config-option-processing "PATHS" "path-to-backups" "path")
+	(config.config-option-processing "PATHS" "path-to-big-images-backup" "path")
 	;; CRITICAL section
 	;; these paths should be different on developer and release servers
 	(config.config-option-processing "CRITICAL" "path-to-conf" "path")
