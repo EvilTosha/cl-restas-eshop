@@ -1,8 +1,4 @@
 ;; загрузка модулей и файлов
-(defvar *path-to-eshop-home* "cl-restas-eshop")
-(defvar *swank-port* 4005)
-(defvar *server-port* 8080)
-
 (defparameter *path-to-libs* (sb-unix::posix-getenv "LIBS_PATH"))
 (defparameter *path-to-eshop* (sb-unix::posix-getenv "ESHOP_PATH"))
 (defparameter *path-to-config* (sb-unix::posix-getenv "CONFIG_PATH"))

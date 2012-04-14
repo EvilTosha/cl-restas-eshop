@@ -752,7 +752,7 @@
 (defun servo.compile-soy (&rest tmpl-name)
   (mapcar #'(lambda (fname)
               (let ((pathname (merge-pathnames (pathname fname) (config.get-option "PATHS" "path-to-templates"))))
-								(log5:log-for info "~%compile template: ~a~&" pathname)
+								(log5:log-for info "compile template: ~a" pathname)
                 (closure-template:compile-template :common-lisp-backend pathname)))
           tmpl-name))
 
