@@ -5,7 +5,7 @@
 ;;генерирует псевдоуникальный номер заказа
 (defun get-order-id ()
   (let ((current-order-id *order-id*)
-        (order-id-pathname (format nil "~a/~a" *path-to-conf* *path-order-id-file*)))
+        (order-id-pathname (format nil "~a~a" (config.get-option "CRITICAL" "path-to-conf") *path-order-id-file*)))
     (if (not (null *order-id*))
         (progn
           (incf *order-id*)
@@ -197,10 +197,11 @@
 
 
 (defun save-order-text (file-name body)
-  (let ((filename (format nil "~a/orders/~a.html" *path-to-dropbox* file-name)))
-    (with-open-file
-        (stream filename :direction :output :if-exists :supersede)
-      (format stream "~a" body))))
+	(when (config.get-option "START_OPTIONS" "release")
+		(let ((filename (format nil "~a/orders/~a.html" *path-to-dropbox* file-name)))
+			(with-open-file
+					(stream filename :direction :output :if-exists :supersede)
+				(format stream "~a" body)))))
 
 
 (defun send-mail (to clientmail filename mailfile order-id)

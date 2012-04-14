@@ -19,8 +19,7 @@
 					 ;;old
 					 :name
 					 :unserialize
-					 :*path-to-pics*
-					 :*path-to-conf*))
+					 :*path-to-pics*))
 
 
 (defpackage #:eshop-test

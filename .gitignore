@@ -1,5 +1,6 @@
 .dropbox
 .obsolete
+cl-cron.log
 /tpl/tosha/
 /tpl/release/articles/
 /libs

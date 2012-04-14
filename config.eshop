@@ -5,14 +5,17 @@ catch-errors = 0
 swank-port = 4005
 server-port = 8080
 
-
 [PATHS]
-path-to-src = cl-restas-eshop/src/
 path-to-last-backup = Dropbox/eshop-backups/
 path-to-templates = Dropbox/httpls/release/
 path-to-articles = Dropbox/content/articles/
-path-to-pics = htpics1/
 path-to-static-pages = Dropbox/content/static-pages/
+path-to-pics = htpics1/
 path-to-dropbox = Dropbox/
 path-to-logs = eshop-logs/
 path-to-backups = eshop-logs/backups/
+
+[CRITICAL] #should be different for dev and release servers
+path-to-conf = eshop-dev/htconf/
+path-to-sitemap = Dropbox/htconf/
+path-to-dropbox-backup = Dropbox/eshop-backups/

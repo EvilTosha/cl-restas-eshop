@@ -35,7 +35,7 @@
 (setf eshop::*order-id* 1)
 (setf eshop:*path-order-id-file* "wolfor-order-id.txt")
 ;; адрес для карты сайта
-(setf eshop:*path-sitemap* "wolfor-sitemap.xml")
+;;(setf eshop:*path-sitemap* "wolfor-sitemap.xml")
 ;; Список email для рассылки писем от ошибках выгрузки 1с
 (setf eshop::*conf.emails.gateway.warn* (list "wolforus@gmail.com"))
 ;; Список email для отправки заказов
@@ -51,6 +51,7 @@
 
 
 ;; content
+(eshop::static-pages.restore)
 (let ((*package* (find-package :eshop)))
   (eshop::restore-skls-from-files)
   (eshop::articles.restore)
@@ -68,5 +69,6 @@
   ;; (eshop::create-bestprice-filter (gethash "netbuki" (eshop::storage eshop::*global-storage*)))
   (eshop::create-ipad3-filter (gethash "planshetnie-komputery" (eshop::storage eshop::*global-storage*)))
   ;; making timer for backups
-  (cl-cron:make-cron-job #'eshop::backup.serialize-all :minute 0 :hour 17)
-  (cl-cron:start-cron))
+  ;; (cl-cron:make-cron-job #'eshop::backup.serialize-all :minute 0 :hour 17)
+  ;; (cl-cron:start-cron)
+	)

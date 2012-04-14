@@ -49,10 +49,11 @@
 
 
 (defun backup.serialize-all (&key (backup-dir (format nil "~aeshop-logs/backups/" (user-homedir-pathname)))
-                             product-filename group-filename (push-to-dropbox t))
+                             product-filename
+														 group-filename
+														 (push-to-dropbox (config.get-option "START_OPTIONS" "release")))
   "Serializing all products & groups to given files in given folder. If no filenames passed, it makes files with type-date-time.bkp template"
   (let* ((date-time (time.encode.backup-filename))
-         (dropbox-backup-path (format nil "~a/eshop-backups/" *path-to-dropbox*))
          (product-path (pathname
                         (if product-filename
                             (format nil "~aproducts/~a" backup-dir product-filename)
@@ -69,9 +70,10 @@
     (backup.serialize-list-to-file (storage.get-groups-list) group-path)
     ;; copying to Dropbox
     (when push-to-dropbox
-      (ensure-directories-exist dropbox-backup-path)
-      (cl-fad:copy-file product-path (format nil "~aproducts.bkp" dropbox-backup-path) :overwrite t)
-      (cl-fad:copy-file group-path   (format nil "~agroups.bkp" dropbox-backup-path) :overwrite t))))
+			(let ((dropbox-backup-path (config.get-option "CRITICAL" "path-to-dropbox-backup")))
+				(ensure-directories-exist dropbox-backup-path)
+				(cl-fad:copy-file product-path (merge-pathnames "products.bkp" dropbox-backup-path) :overwrite t)
+				(cl-fad:copy-file group-path   (merge-pathnames "groups.bkp" dropbox-backup-path) :overwrite t)))))
 
 
 (defun backup.last-product-backup-pathname ()
