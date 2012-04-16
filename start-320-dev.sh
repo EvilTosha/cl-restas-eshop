@@ -1,5 +1,5 @@
-ESHOP_PATH="/home/wolfor/cl-restas-eshop/"
-CONFIG_PATH=$ESHOP_PATH"config.eshop"
+ESHOP_PATH="/home/webadmin/eshop-dev/"
+CONFIG_PATH=$ESHOP_PATH"config-320-dev.eshop"
 LIBS_PATH=$ESHOP_PATH"libs/"
 
 export CONFIG_PATH

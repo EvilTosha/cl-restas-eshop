@@ -274,16 +274,17 @@
 (defun admin-gateway.compile-template (new-post-data)
   (let ((name (getf new-post-data :name))
          (output))
-    (setf output
-          (if (file-exists-p (pathname (merge-pathnames
-																				(pathname name)
-																				(config.get-option "PATHS" "path-to-templates"))))
-              (handler-case
-                  (progn
-                    (servo.compile-soy name)
-                    (format nil "Successfully compiled ~a" name))
-                (error (e) (format  nil "ERROR:~%~a" e)))
-              (format nil "File ~a not found" name)))
+		(if new-post-data
+				(setf output
+							(if (file-exists-p (pathname (merge-pathnames
+																						(pathname name)
+																						(config.get-option "PATHS" "path-to-templates"))))
+									(handler-case
+											(progn
+												(servo.compile-soy name)
+												(format nil "Successfully compiled ~a" name))
+										(error (e) (format  nil "ERROR:~%~a" e)))
+									(format nil "File ~a not found" name))))
     (soy.admin:compile-template (list :output output))))
 
 (defun admin-gateway.do-action (action)
