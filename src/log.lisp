@@ -2,7 +2,8 @@
 (log5:defcategory test)
 (log5:defcategory debug-console)
 (log5:defcategory debug-file)
-(log5:defcategory info)
+(log5:defcategory info)          ;; console + file
+(log5:defcategory info-console)  ;; only for console, not file
 (log5:defcategory warning)
 (log5:defcategory error)
 (log5:defcategory warn+ (or error warning))
@@ -21,12 +22,12 @@
 
 (log5:start-sender 'general-console
                    (log5:stream-sender :location *standard-output*)
-                   :category-spec '(or info warn+)
+                   :category-spec '(or info info-console warn+)
                    :output-spec '(human-time log5:category log5:message))
 
 (log5:start-sender 'debug-console
                    (log5:stream-sender :location *standard-output*)
-                   :category-spec '(or info test debug-console)
+                   :category-spec '(or test debug-console)
                    :output-spec '(log5:message))
 
 
