@@ -60,7 +60,7 @@
 	(when (eshop:config.get-option "START_OPTIONS" "load-xls")
 		(eshop::dtd)
 		(eshop::groupd.restore))
-	(when (eshop:config.get-option "START_OPTIONHS" "run-cron-jobs")
+	(when (eshop:config.get-option "START_OPTIONS" "run-cron-jobs")
 		;; making timer for backups
 		(cl-cron:make-cron-job #'eshop::backup.serialize-all :minute 0 :hour 17)
 		(cl-cron:start-cron))
