@@ -445,7 +445,7 @@
                                                                           :siteprice "0" :subst ""
                                                                           :firstpic "/img/temp/i6.jpg")))
                                                             (render.relink object))))
-                             :keyoptions (render.get-keyoptions object)
+                             :keyoptions (list-filters.limit-end (render.get-keyoptions object) 6)
                              :active (active object)
                              :vintage is-vintage
                              :available is-available
