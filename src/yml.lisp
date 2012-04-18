@@ -65,7 +65,6 @@
     (mapcar #'(lambda (v)
                 (let* ((product (gethash (getf v :articul) (storage *global-storage*)))
                        (d (yml.get-product-delivery-price1 product)))
-                  (wlog d)
                   (if (> d max-price)
                       (setf max-price d))
                   (if (< d min-price)
@@ -83,7 +82,6 @@
         (result 300))
     (when parent
       (setf key (key parent))
-      ;; (wlog key)
       (if (or (equal key "krupnaya-bitivaya-tehnika")
               (equal key "vstraivaemye-rabochie-poverhnosti")
               (equal key "vstraivaemye-rabochie-komplekti")
@@ -102,16 +100,11 @@
 								(> diagonal 32)))
           (setf result 500)
           (if (or
-               ;; (equal key "noutbuki")
-               ;; (equal key "netbuki")
-               ;; (equal key "lcd-televizory")
 							 (and (equal (vendor product) "Brother")
 										(or (equal key "printery")
 												(equal key "mfu")
 												(equal key "faxes")))
-               (yml.is-daily-product product)
-                  ;; (< 500 (siteprice product))
-               )
+               (yml.is-daily-product product))
               (setf result 0)
               (if (or nil
                       ;; (equal key "utyugi")
@@ -397,8 +390,3 @@
                   (yml.test-groups v)
                   (format t "~& (equal key \"~a\")" (key v))))
    (groups group)))
-
-;; (mapcar #'(lambda (v)
-;;             (yml.test-groups (gethash v (storage *global-storage*))))
-;;         (list "melkaya-bitovaya-tehnika"
-;;               "krasota-i-zdorovie"))

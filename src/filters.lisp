@@ -39,18 +39,3 @@
                 (if (not (= num 0))
                     (cons filter num))))
               filters)))
-
-
-;; (let* ((child (gethash "komputery" (storage *global-storage*))))
-;;   (remove-if #'(lambda (filter)
-;;                  (wlog (func-string filter))
-;;                  (is-empty-filtered-list child filter))
-;;              (filters child)))
-
-;; (let* ((gr (gethash "noutbuki" (storage *global-storage*)))
-;;        (filt (car (filters gr)))
-;;        (prod  (car (get-recursive-products gr))))
-;;   (wlog (name gr))
-;;   (wlog (func-string filt))
-;;   (wlog (name-seo prod))
-;;   (funcall (func filt) prod))

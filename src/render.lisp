@@ -1,8 +1,4 @@
-;;;; render.lisp
-
-
 (in-package #:eshop)
-
 
 (defclass eshop-render () ())
 
@@ -221,13 +217,10 @@
 																	(render.prepare-upsale-block (name gr) (render.get-upsale-products gr)))
 															(upsale-links object))))
 
-;; end test
-
 
 (defmethod render.view ((object product))
   (let ((pics (get-pics (articul object))))
     (let ((group (new-classes.parent object)))
-      ;; (when (not (null group))
       (list :articul (articul object)
             :name (name-seo object)
             :groupname (if (null group)
@@ -269,8 +262,7 @@
                                                                :pic (if (null pics) nil (car pics))
                                                                :deliveryprice (delivery-price object)
                                                                :siteprice (price object)
-                                                               :price (siteprice object))))
-            ))))
+                                                               :price (siteprice object))))))))
 
 
 (defun render.render-optgroups (optgroups)
@@ -374,7 +366,6 @@
                     (let ((all))
                       (mapcar #'(lambda (v)
                                   (when (not (equal v object))
-                                    ;; (print v)
                                     (push v all)))
                               (storage.get-filtered-products (products *global-storage*)))
                       all)
@@ -449,20 +440,14 @@
                              :active (active object)
                              :vintage is-vintage
                              :available is-available
-                             ;; :descr (descr object)
                              :shortdescr (seo-text object)
                              :bestproducts (soy.product:similar-products
                                             (list :products (mapcar #'(lambda (prod)
                                                                         (catalog:product
                                                                          (render.view prod)))
                                                                     (list-filters.limit-end (servo.find-relative-product-list object) 4))))
-                             ;; :dontshdev (gethash (articul object) *special-products*)
                              :seotextflag (and (not (null (seo-text object)))
                                                (string/= (seo-text object) ""))
-                             ;; (or (and (descr object)
-                             ;;          (not (string= "" (stripper (descr object)))))
-                             ;;     (and (shortdescr object)
-                             ;;          (not (string= "" (stripper (shortdescr object))))))
                              :available t
                              :predzakaz (preorder object)
                              :addproductcart (if (preorder object)
@@ -471,9 +456,7 @@
                                                                                      :name (name-seo object)
                                                                                      :pic (if (null pics) nil (car pics))
                                                                                      :siteprice (siteprice object)
-                                                                                     :price (price object)
-                                                                                     ;; :deliveryprice (delivery-price object)
-                                                                                     )))
+                                                                                     :price (price object))))
                              :addoneclick (if (not (preorder object))
                                               (soy.buttons:add-one-click (list :articul (articul object)
                                                                                :available is-available)))))
@@ -502,7 +485,6 @@
                (when (< 0 remainder)
                  (setf segment (+ 1 segment))
                  (setf remainder (- remainder 1)))
-               ;; (format t "~&~a:~a:~a" start-pos segment remainder)
                (push (subseq list start-pos (+ start-pos segment)) rs)
                (setf start-pos (+ start-pos segment)))))
     rs))
@@ -549,7 +531,6 @@
               (remove-if-not #'(lambda (p)
                                  (vendor-filter-controller p (request-get-plist)))
                              products-list)))
-    ;; (log5:log-for test "~&filter ~{~a|~}" request-get-plist)
     (with-sorted-paginator
         products-list
       request-get-plist

@@ -20,8 +20,8 @@
 ;;шаблоны
 (defun newcart-compile-templates ()
 	(apply #'servo.compile-soy (list "index.html"
-																		"newcart.soy"
-																		"footer.html")))
+																	 "newcart.soy"
+																	 "footer.html")))
 
 (newcart-update)
 
@@ -32,7 +32,6 @@
         (sum 0)
         (res-list)
         (bonuscount 0))
-    ;; (error (print alist))
     (setf res-list (mapcar #'(lambda (item)
                                (let ((articul (cdr (assoc :id  item)))
                                      (cnt     (cdr (assoc :count item)))
@@ -172,7 +171,7 @@
                                                   (list :bonuscount bonuscount
                                                         :bonusname (if bonuscount
                                                                        (nth (skls.get-count-skls bonuscount)
-                                                                        (list "бонус" "бонуса" "бонусов")))))
+																																						(list "бонус" "бонуса" "бонусов")))))
                                       :rightcells (soy.newcart:rightcells
                                                    (list :notfinished "true"
                                                          :deliverysum pricesum
@@ -193,7 +192,7 @@
 ;; корзина товаров
 (defun cart-page ()
   (let ((cart-cookie (hunchentoot:cookie-in "cart"))
-        (cart);; dbg  (list (list (cons :id "145982") (cons :count 2))))
+        (cart)
         (products)
         (count)
         (pricesum))
@@ -201,16 +200,13 @@
       (setf cart (json:decode-json-from-string cart-cookie))
       (multiple-value-bind (lst cnt sm) (newcart-cart-products cart)
         (setf products (remove-if #'null lst))
-        ;; (print products)
         (setf count cnt)
         (setf pricesum sm)))
     (if (not (null products))
         (default-page
             (soy.newcart:cart-content (list :accessories (soy.product:accessories)
                                             :products (format nil "~{~a~}"
-                                                              (mapcar #'(lambda (x)
-                                                                          ;; (print (cart:product x))
-                                                                          (soy.newcart:cart-product x))
+                                                              (mapcar #'soy.newcart:cart-product
                                                                       products))))
             :no-need-cart t)
         ;; страница для пустой корзины с автоматическим редиректом на главную
@@ -268,10 +264,6 @@
                       ((string= (car cookie) "user-nc") (setf user (json:decode-json-from-string (cdr cookie))))
                       (t nil)))
             (hunchentoot:cookies-in hunchentoot:*request*))
-    ;;;;; DBG
-    ;; (setf cart (list (list (cons :id "145982") (cons :count 2))))
-    ;; (setf user (list (cons :phone "145982") (cons :email "wolforus@gmail.com")))
-    ;;;;;
     ;;если кукисы не пустые
     (when (and (not (null cart))
                (not (null user)))
@@ -300,7 +292,6 @@
             ;; существует два вида доставки: курьером и самовывоз (express | pickup)
             (if  (string= delivery-type "express")
                  (setf deliverysum (yml.get-delivery-price (newcart-cart-products cart))))
-            ;; (format t "EKK: ~a" ekk)
             (setf client-mail
                   (sendmail:clientmail
                    (list :datetime (time.get-date-time)
@@ -330,10 +321,7 @@
                          :comment (cond  ((string= delivery-type "express") courier_comment)
                                          ((string= delivery-type "pickup") pickup_comment)
                                          (t ""))
-                         :articles nil;;  (let ((articles (articles.sort (get-articles-list))))
-                                     ;; (if articles
-                                     ;;     (articles-view-articles (subseq articles 0 7))
-                                     ;;     nil))
+                         :articles nil
                          :products products
                          :deliverysum deliverysum
                          :itogo (+ pricesum deliverysum))))
@@ -365,7 +353,6 @@
             (mapcar #'(lambda (email)
                         (send-mail (list email) client-mail filename tks-mail order-id))
                     *conf.emails.cart*)
-                        ;; артикул 099999 и доставка 107209
             ;; сделать валидацию пользовательского email
             (if (not (string= email ""))
                 (send-client-mail (list email) client-mail order-id))

@@ -5,14 +5,14 @@
 
 ;;старт логирования ошибок в стандартный поток ошибок
 (log5:start-sender 'main-page-sender
-              (log5:stream-sender :location *error-output*)
-              :category-spec 'log5:warn+
-              :output-spec '("WARN:: " log5:message))
+									 (log5:stream-sender :location *error-output*)
+									 :category-spec 'log5:warn+
+									 :output-spec '("WARN:: " log5:message))
 
 ;;обновление главной страницы
 (defun main-page-update ()
 	(apply #'servo.compile-soy (list  ;;"index.html"
-															 "main-page.soy")))
+															"main-page.soy")))
 
 
 ;; Имя берется из объявления
@@ -34,7 +34,6 @@
                                        (key it))
                        :groupname (aif parent
                                        (name it))
-                       ;; :deliveryprice (delivery-price p)
                        :pic (car (get-pics (articul p)))))
          (button-add (list :buttonaddcart (soy.buttons:add-product-cart p-list))))
     (append p-list button-add)))
@@ -44,57 +43,50 @@
 (defun main-page-products-show (storage num)
   (let ((full-daily-list (main-page-get-active-product-list storage))
         (daily-list))
-    ;; (wlog full-daily-list)
     ;;для блока дэйли должно быть не менее 6 товаров
     (if (> (length full-daily-list) num)
         ;; если активных товаров хватает для демонстрации на главной
-        (progn
-          ;; выбираем 6 случайных товаров с учетом их веса
-          (setf daily-list (main-page-get-randoms-from-weight-list full-daily-list num)))
+				;; выбираем 6 случайных товаров с учетом их веса
+				(setf daily-list (main-page-get-randoms-from-weight-list full-daily-list num))
         ;; если не хватает
         (progn
-          (format nil "WARN: Main page daily ~a products"  (length full-daily-list))
+          (log5:log-for warning "WARNING: Main page daily ~a products" (length full-daily-list))
           (setf daily-list (main-page-get-randoms-from-weight-list full-daily-list num))))
-    ;; (wlog "DB-1")
     (mapcar #'(lambda (v) (main-page-view-product (car v) storage))
-            daily-list)
-    ))
+            daily-list)))
 
 ;;отображение товаров дня
 (defun main-page-show-banner (type storage)
   (let ((banners (main-page-get-active-banners storage type))
         (banner (make-instance 'main-page-product)))
-      ;;должен быть хотябы один баннер
-      (if (> (length banners) 0)
-          (progn
-            ;; выбираем случайный товаров баннер с учетом их веса
-            (setf banner (gethash (caar (main-page-get-randoms-from-weight-list banners 1))
-                                  storage)))
-          (progn
-            (wlog "WARN: No banner")))
-      (if banner
-          (list :url (format nil "~a"
-                             (servo.edit-get-param (encode-uri (nth 1 (opts banner))) "bannerType" type))
-                :src (nth 2 (opts banner)))
-          (list :url ""
-                :src ""))))
+		;;должен быть хотябы один баннер
+		(if (> (length banners) 0)
+				(progn
+					;; выбираем случайный товаров баннер с учетом их веса
+					(setf banner (gethash (caar (main-page-get-randoms-from-weight-list banners 1))
+																storage)))
+				(log5:log-for warning "WARNING: No banner"))
+		(if banner
+				(list :url (format nil "~a"
+													 (servo.edit-get-param (encode-uri (nth 1 (opts banner))) "bannerType" type))
+							:src (nth 2 (opts banner)))
+				(list :url ""
+							:src ""))))
 
 ;;отображение отзыва
 (defun main-page-show-lastreview (storage)
   (let ((items (main-page-get-active-views storage))
         (item (make-instance 'main-page-product)))
-      ;;должен быть хотябы один баннер
-      (if (> (length items) 0)
-          (progn
-            ;; выбираем случайный товаров баннер с учетом их веса
-            (setf item (gethash (caar (main-page-get-randoms-from-weight-list items 1))
-                                  storage)))
-          (progn
-            (wlog "WARN: No banner")))
-     (list :name (key item)
-           :review (name item)
-           :ico (nth 0 (opts item))
-           :city (nth 1 (opts item)))))
+		;;должен быть хотябы один баннер
+		(if (> (length items) 0)
+				;; выбираем случайный товаров баннер с учетом их веса
+				(setf item (gethash (caar (main-page-get-randoms-from-weight-list items 1))
+														storage))
+				(log5:log-for warning "WARNING: No banner"))
+		(list :name (key item)
+					:review (name item)
+					:ico (nth 0 (opts item))
+					:city (nth 1 (opts item)))))
 
 
 ;;отображение главной страницы
@@ -151,7 +143,6 @@
                               (active p)
                               (< (date-start v) (get-universal-time) (date-finish v)))
                          (push (cons k (weight v)) rs)
-                         ;;(wlog (format nil "WARN:~a" k))
                          ))))
              storage)
     rs))
@@ -164,7 +155,6 @@
                    (if (and (equal (key v) place)
                             (< (date-start v) (get-universal-time) (date-finish v)))
                        (push (cons k (weight v)) rs)
-                       ;;(wlog (format nil "WARN:~a" k))
                        )))
              storage)
     rs))
@@ -175,9 +165,8 @@
     (maphash #'(lambda (k v)
                  (when v
                    (if (and (gethash (key v) (storage *global-storage*))
-                        (< (date-start v) (get-universal-time) (date-finish v)))
+														(< (date-start v) (get-universal-time) (date-finish v)))
                        (push (cons k (weight v)) rs)
-                       ;; (wlog (format nil "WARN:~a" k))
                        )))
              storage)
     rs))
@@ -189,16 +178,13 @@
                  (when v
                    (if  (< (date-start v) (get-universal-time) (date-finish v))
                         (push (cons k (weight v)) rs)
-                       ;; (wlog (format nil "WARN:~a" k))
-                       )))
+												)))
              storage)
     rs))
 
 
 ;;получить позицию элемента в списке с весами
 (defun main-page-get-num-in-weight-list (input-list weight)
-  ;; (wlog input-list)
-  ;; (wlog weight)
   (let ((cur-pos 0)
         (cur-weight 0))
     (mapcar #'(lambda (v)
@@ -219,29 +205,22 @@
         (sum-weight 0)
         (current-list input-list))
     ;;уменьшаем count до длинны списка если надо
-    ;; (wlog count)
     (if (< (length input-list)
            count)
         (setf count (length input-list)))
     (mapcar #'(lambda (v) (setf sum-weight (+ sum-weight (cdr v))))
             input-list)
-    ;; (wlog (format nil "summ: ~a" sum-weight))
     (setf result (loop
                     :for n
                     :from 1 to count
                     :collect (let* ((weight-pos 0)
                                     (pos 0)
                                     (element nil))
-                               ;; (wlog (format nil "do ~a" sum-weight))
                                (when (> sum-weight 0)
-                                   (setf weight-pos (random sum-weight))
-                                   (setf pos (main-page-get-num-in-weight-list current-list weight-pos)))
+																 (setf weight-pos (random sum-weight))
+																 (setf pos (main-page-get-num-in-weight-list current-list weight-pos)))
                                (setf element (nth pos current-list))
-                               ;; (wlog (format nil "pos: ~a | ~a" pos  weight-pos))
-                               ;; (print)
                                (setf sum-weight (- sum-weight (cdr element)))
-                               ;; (wlog (cdr element))
-                               ;; (wlog sum-weight)
                                (setf current-list (remove-if #'(lambda (v)
                                                                  (equal v element))
                                                              current-list))
@@ -250,7 +229,7 @@
 
 (defun main-page.restore ()
   (let ((t-storage))
-    (wlog "Start (main-page-restore):")
+    (log5:log-for info "Start (main-page-restore):")
     (let ((*main-page.storage* (make-instance 'main-page-storage)))
       (main-page-load (daily *main-page.storage*) "daily.xls")
       (main-page-load (best *main-page.storage*) "best.xls")
@@ -260,7 +239,7 @@
       (main-page-load (review *main-page.storage*) "review.xls")
       (setf t-storage *main-page.storage*))
     (setf  *main-page.storage* t-storage)
-    (wlog "Finish (main-page-restore)")))
+    (log5:log-for info "Finish (main-page-restore)")))
 
 (defun main-page-load (storage filename)
   (let ((num 0)
@@ -270,16 +249,14 @@
                (list "-q3" (format nil "~a/mainPage/~a" *path-to-dropbox* filename)) :wait nil :output :stream)))
     (with-open-stream (stream (sb-ext:process-output proc))
       (setf header-line (read-line stream nil))
-      (print header-line)
       (loop
          :for line = (read-line stream nil)
          :until (or (null line)
                     (string= "" (string-trim "#\," line)))
          :do (let* ((words (sklonenie-get-words line))
                     (skls (mapcar #'(lambda (w) (string-trim "#\""  w))
-                             words))
+																	words))
                     (key (car skls)))
-               (wlog line)
                (incf num)
                (setf (gethash num storage)
                      (make-instance 'main-page-product
@@ -289,7 +266,5 @@
                                     :date-finish  (time.article-decode-date (nth 3 skls))
                                     :weight (parse-integer (aif (nth 4 skls) it "0"))
                                     :opts (nthcdr 5 skls)
-                                    :banner-type (nth 5 skls)))
-               ;; (format t "~&~a: ~{~a~^,~}" key skls)
-               )))))
+                                    :banner-type (nth 5 skls))))))))
 

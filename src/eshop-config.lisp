@@ -28,18 +28,12 @@
                                  "wolforus@gmail.com"))
 
 
-
-
-
-(defun wlog (s)
-  (format t "~&~a> ~a" (time.get-date-time) s))
-
 (config.parse-config)
 
 (defun compile-templates ()
   (mapcar #'(lambda (fname)
               (let ((pathname (merge-pathnames (pathname fname) (config.get-option "PATHS" "path-to-templates"))))
-                (wlog (format nil "~&compile-template: ~a" pathname))
+                (format t "~&compile-template: ~a" pathname)
                 (closure-template:compile-template :common-lisp-backend pathname)))
           '("index.html"            "product.soy"            "product-accessories.html"
             "product-reviews.html"  "product-simulars.html"   "product-others.html"
@@ -52,7 +46,6 @@
             "search.html"
             "agent.html"            "update.html"
             "header.html"           "static.html"
-            ;; "levashovsky.html"
             "yml.html"                "fullfilter.html"
             "sendmail.html"
             "404.html"

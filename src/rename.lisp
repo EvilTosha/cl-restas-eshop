@@ -51,9 +51,7 @@
       (when (not (equal (rename-new-name name (+ 1 i))
                       (subseq (nth i pics) 0 (search "." (nth i pics)))))
           (setf result nil)))
-          ;;(print (rename-new-name name (+ 1 i)))
-          ;;(print (subseq (nth i pics) 0 (search "." (nth i pics))))))
-    result))
+		result))
 
 
 ;;переименовывает все картинки в указанной папке именами для указанного продукта
@@ -98,13 +96,12 @@
              (name (name-seo product))
              (counter 0)
              (path-art  (ppcre:regex-replace  "(\\d{1,3})(\\d{0,})"  (format nil "~a" articul)  "\\1/\\1\\2" )))
-        (wlog (format nil "Start converting images for product ~a from folder ~a~%"
-                articul path-to-folder))
+        (log5:log-for info "Start converting images for product ~a from folder ~a" articul path-to-folder)
         (loop
            :for pic
            :in (directory (format nil "~a/*.jpg" path-to-folder))
            :do (incf counter)
-           (wlog (format nil "Converting file ~a ~%" pic))
+           (log5:log-for info-console "Converting file ~a" pic)
            (let ((new-name (rename-new-name name counter)))
              (loop
                 :for folder
@@ -123,8 +120,8 @@
                          new-name)
                  size-w
                  size-h))
-             (wlog (format nil "converted to ~a ~%" new-name)))))
-      (wlog (format nil "No such directory! ~%"))))
+             (log5:log-for info-console "converted to ~a" new-name))))
+      (log5:log-for warning "Directory ~a doesn't exist!" path-to-folder)))
 
 
 ;;конвертирует картинку до указанных размеров и кладет в указанную папку
@@ -176,9 +173,9 @@
 
 (defun rename-copy-folder (from to)
   (when (not (directory-exists-p from))
-      (wlog (format nil  "Directory doesn't exist!~%")))
+		(log5:log-for warning "Directory doesn't exist!"))
   (ensure-directories-exist to)
-  (wlog (format nil "Start copy folder ~a to ~a~%" from to))
+  (log5:log-for info "Start copy folder ~a to ~a" from to)
   (let ((files-list (rename-recursive-get-files from))
         (len (length from))
         (counter 0))
@@ -194,8 +191,8 @@
                (copy-file file-or-dir new-to)
                (incf counter))
              (when (not (directory-pathname-p new-to))
-               (wlog (format nil "File ~a already exists!~%" new-to))))))
-    (wlog (format nil "Copying finished! ~a files were copied.~%" counter))))
+               (log5:log-for warning "File ~a already exists!" new-to)))))
+    (log5:log-for info "Copying finished! ~a files were copied." counter)))
 
 
 
@@ -205,8 +202,7 @@
   (if (and (directory-exists-p from)
            (directory-exists-p backup))
       (progn
-        (wlog (format nil "Start converting from \"~a\"~% Backup folder : \"~a\"~%"
-                from backup))
+        (log5:log-for info "Start converting from \"~a\"  Backup folder : \"~a\"" from backup)
         (loop
            :for folder
            :in (directory (format nil "~a*" from))
@@ -221,11 +217,11 @@
                            )
                        )))))
       ;;else
-      (wlog (format nil "Folder doesn't exist!~%"))))
+      (log5:log-for warning "Folder ~a or ~a doesn't exist!" from backup)))
 
 ;;удаление папки
 (defun rename-remove-folder (path)
-  (wlog (format nil "Start removing folder ~a~%" path))
+  (log5:log-for info "Start removing folder ~a" path)
   (let ((proc (sb-ext:run-program "/bin/rm"
                             (list "-r"
                                   path)
@@ -244,13 +240,3 @@
        :for dir
        :in dirs
        :do (rename-remove-folder (format nil "~a/~a/~a" (config.get-option "PATHS" "path-to-pics") dir path-art)))))
-
-
-
-
-;; (mapcar #'(lambda (v)
-;;             (let ((p (gethash (format nil "~a" v) (storage *global-storage*))))
-;;               (wlog p)
-;;               (rename-remove-product-pics p)
-;;               ))
-;;         '(150791))

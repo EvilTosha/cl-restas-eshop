@@ -44,7 +44,7 @@
                   (format file "~a~%" (backup.serialize-entity object))
                   (incf total))
               object-list))
-    (wlog (format nil "Total serialized: ~a" total))))
+    (log5:log-for info "Total serialized: ~a" total)))
 
 
 
@@ -64,9 +64,9 @@
                           (format nil "~agroups/group-~a.bkp" backup-dir date-time)))))
     (ensure-directories-exist product-path)
     (ensure-directories-exist group-path)
-		(log5:log-for info "start products serializing to ~a" product-path)
+		(log5:log-for info "Start products serializing to ~a" product-path)
     (backup.serialize-list-to-file (storage.get-products-list) product-path)
-		(log5:log-for info "start groups serializing to ~a" group-path)
+		(log5:log-for info "Start groups serializing to ~a" group-path)
 		(backup.serialize-list-to-file (storage.get-groups-list) group-path)
     ;; copying to Dropbox
     (when push-to-dropbox
