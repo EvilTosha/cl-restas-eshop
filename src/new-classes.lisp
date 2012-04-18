@@ -190,6 +190,15 @@
     ;;convert vendors-seo from list to hashtable
     (setf (vendors-seo item) (servo.list-to-hashtasble
                               (copy-list (vendors-seo item)))))
+	;; upsale
+	(setf (upsale-links item)
+				(mapcar #'(lambda (group-key)
+										;;в случае если на месте ключей уже лежат группы
+										(if (equal (type-of group-key) 'group)
+												group-key
+												(if group-key
+														(gethash group-key (storage *global-storage*)))))
+								(upsale-links item)))
   ;; после десериализации в parent лежит список key родительских групп
   (let ((parents (copy-list (parents item))))
     (setf (parents item)
