@@ -2,14 +2,14 @@
 # When adding new option, remember to add parsing of it in src/config.lisp file
 
 [START_OPTIONS]
-release = 0
-dbg-on = 1
+release = 1
+dbg-on = 0
 catch-errors = 0
-swank-port = 4005
-server-port = 8080
+swank-port = 4444
+server-port = 4244
 load-storage = 1
-load-xls = 0
-load-content = 0
+load-xls = 1
+load-content = 1
 run-cron-jobs = 0
 
 [PATHS]
@@ -24,8 +24,6 @@ path-to-backups = eshop-logs/backups/
 path-to-big-images-backup = source-big-images-bkps/
 
 [CRITICAL] #should be different for dev and release servers
-path-to-conf = eshop-dev/htconf/
+path-to-conf = Dropbox/htconf/
 path-to-sitemap = Dropbox/htconf/
 path-to-dropbox-backup = Dropbox/eshop-backups/
-path-to-css-parent-folder = Dropbox/htimgs/dev/
-path-to-js-parent-folder = Dropbox/htimgs/dev/

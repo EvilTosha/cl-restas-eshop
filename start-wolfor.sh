@@ -6,4 +6,4 @@ export CONFIG_PATH
 export LIBS_PATH
 export ESHOP_PATH
 
-sbcl --lose-on-corruption --disable-ldb --dynamic-space-size 1024 --load "$ESHOP_PATH"/start-eshop.lisp
+sbcl --lose-on-corruption --disable-ldb --dynamic-space-size 1024 --load "$ESHOP_PATH"start-eshop.lisp
