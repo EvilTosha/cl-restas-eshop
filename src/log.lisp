@@ -23,7 +23,7 @@
 (log5:start-sender 'general-console
                    (log5:stream-sender :location *standard-output*)
                    :category-spec '(or info info-console warn+)
-                   :output-spec '(human-time log5:category log5:message))
+                   :output-spec '(human-time log5:message))
 
 (log5:start-sender 'debug-console
                    (log5:stream-sender :location *standard-output*)

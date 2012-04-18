@@ -105,10 +105,7 @@
 														(incf num)
 														(when product
 															(setf (optgroups product) optgroups)
-															(setf (optgroups product) (new-classes.get-transform-optgroups product)))
-														(if (not product)
-																(wlog key))
-														)))
+															(setf (optgroups product) (new-classes.get-transform-optgroups product))))))
     num))
 
 
@@ -248,7 +245,6 @@
   (when (and (null (raw-fullfilter item))
              (fullfilter item)
              (not (equal (type-of (fullfilter item)) 'group-filter)))
-    (wlog (fullfilter item))
     (setf (raw-fullfilter item) (concatenate 'string "" (fullfilter item)))
     (setf (fullfilter item) nil))
   (when (and (raw-fullfilter item)

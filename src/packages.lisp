@@ -1,6 +1,5 @@
 ;; TODO fix exports
 
-;; (print "restas:define-module CL-ESHOP")
 (restas:define-module #:eshop
     (:use :cl
           :closure-template
@@ -16,10 +15,10 @@
 					 :config.set-option
 					 :config.has-option-p
 					 :servo.compile-soy
+					 :dtd
 					 ;;old
 					 :name
-					 :unserialize
-					 :*path-to-pics*))
+					 :unserialize))
 
 
 (defpackage #:eshop-test

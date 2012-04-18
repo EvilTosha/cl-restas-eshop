@@ -23,38 +23,34 @@
     (mapcar #'(lambda (w)
                 (if (not (null w))
                     (setf (gethash (stripper w) tags) w)))
-            words)
-    ;; (format t "~&~a: ~{~a~^,~}" key skls)
-    ))
+            words)))
 
-
-;;
 (defmethod unserialize (filepath (dummy article))
-    (let* ((file-content (alexandria:read-file-into-string filepath))
-           (raw (decode-json-from-string file-content))
-           (key (pathname-name filepath))
-           (body (cdr (assoc :body raw)))
-           (breadcrumbs (cdr (assoc :breadcrumbs raw)))
-           (rightblock (cdr (assoc :rightblock raw)))
-           (name (cdr (assoc :name raw)))
-           (date (time.article-decode-date (cdr (assoc :date raw))))
-           (descr (cdr (assoc :descr raw)))
-           (tags-line (cdr (assoc :tags raw)))
-           (title (cdr (assoc :title raw)))
-           (new (make-instance 'article
-                               :key key
-                               :name name
-                               :descr descr
-                               :bredcrumbs breadcrumbs
-                               :body body
-                               :rightblock rightblock
-                               :title title
-                               :ctype (ctype dummy)
-                               :date date)))
-      (make-tags-table (tags new) tags-line)
-      (setf (gethash key *storage-articles*) new)
-      ;; Возвращаем key статьи
-      key))
+	(let* ((file-content (alexandria:read-file-into-string filepath))
+				 (raw (decode-json-from-string file-content))
+				 (key (pathname-name filepath))
+				 (body (cdr (assoc :body raw)))
+				 (breadcrumbs (cdr (assoc :breadcrumbs raw)))
+				 (rightblock (cdr (assoc :rightblock raw)))
+				 (name (cdr (assoc :name raw)))
+				 (date (time.article-decode-date (cdr (assoc :date raw))))
+				 (descr (cdr (assoc :descr raw)))
+				 (tags-line (cdr (assoc :tags raw)))
+				 (title (cdr (assoc :title raw)))
+				 (new (make-instance 'article
+														 :key key
+														 :name name
+														 :descr descr
+														 :bredcrumbs breadcrumbs
+														 :body body
+														 :rightblock rightblock
+														 :title title
+														 :ctype (ctype dummy)
+														 :date date)))
+		(make-tags-table (tags new) tags-line)
+		(setf (gethash key *storage-articles*) new)
+		;; Возвращаем key статьи
+		key))
 
 
 ;; загрузка статей из папки
@@ -65,27 +61,27 @@
                     (push x files)))
             (directory (format nil "~a/*" path)))
     (mapcar #'(lambda (file)
-                (wlog file)
+                (log5:log-for info-console "Load article: ~a" file)
                 (unserialize (format nil "~a" file) (make-instance 'article :ctype ctype)))
             files)))
 
 
 (defun articles.restore ()
   (let ((t-storage))
-      (wlog "start loadc articles....{")
-      (sb-ext:gc :full t)
-      (let ((*storage-articles* (make-hash-table :test #'equal)))
-        (process-articles-dir (config.get-option "PATHS" "path-to-articles") "article")
-        (setf t-storage *storage-articles*))
-      (setf *storage-articles* t-storage)
-      (sb-ext:gc :full t)
-      (wlog "...} finish load articles")))
+		(log5:log-for info "Start load articles...")
+		(sb-ext:gc :full t)
+		(let ((*storage-articles* (make-hash-table :test #'equal)))
+			(process-articles-dir (config.get-option "PATHS" "path-to-articles") "article")
+			(setf t-storage *storage-articles*))
+		(setf *storage-articles* t-storage)
+		(sb-ext:gc :full t)
+		(log5:log-for info "Finish load articles")))
 
 ;;шаблоны
 (defun articles.update ()
 	(apply #'servo.compile-soy (list "index.html"
-																		"articles.soy"
-																		"footer.html")))
+																	 "articles.soy"
+																	 "footer.html")))
 
 
 (defun articles.sort (unsort-articles)
@@ -93,8 +89,6 @@
 
 
 ;;;;;;;;;;;;;;;;;;;;; RENDER ;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
 
 (defun get-articles-list (&optional request-get-plist)
   (let ((articles)
@@ -104,9 +98,9 @@
     (maphash #'(lambda (k v)
                  (declare (ignore k))
                  (if (or (not (null showall))
-                          (not (= (date v) 0)))
+												 (not (= (date v) 0)))
                      (push v articles)))
-     *storage-articles*)
+						 *storage-articles*)
     articles))
 
 
@@ -116,19 +110,19 @@
             (string= ""
                      (stripper tags)))
         (mapcar #'(lambda (v) (push v articles))
-                 articles-list)
+								articles-list)
         (progn
           (let ((tags (split-sequence:split-sequence #\, tags)))
             (mapcar #'(lambda (v)
-                         (let ((has-tags t))
-                           (mapcar #'(lambda (tag)
-                                       (setf has-tags (and has-tags
-                                                           (gethash tag (tags v)))))
-                                   tags)
-                           (if has-tags
-                               (push v articles))))
-                     articles-list))
-            ))
+												(let ((has-tags t))
+													(mapcar #'(lambda (tag)
+																			(setf has-tags (and has-tags
+																													(gethash tag (tags v)))))
+																	tags)
+													(if has-tags
+															(push v articles))))
+										articles-list))
+					))
     articles))
 
 (defun articles-view-articles (articles)
@@ -179,11 +173,11 @@
                                                                                       :of (tags v)
                                                                                       :collect key)))
                                                                             "")))
-                                                            paginated)))))
-               :rightblock  ""))))))
+																															paginated)))))
+								 :rightblock  ""))))))
 
 (defun get-article-breadcrumbs(article)
-    (format nil "
+	(format nil "
                   <a href=\"/\">Главная</a> /
                   <a href=\"/articles\">Материалы</a> /
                   ~a " (name article)))
@@ -199,11 +193,11 @@
                                                     (main-page-show-banner "line" (banner *main-page.storage*))))
                        :footer (root:footer)
                        :content  (static:main
-                                 (list :menu (new-classes.menu)
-                                       :breadcrumbs (bredcrumbs object)
-                                       :subcontent  (body object)
-                                       :rightblock  (rightblock object)))
-                 ))
+																	(list :menu (new-classes.menu)
+																				:breadcrumbs (bredcrumbs object)
+																				:subcontent  (body object)
+																				:rightblock  (rightblock object)))
+											 ))
       (root:main (list :keywords "" ;;keywords
                        :description "" ;;description
                        :title  (if (title object)
@@ -232,10 +226,10 @@
                                                                                     (if (< 0 (hash-table-count (tags object)))
                                                                                         (soy.articles:articles-tags
                                                                                          (list :tags
-                                                                                           (loop
-                                                                                              :for key being the hash-keys
-                                                                                              :of (tags object)
-                                                                                              :collect key)))
+																																															 (loop
+																																																	:for key being the hash-keys
+																																																	:of (tags object)
+																																																	:collect key)))
                                                                                         "")
                                                                                     ))
                                        :rightblock (soy.articles:r_b_articles (list :articles (let ((articles (articles.sort (remove-if #'(lambda(v)(equal v object)) (get-articles-list)))))
