@@ -262,3 +262,26 @@
          (soy.oneclickcart:answerwindow (list :phone telef
                                               :orderid order-id)))
        (soy.oneclickcart:formwindow1 (list :articul articul)))))
+
+
+
+(defun oneclickcart.make-common-order (request-get-plist)
+  (let* ((telef (getf request-get-plist :phone))
+				 (name (getf request-get-plist :name))
+				 (articul (getf request-get-plist :article))
+				 (email (getf request-get-plist :email))
+				 (pr (gethash articul (storage *global-storage*)))
+				 (order-id))
+   (if telef
+			 (if articul
+					 (if pr
+							 (progn
+								 (setf order-id  (get-order-id));;(oneclick-sendmail telef articul name email))
+								 (json:encode-json-to-string (list :phone telef
+																									 :orderid order-id)))
+							 (json:encode-json-to-string (list :phone telef
+															 :error "3"))) ;; no such product
+						 (json:encode-json-to-string (list :phone telef
+															 :error "1"))) ;; no articul in parameters
+       (json:encode-json-to-string (list :phone telef
+															 :error "2"))))) ;; no phone number in parameters

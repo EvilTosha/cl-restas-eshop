@@ -9,6 +9,10 @@
 
 (clear)
 
+;; static content
+;; Роуты до статиx файлов
+;; Дублирует функционал nginx для развертывания на localhost
+
 (restas:define-route request-static-route-img ("/img/*")
   (let ((full-uri (format nil "~a" (restas:request-full-uri))))
     (pathname (concatenate 'string *path-to-dropbox* "/htimgs/" (subseq full-uri (search "/img/" full-uri))))))
@@ -47,6 +51,7 @@
 (restas:define-route request-route-static-sitemap2 ("/sitemap2.xml")
 	(merge-pathnames "sitemap2.xml" (config.get-option "CRITICAL" "path-to-conf")))
 
+;; end static content
 
 
 ;; FILTER
@@ -250,10 +255,10 @@
    :return-code hunchentoot:+http-not-found+
    :content-type "text/html"))
 
-;; (restas:define-route request-route ("/request")
-;;   (oneclickcart-page (request-get-plist)))
+(restas:define-route request-route ("/request")
+  (oneclickcart.make-common-order (request-get-plist)))
 
-(restas:define-route request-route ("/request1")
+(restas:define-route request1-route ("/request1")
   (oneclickcart.page (request-get-plist)))
 
 
