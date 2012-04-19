@@ -241,6 +241,7 @@
             :groupd (groupd.is-groupd object)
             :groupd_man (groupd.man.is-groupd object)
             :groupd_woman (groupd.woman.is-groupd object)
+						:groupd_holiday (groupd.holiday.is-groupd object)
             :firstpic (car pics)
             :promotiontext (concatenate 'string
                                         (let ((value))
@@ -393,6 +394,7 @@
                              :groupd (groupd.is-groupd object)
                              :groupd_man (groupd.man.is-groupd object)
                              :groupd_woman (groupd.woman.is-groupd object)
+														 :groupd_holiday (groupd.holiday.is-groupd object)
                              :bonuscount (if (and (bonuscount object)
                                                   (not (equal (bonuscount object) 0)))
                                              (* (bonuscount object) 10))
