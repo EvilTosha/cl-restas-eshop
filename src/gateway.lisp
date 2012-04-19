@@ -362,11 +362,12 @@
          (current-name (format nil "~a/gateway/~a.bkp" *path-to-logs* filename))
          (*serialize-check-flag* nil)
          (last-gateway))
-    (log5:log-for info "gateway restore file ~a" current-name)
+    (log5:log-for info "gateway current time ~a" current-name)
     (setf last-gateway (car
                         (remove-if #'(lambda (v) (string< current-name (format nil "~a" v)))
                                    (reverse (directory
                                              (format nil "~a/gateway/*.bkp" *path-to-logs*))))))
+		(log5:log-for info "gateway restore file ~a" last-gateway)
     (if last-gateway
         (let ((data)
               (lastgateway-ts (time.decode.backup
@@ -384,6 +385,7 @@
           (gateway.restore-singles1 lastgateway-ts timestamp)
           (post-proccess-gateway)
           )))
+	(log5:log-for info "gateway restore finished")
   "test")
 
 (defun gateway.store-singles (history)
