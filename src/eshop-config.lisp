@@ -38,7 +38,7 @@
           '("index.html"            "product.soy"            "product-accessories.html"
             "product-reviews.html"  "product-simulars.html"   "product-others.html"
             "catalog.html"          "catalog-in.html"         "catalog-staff.html"
-            "footer.html"
+            "footer.html" "holidays.soy"
             "menu.html"             "banner.html"
             "notlogged.html"
             "cart-widget.html"      "cart.html"               "checkout.html"
