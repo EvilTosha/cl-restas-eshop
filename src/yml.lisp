@@ -106,10 +106,10 @@
 												(equal key "faxes")))
                (yml.is-daily-product product))
               (setf result 0)
-              (if (or nil
-                      ;; (equal key "utyugi")
-                      ;; (equal key "shveinye-mashiny")
-                      ;; (equal key "pylesosy")
+              (if (or
+                      (equal key "mobilephones")
+                      (equal key "planshetnie-komputery")
+                      (equal key "cifrovye-fotoapparaty")
                       ;; (equal key "kuhonnie-vesy")
                       ;; (equal key "kofevarki")
                       ;; (equal key "kofemolki")
@@ -138,7 +138,7 @@
                       ;; (equal key "epilyatory")
                       ;; (equal key "britvy")
                       )
-                  (setf result 150)))))
+                  (setf result 100)))))
     result))
 
 
