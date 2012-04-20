@@ -241,6 +241,7 @@
             :groupd (groupd.is-groupd object)
             :groupd_man (groupd.man.is-groupd object)
             :groupd_woman (groupd.woman.is-groupd object)
+						:groupd_holiday (groupd.holiday.is-groupd object)
             :firstpic (car pics)
             :promotiontext (concatenate 'string
                                         (let ((value))
@@ -250,8 +251,8 @@
                                         " "
                                         (if (= 0 (yml.get-product-delivery-price1 object))
                                             " "
-                                            (if (= 150 (yml.get-product-delivery-price1 object))
-                                                "(скидка на доставку 50%)")))
+                                            (if (= 100 (yml.get-product-delivery-price1 object))
+                                                "(скидка на доставку 70%)")))
             :keyopts (render.get-catalog-keyoptions object)
             :oneclickbutton  (if (not (preorder object))
                                  (soy.buttons:add-one-click (list :articul (articul object))))
@@ -393,6 +394,7 @@
                              :groupd (groupd.is-groupd object)
                              :groupd_man (groupd.man.is-groupd object)
                              :groupd_woman (groupd.woman.is-groupd object)
+														 :groupd_holiday (groupd.holiday.is-groupd object)
                              :bonuscount (if (and (bonuscount object)
                                                   (not (equal (bonuscount object) 0)))
                                              (* (bonuscount object) 10))
@@ -423,8 +425,8 @@
                                                   " "
                                                   (if (= 0 (yml.get-product-delivery-price1 object))
                                                       " (бесплатная доставка)"
-                                                      (if (= 150 (yml.get-product-delivery-price1 object))
-                                                          "(скидка на доставку 50%)")))
+                                                      (if (= 100 (yml.get-product-delivery-price1 object))
+                                                          "(скидка на доставку 70%)")))
                              :others (soy.product:others
                                       (list :others (mapcar #'(lambda (x)
                                                                 (if (equal 'product (type-of x))
@@ -436,7 +438,7 @@
                                                                           :siteprice "0" :subst ""
                                                                           :firstpic "/img/temp/i6.jpg")))
                                                             (render.relink object))))
-                             :keyoptions (list-filters.limit-end (render.get-keyoptions object) 6)
+                             :keyoptions (list-filters.limit-end (remove-if #'(lambda (v) (equal (getf v :optvalue) "")) (render.get-keyoptions object)) 6)
                              :active (active object)
                              :vintage is-vintage
                              :available is-available

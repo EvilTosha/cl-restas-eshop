@@ -27,16 +27,19 @@
 										 :dont-close t
 										 :port (eshop:config.get-option "START_OPTIONS" "swank-port"))
 
-;; нумерация заказов
-(setf eshop::*order-id* 1)
-(setf eshop:*path-order-id-file* "wolfor-order-id.txt")
-;; адрес для карты сайта
-;;(setf eshop:*path-sitemap* "wolfor-sitemap.xml")
-;; Список email для рассылки писем от ошибках выгрузки 1с
-(setf eshop::*conf.emails.gateway.warn* (list "wolforus@gmail.com"))
-;; Список email для отправки заказов
-(setf eshop::*conf.emails.cart* (list "wolforus@gmail.com"
-                                      "slamly@gmail.com"))
+;; alternative order numbering for developers server
+(if (eshop:config.get-option "START_OPTIONS" "dbg-on")
+		(progn
+			;; нумерация заказов
+			(setf eshop::*order-id* 1)
+			(setf eshop:*path-order-id-file* "wolfor-order-id.txt")
+			;; адрес для карты сайта
+			;;(setf eshop:*path-sitemap* "wolfor-sitemap.xml")
+			;; Список email для рассылки писем от ошибках выгрузки 1с
+			(setf eshop::*conf.emails.gateway.warn* (list "wolforus@gmail.com"))
+			;; Список email для отправки заказов
+			(setf eshop::*conf.emails.cart* (list "wolforus@gmail.com"
+																						"slamly@gmail.com"))))
 
 ;; запуск Restas
 (restas:start '#:eshop :port (eshop:config.get-option "START_OPTIONS" "server-port"))
@@ -55,7 +58,9 @@
   (eshop::report.set-salefilter)
 	(when (eshop:config.get-option "START_OPTIONS" "load-xls")
 		(eshop::dtd)
-		(eshop::groupd.restore))
+		(eshop::groupd.restore)
+		(eshop::groupd.holiday.restore)
+		)
 	(when (eshop:config.get-option "START_OPTIONS" "load-content")
 		(eshop::static-pages.restore)
 		(eshop::articles.restore)
@@ -65,12 +70,6 @@
 		(cl-cron:make-cron-job #'eshop::backup.serialize-all :minute 0 :hour 17)
 		(cl-cron:start-cron))
   ;;; business logic
-  ;; (groupd.man.restore)
-  ;; (groupd.woman.restore)
-  ;; (report.set-man-salefilter)
-  ;; (report.set-woman-salefilter)
-  ;; (eshop::create-bestprice-filter (gethash "noutbuki" (eshop::storage eshop::*global-storage*)))
-  ;; (eshop::create-bestprice-filter (gethash "netbuki" (eshop::storage eshop::*global-storage*)))
-  (eshop::create-ipad3-filter (gethash "planshetnie-komputery" (eshop::storage eshop::*global-storage*))))
+	(eshop::report.create-marketing-filters))
 
 (log5:log-for eshop::info "ESHOP load finished")

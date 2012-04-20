@@ -3,6 +3,7 @@
 (defparameter *groupd.storage* (make-hash-table :test #'equal))
 (defparameter *groupd.man.storage* (make-hash-table :test #'equal))
 (defparameter *groupd.woman.storage* (make-hash-table :test #'equal))
+(defparameter *groupd.holiday.storage* (make-hash-table :test #'equal))
 
 (defun groupd.restore ()
   (let ((t-storage))
@@ -55,3 +56,14 @@
 
 (defmethod groupd.woman.is-groupd ((object product))
   (gethash (format nil "~a" (articul object)) *groupd.woman.storage*))
+
+(defun groupd.holiday.restore ()
+  (let ((t-storage))
+    (let ((*groupd.holiday.storage* (make-hash-table :test #'equal)))
+      (groupd.load *groupd.holiday.storage* "holiday.xls")
+      (setf t-storage *groupd.holiday.storage*))
+    (setf  *groupd.holiday.storage* t-storage)
+    (log5:log-for info "DONE groupd.holiday.restore")))
+
+(defmethod groupd.holiday.is-groupd ((object product))
+  (gethash (format nil "~a" (articul object)) *groupd.holiday.storage*))

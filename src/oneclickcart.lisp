@@ -263,23 +263,28 @@
 
 
 
+(defclass oneclickcart.answer ()
+  ((phone     :initarg :phone    :initform nil   :accessor phone)
+   (orderid   :initarg :orderid   :initform nil   :accessor orderid)
+   (errorid   :initarg :errorid  :initform nil   :accessor errorid)
+   ))
+
 (defun oneclickcart.make-common-order (request-get-plist)
   (let* ((telef (getf request-get-plist :phone))
 				 (name (getf request-get-plist :name))
 				 (articul (getf request-get-plist :article))
 				 (email (getf request-get-plist :email))
 				 (pr (gethash articul (storage *global-storage*)))
-				 (order-id))
+				 (order-id)
+				 (error-id 0)
+				 (answer (make-instance 'oneclickcart.answer :phone telef)))
    (if telef
 			 (if articul
 					 (if pr
-							 (progn
-								 (setf order-id  (get-order-id));;(oneclick-sendmail telef articul name email))
-								 (json:encode-json-to-string (list :phone telef
-																									 :orderid order-id)))
-							 (json:encode-json-to-string (list :phone telef
-															 :error "3"))) ;; no such product
-						 (json:encode-json-to-string (list :phone telef
-															 :error "1"))) ;; no articul in parameters
-       (json:encode-json-to-string (list :phone telef
-															 :error "2"))))) ;; no phone number in parameters
+							 (setf order-id (oneclick-sendmail1 telef articul name email))
+							 (setf error-id 3)) ;; no such product
+						 (setf error-id 1)) ;; no articul in parameters
+       (setf error-id 2)) ;; no phone number in parameters
+	 (setf (orderid answer) order-id)
+	 (setf (errorid answer) error-id)
+	 (json:encode-json-to-string answer)))

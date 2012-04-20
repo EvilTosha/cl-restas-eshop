@@ -418,6 +418,43 @@
 							(create-woman-sale-filter gr))
           (storage.get-groups-list)))
 
+
+(defun report.edit-filter (group filter-func name filter-key)
+	(let* ((key (format nil "~a-~a" (key group) filter-key))
+         (filter)
+         (tmp-filter (car (remove-if-not #'(lambda (v) (equal (key v) key))
+																				 (filters group)))))
+    (if (not tmp-filter)
+        (setf filter (make-instance 'filter))
+        (setf filter tmp-filter))
+    (setf (name filter) name)
+    (setf (func filter) filter-func)
+    (setf (key filter) key)
+    (setf (parents filter) (list group))
+    (when (not tmp-filter)
+      (setf (gethash key (storage *global-storage*)) filter)
+      (push filter (filters group)))
+    filter))
+
+(defun report.set-filters (groups filter-func name filter-key)
+	(mapcar #'(lambda (gr)
+							(report.edit-filter gr filter-func name filter-key))
+          groups))
+
+(defun report.create-marketing-filters ()
+	(create-ipad3-filter (gethash "planshetnie-komputery" (storage *global-storage*)))
+	(report.set-filters (storage.get-groups-list)
+											#'groupd.holiday.is-groupd
+											"Для отдыха"
+											"holidays"))
+;; (groupd.man.restore)
+  ;; (groupd.woman.restore)
+  ;; (report.set-man-salefilter)
+  ;; (report.set-woman-salefilter)
+  ;; (eshop::create-bestprice-filter (gethash "noutbuki" (eshop::storage eshop::*global-storage*)))
+  ;; (eshop::create-bestprice-filter (gethash "netbuki" (eshop::storage eshop::*global-storage*)))
+
+
 (defun report.set-salefilter ()
   (mapcar #'(lambda (v)
               (let ((gr (gethash (format nil "~a" v) (storage *global-storage*))))

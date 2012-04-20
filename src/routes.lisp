@@ -285,3 +285,10 @@ var i,y,x=\"3c7461626c6520636c6173733d226261636b5f746f5f7363686f6f6c223e0d0a3c74
     (soy.elka2012:base (list :days (time.get-delta-new-year-date)
                            :orders (if *order-id* (ceiling (- *order-id* 66070) 4) 0)
                            :sharebuttons (soy.articles:share-buttons))))
+
+(restas:define-route holidays/-route ("/holidays-2012/")
+	(soy.holidays:body))
+
+(restas:define-route holidays-route ("/holidays-2012")
+	(soy.holidays:body))
+
