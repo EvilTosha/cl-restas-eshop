@@ -1,5 +1,6 @@
 (in-package #:eshop)
 
+(defparameter *special-products* (make-hash-table :test #'equal))
 
 (defun write-products-report (stream)
   (format stream "~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~%"
@@ -221,13 +222,6 @@
              (storage *global-storage*))
     (loop :for packet :in (reverse (caddr (car *history*))) :do
        (format stream "~a" (sb-ext:octets-to-string packet :external-format :cp1251)))))
-
-
-
-
-(defparameter *special-products* (make-hash-table :test #'equal))
-
-
 
 (defun post-proccess-gateway ()
 	(mapcar #'(lambda (v)

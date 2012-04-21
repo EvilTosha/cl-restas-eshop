@@ -8,7 +8,6 @@
       (STRING< (name a)
          (name b))))
 
-
 ;;шаблоны
 (defun catalog.catalog-update ()
 	(apply #'servo.compile-soy (list "new-catalog.soy")))
@@ -52,9 +51,6 @@
              (when col2
                (nconc res (list col2)))
              res))))
-
-
-
 
 
 (defun catalog.catalog-entity ()

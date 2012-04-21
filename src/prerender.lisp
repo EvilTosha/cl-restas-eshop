@@ -1,5 +1,9 @@
-(in-package #:eshop)
+;;; prerender.lisp
+;;; set of methods for converting templates in articles to products views,
+;;; images, buttons, etc
+;;; teplates look like <!--#(temp_name);arg1;arg2;...;-->
 
+(in-package #:eshop)
 
 (defun prerender-str-to-args (string)
   (let* ((res) (prev 0))
@@ -7,9 +11,7 @@
       (when (equal (char string cur) #\;)
         (pushnew (subseq string prev cur) res)
         (setf prev (+ 1 cur))))
-    (nreverse res))
-)
-
+    (nreverse res)))
 
 ;;составление строки по данным аргументам
 (defun prerender-args-to-html (args)
@@ -107,5 +109,4 @@
                      (prerender-args-to-html
                       (prerender-str-to-args
                        (subseq string (+ 5 start) (+ 1 end))))
-                     (prerender-string-replace (subseq string (+ 4 end))))
-        )))
+                     (prerender-string-replace (subseq string (+ 4 end)))))))

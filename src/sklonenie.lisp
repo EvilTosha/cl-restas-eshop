@@ -1,30 +1,8 @@
+;;; sklonenie.lisp
+
 (in-package #:eshop)
 
-
 (defparameter *group-skls* (make-hash-table :test #'equal))
-
-;; function getNameCountIndex(count) {
-;; 	var cnt = (count % 100);
-;; 	var result = 0;
-;;         if (cnt >= 20) {
-;; 	   cnt = (cnt % 10);
-;; 	};
-;; 	if (cnt == 0) {
-;; 	   result = 2;
-;; 	} else {
-;; 	    if (cnt == 1) {
-;; 	   	result = 0;
-;; 	    } else {
-;;                 if (cnt < 5) {
-;; 	           result = 1;
-;;                 }  else {
-;; 	           result = 2;
-;; 		};
-;;             };
-;; 	};
-;; 	return result;
-;; }
-
 
 (defun skls.get-count-skls(count)
   (let ((cnt (mod count 100))
@@ -39,38 +17,16 @@
                 (setf result 1)
                 (setf result 2))))
     result))
-  ;; 	var cnt = (count % 100);
-;; 	var result = 0;
-;;         if (cnt >= 20) {
-;; 	   cnt = (cnt % 10);
-;; 	};
-;; 	if (cnt == 0) {
-;; 	   result = 2;
-;; 	} else {
-;; 	    if (cnt == 1) {
-;; 	   	result = 0;
-;; 	    } else {
-;;                 if (cnt < 5) {
-;; 	           result = 1;
-;;                 }  else {
-;; 	           result = 2;
-;; 		};
-;;             };
-;; 	};
-;; 	return result;
-
 
 (defun restore-skls-from-files ()
   (let ((t-storage))
-      (print "start load skls....{")
-      ;;(sb-ext:gc :full t)
+      (log5:log-for info "Start load skls...")
       (let ((*group-skls* (make-hash-table :test #'equal)))
         (load-sklonenie)
-        (print *group-skls*)
+        (log5:log-for info *group-skls*)
         (setf t-storage  *group-skls*))
       (setf *group-skls* t-storage)
-      ;;(sb-ext:gc :full t)
-      (print "...} finish load skls")))
+      (log5:log-for info "Finish load skls")))
 
 (defun load-sklonenie ()
   (let ((proc (sb-ext:run-program
@@ -86,10 +42,7 @@
                              words))
                     (key (string-downcase (car skls))))
                (format t "~&~a" line)
-               (setf (gethash key *group-skls*) skls)
-               ;; (format t "~&~a: ~{~a~^,~}" key skls)
-               )
-              ))))
+               (setf (gethash key *group-skls*) skls))))))
 
 (defmethod sklonenie-get-words ((isg string))
   (let ((bin))

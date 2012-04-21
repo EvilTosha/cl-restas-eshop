@@ -14,11 +14,10 @@
    (body        :initarg :body      :initform nil       :accessor body)
    (date        :initarg :date      :initform nil       :accessor date)
    (ctype        :initarg :ctype    :initform "article"  :accessor ctype) ;; article / static
-   (tags        :initarg :tags    :initform (make-hash-table :test #'equal) :accessor tags)
-   ))
+   (tags        :initarg :tags    :initform (make-hash-table :test #'equal) :accessor tags)))
 
 ;;тэги через запятую
-(defun make-tags-table(tags input-string)
+(defun make-tags-table (tags input-string)
   (let ((words (split-sequence:split-sequence #\, input-string)))
     (mapcar #'(lambda (w)
                 (if (not (null w))
@@ -121,8 +120,7 @@
 																	tags)
 													(if has-tags
 															(push v articles))))
-										articles-list))
-					))
+										articles-list))))
     articles))
 
 (defun articles-view-articles (articles)
@@ -177,10 +175,9 @@
 								 :rightblock  ""))))))
 
 (defun get-article-breadcrumbs(article)
-	(format nil "
-                  <a href=\"/\">Главная</a> /
-                  <a href=\"/articles\">Материалы</a> /
-                  ~a " (name article)))
+	(format nil "<a href=\"/\">Главная</a> /
+               <a href=\"/articles\">Материалы</a> /
+               ~a " (name article)))
 
 ;; отображение страницы статьи
 (defmethod restas:render-object ((designer eshop-render) (object article))
@@ -237,18 +234,3 @@
                                                                                                     (articles-view-articles (subseq articles 0 10))
                                                                                                     nil))))))))))
 
-
-;; (let ((object (gethash "kakdobratsja" (storage *global-storage*))))
-;;       (root:main (list :keywords "" ;;keywords
-;;                        :description "" ;;description
-;;                        :title (name object)
-;;                        :header (root:header (append (list :logged (root:notlogged)
-;;                                                           :cart (root:cart))
-;;                                                     (main-page-show-banner "line" (banner *main-page.storage*))))
-;;                        :footer (root:footer)
-;;                        :content  (static:main
-;;                                  (list :menu (new-classes.menu)
-;;                                        :breadcrumbs (bredcrumbs object)
-;;                                        :subcontent  (body object)
-;;                                        :rightblock  (rightblock object)))
-;;                        ))

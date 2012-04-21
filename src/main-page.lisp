@@ -21,7 +21,7 @@
   (let* ((dp (gethash key storage))
          (p (gethash (key dp) (storage *global-storage*)))
          (price (+ (siteprice p) (delta-price p)))
-         (parent (storage.main-parent p))
+         (parent (new-classes.parent p))
          (p-list (list :articul (articul p)
                        :name (name dp)
                        :siteprice (siteprice p)

@@ -1,17 +1,6 @@
- ;;;;;;;;;;;;;;;;;
-;; newcart.lisp
- ;;;;;;;;;;;;;;;;;
+;;; newcart.lisp
 
 (in-package #:eshop)
-
-;;категория для логирования
-(log5:defcategory :newcart-log)
-
-;;старт логирования ошибок в стандартный поток ошибок
-(log5:start-sender 'newcart-sender
-                   (log5:stream-sender :location *error-output*)
-                   :category-spec 'log5:warn+
-                   :output-spec '("WARN:: " log5:message))
 
 ;;обновление страницы
 (defun newcart-update ()
@@ -22,8 +11,6 @@
 	(apply #'servo.compile-soy (list "index.html"
 																	 "newcart.soy"
 																	 "footer.html")))
-
-(newcart-update)
 
 ;; возвращает список отображений продуктов, количество, суммарную цену заказа
 (defun newcart-cart-products (alist)
@@ -65,7 +52,6 @@
                                            :cnt cnt)))))
                            alist))
     (values-list (list res-list sum-counter sum bonuscount))))
-
 
 (defun newcart-tovar (n)
   (let ((k n))
@@ -138,8 +124,6 @@
                             :value (format nil "{~{\"~(~a~)\":\"~a\"~^,~}}" cookie-data))))
 
 
-
-
 ;;отображение страницы
 (defun newcart-show (&optional (request-str ""))
   (declare (ignore request-str))
@@ -180,8 +164,6 @@
                                                          :products (mapcar #'soy.newcart:product-item products))))))
         (progn
           ;; страница для пустой корзины с автоматическим редиректом на главную
-          ;; (log5:log-for (or esho::newcart-log
-          ;;                   log5:warn+) "trying to checkout null cart")
           (soy.newcart:fullpage (list :head (soy.newcart:head-redirect (list :timeout 5
                                                                              :url "/"))
                                       :header (soy.newcart:header)
@@ -252,7 +234,7 @@
 
 ;; страница информации об отправленном заказе
 (defun thanks-page ()
-  (let ((cart) ;; ;; dbg  (list (list (cons :id "145982") (cons :count 2)))) ;; товары
+  (let ((cart) ;; товары
         (user) ;; данные о пользователе
         (products)
         (count)  ;; количество товаров в корзине
@@ -269,7 +251,6 @@
                (not (null user)))
       (multiple-value-bind (lst cnt sm bc) (newcart-cart-products cart)
         (setf products (remove-if #'null lst))
-        ;; (print products)
         (setf count cnt)
         (setf pricesum sm)
         (if (and bc
@@ -400,8 +381,7 @@
                                       :deliverysum deliverysum
                                       :productscount count
                                       :tovar (newcart-tovar count)
-                                      :products (mapcar #'soy.newcart:product-item  products)))))
-            ))
+                                      :products (mapcar #'soy.newcart:product-item  products)))))))
         (progn
           (soy.newcart:fullpage (list :head (soy.newcart:head-redirect (list :timeout 5
                                                                              :url "/"))

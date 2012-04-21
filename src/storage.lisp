@@ -12,14 +12,6 @@
 
 (defvar *global-storage* (make-instance 'global-storage))
 
-;;!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-(defmethod storage.main-parent ((object group))
-  (car (parents object)))
-
-(defmethod storage.main-parent ((object product))
-  (car (parents object)))
-;;!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 (defun storage.is-offspring (group item)
   (when (and group item)
     (not (every
@@ -117,14 +109,11 @@
                                  compare))
 
 
-
-
 (defun storage.add-new-object (object &optional (key nil key-supplied-p))
   "Adding exactly new object to storage but not pushing it in any list"
   (when (not key-supplied-p)
     (setf key (key object)))
   (setf (gethash key (storage *global-storage*)) object))
-  ;; (log5:log-for test "Added new element with key ~a" key))
 
 (defun storage.edit-in-list (list object &optional (key nil key-supplied-p))
   "Editing or adding (if not exist) object in given list"
@@ -147,7 +136,6 @@
   "Editing or adding object to storage and edit it in appropriate lists"
   (when (not key-supplied-p)
     (setf key (key object)))
-  ;; (log5::log-for test "add/edit ~a" key)
   (setf (gethash key (storage *global-storage*)) object)
   (when (equal (type-of object) 'product)
     (setf (products *global-storage*) (storage.edit-in-list (products *global-storage*) object key))

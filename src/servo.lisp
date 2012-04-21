@@ -10,10 +10,6 @@
                                ,alist)))
      (push (cons ,key  ,val) ,alist)))
 
-;; (macroexpand-1 '(re-assoc dumb :nameless (name object)))
-
-
-
 (defmacro with-sorted-paginator (get-products request-get-plist body)
   `(let* ((products ,get-products)
           (sorting  (getf ,request-get-plist :sort))
@@ -165,7 +161,6 @@
 		(with-option1 product
 			option-group-name option-name
 			(setf value-x (getf option :value)))
-		;; (format t "~&Значение опции: ~a ключ: ~a " value-x key-name)
 		(mapcar #'(lambda (option-value)
 								(let ((value-p (getf request-plist
 																		 (intern (string-upcase
@@ -174,18 +169,11 @@
 																											number))
 																						 :keyword))))
 									(incf number)
-									;; (format t "~&Опция в запросе: ~a ~a" option-value value-p)
 									(when (equal value-p "1")
 										(setf request-flag nil)
-										;; (format t "~&Опция в запросе: ~a" option-value)
 										(if (string= value-x option-value)
 												(setf result-flag t)))))
 						filter-options)
-		;; DBG
-		;; (if (string= (format nil "~a" key-name) "WARRANTY")
-		;;     (progn
-		;;       (print filter-options) ;;158712
-		;;       (format t "~a-- ~a : ~a" (articul product)  result-flag request-flag)))
 		(or result-flag
 				request-flag)))
 
@@ -217,7 +205,6 @@
 							(if (string= opt-val "Любой")
 									t
 									(string= value-x opt-val)))))))))
-
 
 (defun paginator-page-line (request-get-plist start stop current)
 	(loop :for i from start :to stop :collect
@@ -871,7 +858,7 @@
 
 (defmethod servo.available-for-order-p ((object product))
 	;; life-time is given in days
-	(< (get-universal-time) (+ (date-modified object) (* 60 60 24 (life-time (storage.main-parent object))))))
+	(< (get-universal-time) (+ (date-modified object) (* 60 60 24 (life-time (new-classes.parent object))))))
 
 (defun servo.string-replace-chars (string char-list &key (replacement nil) (test #'char=))
 	"Replacing all chars in char-list from string"
