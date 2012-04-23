@@ -52,4 +52,28 @@
 						 *printer-storage*)
 		result))
 
+(defun cartrige.restore ()
+  (let ((t-storage))
+    (let ((*printer-storage* (make-hash-table :test #'equal)))
+      (groupd.load *printer-storage* "printyrikartridji.xls")
+      (setf t-storage *printer-storage*))
+    (setf  *printer-storage* t-storage)
+    (log5:log-for info "DONE cartrige.restore")))
 
+(defun cartrige.load (storage filename)
+  (let ((header-line)
+        (proc (sb-ext:run-program
+               "/usr/bin/xls2csv"
+               (list "-q3" (format nil "~a/mainPage/~a" *path-to-dropbox* filename)) :wait nil :output :stream)))
+    (with-open-stream (stream (sb-ext:process-output proc))
+      (setf header-line (read-line stream nil))
+      (print header-line)
+      (loop
+         :for line = (read-line stream nil)
+         :until (or (null line)
+                    (string= "" (string-trim "#\," line)))
+         :do (let* ((words (sklonenie-get-words line))
+                    (skls (mapcar #'(lambda (w) (string-trim "#\""  w))
+                             words))
+                    (key (car skls)))
+               (setf (gethash key storage) skls))))))
