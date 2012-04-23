@@ -30,6 +30,12 @@
 (restas:define-route admin-templates-route ("/administration-super-panel/templates" :method :post)
   (show-admin-page "templates"))
 
+(restas:define-route admin-backup1-route ("/administration-super-panel/makebackup")
+  (show-admin-page "backup"))
+
+(restas:define-route admin-backup-route ("/administration-super-panel/makebackup" :method :post)
+  (show-admin-page "backup"))
+
 (restas:define-route admin-cron-route ("/administration-super-panel/cron-jobs" :method :post)
   (show-admin-page "cron-jobs"))
 
@@ -92,6 +98,7 @@
                "<li><a href=\"/administration-super-panel/pics\">pics</a></li>"
                "<li><a href=\"/administration-super-panel/info\">info</a></li>"
                "<li><a href=\"/administration-super-panel/templates\">templates</a></li>"
+							 "<li><a href=\"/administration-super-panel/makebackup\">backup</a></li>"
 							 "<li><a href=\"/administration-super-panel/cron-jobs\">cron-jobs</a></li>"))))
 
 (defun admin.test-get-post-parse ()
@@ -287,6 +294,18 @@
 									(format nil "File ~a not found" name))))
     (soy.admin:compile-template (list :output output))))
 
+(defun admin-gateway.make-backup (new-post-data)
+  (let ((dobackup (getf new-post-data :dobackup))
+				(output))
+		(if (and new-post-data (string= dobackup "dobackup"))
+				(setf output
+							(handler-case
+									(progn
+										(backup.serialize-all)
+										(format nil "Successfully made backup"))
+								(error (e) (format  nil "ERROR:~%~a" e)))))
+    (soy.admin:make-backup (list :output output))))
+
 (defun admin-gateway.do-action (action)
   (handler-case
       (if (not (null action))
@@ -402,6 +421,8 @@
                               (admin-gateway.pics-deleting new-post-data))
                              ((string= key "templates")
                               (admin-gateway.compile-template new-post-data))
+														 ((string= key "backup")
+                              (admin-gateway.make-backup new-post-data))
 														 ((string= key "cron-jobs")
                               (cron.html-print-job-list new-post-data))
                              (t (format nil "~a" key)))))))))
@@ -452,4 +473,18 @@
           (setf (getf result :raw-fullfilter) new-raw)))
     result))
 
-;; test
+;; (defun admin.server-restart (&optional (port 4006))
+;; 	(let* ((string (with-output-to-string (*standard-output*) (sb-ext:run-program "/bin/netstat"
+;; 																																								(list "-plnt")
+;; 																																								:output *standard-output*)))
+;; 				 ;; TODO: use only one regexp
+;; 				 (pid (ppcre:scan-to-strings "(\\d)+(?=/sbcl)"
+;; 																		 (ppcre:scan-to-strings
+;; 																			(format nil "(?=~d)([^\\r\\n])+(\\d+)/sbcl" port) string))))
+;; 		(when pid
+;; 			(log5:log-for info "KILLING RELEASE SITE PROCESS; PID = ~a" pid)
+;; 			(sb-ext:run-program "/bin/kill" (list "-9" (format nil "~d" pid))))
+;; 		(let ((sh "/home/eviltosha/cl-restas-eshop/start-4006.sh"))
+;; 			(log5:log-for info "RESTART SERVER; sh = ~a" sh)
+;; 			(with-output-to-string (*standard-output*) (sb-ext:run-program "/bin/sh" (list sh))))))
+;; ;;(log5:log-for info "server restart...."))))
