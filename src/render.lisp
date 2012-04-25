@@ -143,6 +143,8 @@
                                                                             (storage.get-filtered-products object #'active)))
                                       :accessories (catalog:accessories)
                                       :pager pager
+																			:cartrigeselect (when (string= "cartridge-dlya-printerov" (key object))
+																												(catalog:cartige-select))
                                       :products
                                       (loop
                                          :for product :in  paginated :collect (render.view product)))))))))
