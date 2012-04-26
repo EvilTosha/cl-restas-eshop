@@ -1,3 +1,5 @@
+;;;; articles.lisp
+
 (in-package #:eshop)
 
 ;; хранилище статей
@@ -172,7 +174,10 @@
                                                                                       :collect key)))
                                                                             "")))
 																															paginated)))))
-								 :rightblock  ""))))))
+								 :rightblock (soy.articles:r_b_articles (list :articles (let ((articles (articles.sort (get-articles-list))))
+																																					(if articles
+																																							(articles-view-articles (subseq articles 0 10))
+																																							nil))))))))))
 
 (defun get-article-breadcrumbs(article)
 	(format nil "<a href=\"/\">Главная</a> /
@@ -193,8 +198,7 @@
 																	(list :menu (new-classes.menu)
 																				:breadcrumbs (bredcrumbs object)
 																				:subcontent  (body object)
-																				:rightblock  (rightblock object)))
-											 ))
+																				:rightblock  (rightblock object)))))
       (root:main (list :keywords "" ;;keywords
                        :description "" ;;description
                        :title  (if (title object)
@@ -227,8 +231,7 @@
 																																																	:for key being the hash-keys
 																																																	:of (tags object)
 																																																	:collect key)))
-                                                                                        "")
-                                                                                    ))
+                                                                                        "")))
                                        :rightblock (soy.articles:r_b_articles (list :articles (let ((articles (articles.sort (remove-if #'(lambda(v)(equal v object)) (get-articles-list)))))
                                                                                                 (if articles
                                                                                                     (articles-view-articles (subseq articles 0 10))

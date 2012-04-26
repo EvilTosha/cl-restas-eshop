@@ -16,7 +16,7 @@
 					 :config.has-option-p
 					 :servo.compile-soy
 					 :dtd
-					 :restore-skls-from-files
+					 :sklonenie.restore
 					 :new-classes.unserialize-all
 					 :gateway.restore-history
 					 :static-pages.restore

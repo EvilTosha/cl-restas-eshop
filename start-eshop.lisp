@@ -49,7 +49,7 @@
 
 (let ((*package* (find-package :eshop)))
 	;;; content
-	(eshop:restore-skls-from-files)
+	(eshop:sklonenie.restore)
 	(when (eshop:config.get-option "START_OPTIONS" "load-storage")
 		(eshop:new-classes.unserialize-all)
 		(eshop:gateway.restore-history))

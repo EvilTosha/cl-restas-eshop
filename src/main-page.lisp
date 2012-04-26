@@ -13,8 +13,7 @@
 
 ;;обновление главной страницы
 (defun main-page-update ()
-	(apply #'servo.compile-soy (list  ;;"index.html"
-															"main-page.soy")))
+	(apply #'servo.compile-soy (list "main-page.soy")))
 
 
 ;; Имя берется из объявления
@@ -118,11 +117,9 @@
    (hit            :initarg :hit         :initform (make-hash-table :test #'equal)     :accessor hit)
    (new            :initarg :new         :initform (make-hash-table :test #'equal)     :accessor new)
    (review         :initarg :review      :initform (make-hash-table :test #'equal)     :accessor review)
-   (banner         :initarg :banner      :initform (make-hash-table :test #'equal)     :accessor banner)
-   ))
+   (banner         :initarg :banner      :initform (make-hash-table :test #'equal)     :accessor banner)))
 
 (defvar *main-page.storage* (make-instance 'main-page-storage))
-
 
 ;; продукт для главной
 (defclass main-page-product ()
@@ -132,8 +129,7 @@
    (date-finish    :initarg :date-finish :initform nil     :accessor date-finish)
    (weight         :initarg :weight      :initform 0       :accessor weight)
    (opts           :initarg :opts        :initform nil     :accessor opts)
-   (banner-type    :initarg :banner-type :initform nil     :accessor banner-type)
-   ))
+   (banner-type    :initarg :banner-type :initform nil     :accessor banner-type)))
 
 ;;получить список активных продуктов из хэш таблицы
 (defun main-page-get-active-product-list (storage)
@@ -229,20 +225,6 @@
                                element)))
     result))
 
-;; (defun main-page.restore ()
-;;   (let ((t-storage))
-;;     (log5:log-for info "Start (main-page-restore):")
-;;     (let ((*main-page.storage* (make-instance 'main-page-storage)))
-;;       (main-page-load (daily *main-page.storage*) "daily.xls")
-;;       (main-page-load (best *main-page.storage*) "best.xls")
-;;       (main-page-load (hit *main-page.storage*) "hit.xls")
-;;       (main-page-load (new *main-page.storage*) "new.xls")
-;;       (main-page-load (banner *main-page.storage*) "banners.xls")
-;;       (main-page-load (review *main-page.storage*) "review.xls")
-;;       (setf t-storage *main-page.storage*))
-;;     (setf  *main-page.storage* t-storage)
-;;     (log5:log-for info "Finish (main-page-restore)")))
-
 (defun main-page.restore ()
 	(let* ((t-storage (make-instance 'main-page-storage)))
 		(log5:log-for info "Start main-page.restore...")
@@ -275,32 +257,3 @@
 									(cons (review t-storage) "review.xls")))
 		(setf *main-page.storage* t-storage)
 		(log5:log-for info "Finish main-page.restore...")))
-
-;; (defun main-page-load (storage filename)
-;;   (let ((num 0)
-;;         (header-line)
-;;         (proc (sb-ext:run-program
-;;                "/usr/bin/xls2csv"
-;;                (list "-q3" (format nil "~a/mainPage/~a" *path-to-dropbox* filename)) :wait nil :output :stream)))
-;;     (with-open-stream (stream (sb-ext:process-output proc))
-;;       (setf header-line (read-line stream nil))
-;;       (loop
-;;          :for line = (read-line stream nil)
-;;          :until (or (null line)
-;;                     (string= "" (string-trim "#\," line)))
-;;          :do (progn (print line)
-;; 										(let* ((words (sklonenie-get-words line))
-;;                     (skls (mapcar #'(lambda (w) (string-trim "#\""  w))
-;; 																	words))
-;;                     (key (car skls)))
-;;                (incf num)
-;;                (setf (gethash num storage)
-;;                      (make-instance 'main-page-product
-;;                                     :key key
-;;                                     :name (nth 1 skls)
-;;                                     :date-start (time.article-decode-date (nth 2 skls))
-;;                                     :date-finish  (time.article-decode-date (nth 3 skls))
-;;                                     :weight (parse-integer (aif (nth 4 skls) it "0"))
-;;                                     :opts (nthcdr 5 skls)
-;;                                     :banner-type (nth 5 skls)))))))))
-

@@ -18,31 +18,18 @@
                 (setf result 2))))
     result))
 
-(defun restore-skls-from-files ()
-  (let ((t-storage))
-      (log5:log-for info "Start load skls...")
-      (let ((*group-skls* (make-hash-table :test #'equal)))
-        (load-sklonenie)
-        (log5:log-for info *group-skls*)
-        (setf t-storage  *group-skls*))
-      (setf *group-skls* t-storage)
-      (log5:log-for info "Finish load skls")))
-
-(defun load-sklonenie ()
-  (let ((proc (sb-ext:run-program
-               "/usr/bin/xls2csv"
-               (list "-q3" (format nil "~a/seo/~a" *path-to-dropbox* "sklonenija.xls")) :wait nil :output :stream)))
-    (with-open-stream (stream (sb-ext:process-output proc))
-      (loop
-         :for line = (read-line stream nil)
-         :until (or (null line)
-                    (string= "" (string-trim "#\," line)))
-         :do (let* ((words (sklonenie-get-words line))
-                    (skls (mapcar #'(lambda (w) (string-trim "#\""  w))
-                             words))
-                    (key (string-downcase (car skls))))
-               (format t "~&~a" line)
-               (setf (gethash key *group-skls*) skls))))))
+(defun sklonenie.restore ()
+	(let ((t-storage (make-hash-table :test #'equal)))
+		(xls.restore-from-xls
+		 (merge-pathnames "sklonenija.xls" (config.get-option "PATHS" "path-to-seo"))
+		 #'(lambda (line)
+				 (let* ((words (sklonenie-get-words line))
+								(skls (mapcar #'(lambda (w) (string-trim "#\""  w))
+															words))
+								(key (string-downcase (car skls))))
+					 (setf (gethash key t-storage) skls)))
+		 "sklonenie.restore")
+		(setf *group-skls* t-storage)))
 
 (defmethod sklonenie-get-words ((isg string))
   (let ((bin))
