@@ -872,10 +872,15 @@
 									 string))
 	 'string))
 
-(defun servo.is-valid-string (s &optional (whitespace-check t)
-															(unwanted-chars (list #\Space #\Tab #\Newline)))
+(defun servo.is-valid-string (s &key (whitespace-check t)
+															(unwanted-chars (list #\Space #\Tab #\Newline))
+															(del-method :replace-all))
 	(and s (string/= s "") (if whitespace-check
-														 (string/= "" (servo.string-replace-chars s unwanted-chars))
+														 (case del-method
+															 (:replace-all (string/= "" (servo.string-replace-chars s unwanted-chars)))
+															 (:trim (string-trim unwanted-chars s))
+															 (:left-trim (string-left-trim unwanted-chars s))
+															 (:right-trim (string-right-trim unwanted-chars s)))
 														 t)
 			 ;; for returning t if valid (not number)
 			 t))

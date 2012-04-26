@@ -202,8 +202,8 @@
                 (email.send-mail-warn (list email) *xls.errors* (format nil "дубли в dtd: ~a" *xls.errors-num*)))
             *conf.emails.xls.warn*)))
 
-(defun xls.restore-from-xls (filepath storage line-processor)
-	(log5:log-for info "Start restore ~a from file ~a" storage filepath)
+(defun xls.restore-from-xls (filepath line-processor &optional (restore-name "restore-from-xls"))
+	(log5:log-for info "Start ~a from file ~a" restore-name filepath)
 	(let* ((file (format nil "~a" filepath))
 				 (proc (when (file-exists-p file)
 								 (sb-ext:run-program
@@ -214,6 +214,6 @@
 				(read-line stream nil)
 				(loop
 					 :for line = (read-line stream nil)
-					 :while (servo.is-valid-string (string-trim "#\," line))
+					 :while (servo.is-valid-string line :unwanted-chars (list #\,) :del-method :trim)
 					 :do (funcall line-processor line))))
-    (log5:log-for info "DONE restore")))
+    (log5:log-for info "DONE ~a" restore-name)))

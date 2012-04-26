@@ -97,11 +97,9 @@
 				#'string<))
 
 (defun cartrige.restore ()
-	(log5:log-for info "Start cartrige.restore...")
 	(let ((t-storage (make-hash-table :test #'equal)))
 		(xls.restore-from-xls
-		 (format nil "~a~a" (config.get-option "CRITICAL" "path-to-conf") "printyrikartridji.xls")
-		 t-storage
+		 (merge-pathnames "printyrikartridji.xls" (config.get-option "CRITICAL" "path-to-conf"))
 		 #'(lambda (line)
 				 (let* ((content-list (mapcar #'(lambda (elt)
 																					(string-trim "#\"" elt))
@@ -124,8 +122,7 @@
 															 :while (servo.is-valid-string elt)
 															 :collect elt)))
 					 (cartrige.add-printer t-storage articul origin-list other-list vendor name
-																 (format nil "~a ~(~a~)" type tech)))))
-		(when t-storage
-			(setf *printer-storage* t-storage))
-		(log5:log-for info "DONE cartrige.restore")))
+																 (format nil "~a ~(~a~)" type tech))))
+		 "cartrige.restore")
+		(setf *printer-storage* t-storage)))
 
