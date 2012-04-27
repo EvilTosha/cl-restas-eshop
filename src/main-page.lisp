@@ -228,32 +228,30 @@
 (defun main-page.restore ()
 	(let* ((t-storage (make-instance 'main-page-storage)))
 		(log5:log-for info "Start main-page.restore...")
-		(mapcar #'(lambda (pair)
-								(let ((filename (cdr pair))
-											(storage (car pair))
-											(num 0))
-									(xls.restore-from-xls
-									 (merge-pathnames filename (config.get-option "PATHS" "path-to-main-page"))
-									 #'(lambda (line)
-											 (let* ((words (sklonenie-get-words line))
-															(skls (mapcar #'(lambda (w) (string-trim "#\""  w))
-																						words))
-															(key (car skls)))
-												 (incf num)
-												 (setf (gethash num storage)
-															 (make-instance 'main-page-product
-																							:key key
-																							:name (nth 1 skls)
-																							:date-start (time.article-decode-date (nth 2 skls))
-																							:date-finish  (time.article-decode-date (nth 3 skls))
-																							:weight (parse-integer (aif (nth 4 skls) it "0"))
-																							:opts (nthcdr 5 skls)
-																							:banner-type (nth 5 skls))))))))
-						(list (cons (daily t-storage) "daily.xls")
-									(cons (best t-storage) "best.xls")
-									(cons (hit t-storage) "hit.xls")
-									(cons (new t-storage) "new.xls")
-									(cons (banner t-storage) "banners.xls")
-									(cons (review t-storage) "review.xls")))
+		(loop
+			 :for filename
+			 :in (list "daily.xls"       "best.xls"       "hit.xls"       "new.xls"
+								 "banners.xls"       "review.xls")
+			 :for storage
+			 :in (list (daily t-storage) (best t-storage) (hit t-storage) (new t-storage)
+								 (banner t-storage) (review t-storage))
+			 :do (let ((num 0))
+						 (xls.restore-from-xls
+							(merge-pathnames filename (config.get-option "PATHS" "path-to-main-page"))
+							#'(lambda (line)
+									(let* ((words (sklonenie-get-words line))
+												 (skls (mapcar #'(lambda (w) (string-trim "#\""  w))
+																			 words))
+												 (key (car skls)))
+										(incf num)
+										(setf (gethash num storage)
+													(make-instance 'main-page-product
+																				 :key key
+																				 :name (nth 1 skls)
+																				 :date-start (time.article-decode-date (nth 2 skls))
+																				 :date-finish  (time.article-decode-date (nth 3 skls))
+																				 :weight (parse-integer (aif (nth 4 skls) it "0"))
+																				 :opts (nthcdr 5 skls)
+																				 :banner-type (nth 5 skls))))))))
 		(setf *main-page.storage* t-storage)
 		(log5:log-for info "Finish main-page.restore...")))
