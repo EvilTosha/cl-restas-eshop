@@ -250,8 +250,7 @@
 												start-page-line
 												cur-page-line
 												stop-page-line)))
-			(values result page-line-string)
-			)))
+			(values result page-line-string))))
 
 
 (defun menu-sort (a b)
@@ -294,16 +293,6 @@
 																content
 																"test page"))))
 
-(defun static-page ()
-	(let ((∆ (find-package (intern (string-upcase (subseq (request-str) 1)) :keyword))))
-		(default-page
-				(static:main
-				 (list :menu (menu)
-							 :breadcrumbs (funcall (find-symbol (string-upcase "breadcrumbs") ∆))
-							 :subcontent  (funcall (find-symbol (string-upcase "subcontent") ∆))
-							 :rightblock  (funcall (find-symbol (string-upcase "rightblock") ∆)))))))
-
-
 (defun request-str ()
 	(let* ((request-full-str (hunchentoot:url-decode (hunchentoot:request-uri hunchentoot:*request*)))
 				 (request-parted-list (split-sequence:split-sequence #\? request-full-str))
@@ -335,13 +324,10 @@
 		request-list))
 
 
-
 (defun make-get-str (request-get-plist)
 	(format nil "~{~a~^&~}"
 					(loop :for cursor :in request-get-plist by #'cddr collect
-						 (format nil "~a=~a" (string-downcase cursor) (getf request-get-plist cursor))
-						 )))
-
+						 (format nil "~a=~a" (string-downcase cursor) (getf request-get-plist cursor)))))
 
 
 (defun parse-id (id-string)
@@ -439,7 +425,7 @@
 								:repeat cnt
 								:collect
 								(pop lst)) ret)
-			 (unless (null lst)
+			 (when lst
 				 (go re)))
 		(reverse ret)))
 
@@ -695,11 +681,8 @@
                        (string-downcase (string-trim '(#\Space #\Tab #\Newline) vendor))
                        (string-downcase (string-trim '(#\Space #\Tab #\Newline)
 																										 (ppcre:regex-replace-all "%20" (getf request-get-plist :vendor) " "))))
-                      (push product result-products))
-                  ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-                  ))
-            (get-recursive-products object)
-            )
+                      (push product result-products))))
+            (get-recursive-products object))
     result-products))
 
 (defmethod vendor-filter-controller (product request-get-plist)
@@ -784,9 +767,6 @@
 					 (setf (gethash key res) value)))
     res))
 
-
-
-
 (defun servo.diff-percentage (full part)
   "Returns difference in percents. (1 - part / full) * 100%"
   (if (or (null full) (null part) (equal 0 full))
@@ -856,12 +836,12 @@
 	;; life-time is given in days
 	(< (get-universal-time) (+ (date-modified object) (* 60 60 24 (life-time (new-classes.parent object))))))
 
-(defun servo.string-replace-chars (string char-list &key (replacement nil) (test #'char=))
+(defun servo.string-replace-chars (string char-list &key (replacement nil))
 	"Replacing all chars in char-list from string"
 	(coerce
 	 (remove-if #'null
 							(map 'list (lambda (c)
-													 (if (some (lambda (c1) (funcall test c c1))
+													 (if (some #'(lambda (c1) (char= c c1))
 																		 char-list)
 															 replacement
 															 c))
@@ -894,5 +874,5 @@
 					(format stream "~&~a ERROR: ~a~%" (time.get-full-human-time) e)
 					(setf successful nil))))
 		(if successful
-			(format stream "~&~a Finish ~a~%" (time.get-full-human-time) function)
-			(format stream "~&~a ~a finished with error~%" (time.get-full-human-time) function))))
+        (format stream "~&~a Finish ~a~%" (time.get-full-human-time) function)
+        (format stream "~&~a ~a finished with error~%" (time.get-full-human-time) function))))
