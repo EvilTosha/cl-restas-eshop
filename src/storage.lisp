@@ -1,3 +1,5 @@
+;;;; storage.lisp
+
 (in-package #:eshop)
 
 (defclass global-storage ()
@@ -24,7 +26,11 @@
                               nil)))
                   (parents item))))))
 
-(defun storage.get-all-child-groups (root &optional (sort-f #'catalog.alphabet-group-sort-f))
+(defun storage.alphabet-group-sorter (a b)
+  (when (and (name a) (name b))
+    (STRING< (name a) (name b))))
+
+(defun storage.get-all-child-groups (root &optional (sorter #'storage.alphabet-group-sorter))
   (sort
    (let ((children (groups root))
          (res))
@@ -32,9 +38,9 @@
          (list root)
          (progn
            (mapcar #'(lambda (root)
-                       (setf res (append res (storage.get-all-child-groups root sort-f))))
+                       (setf res (append res (storage.get-all-child-groups root sorter))))
                    children)
-           res))) sort-f))
+           res))) sorter))
 
 (defmethod storage.get-recursive-products ((object group))
   (let ((products (products object)))

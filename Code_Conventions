@@ -1,0 +1,25 @@
+Code and working process conventions for CL-eshop project.
+
+Firstly look at standard naming/coding conventions for Common Lisp:
+http://www.cliki.net/naming%20conventions
+http://www.cs.umd.edu/~nau/cmsc421/norvig-lisp-style.pdf
+
+Project specific conventions:
+- Each function name shoud start with name of containing file. Example: function in xls.lisp file should look like (defun xls.foo () ...)
+
+- Each keyword in loop macro should start with colon. Example:
+(loop
+   :for x
+   :in (list 1 2 3)
+   :do (foo x))
+but not
+(loop
+   for x
+   in (list 1 2 3)
+   do (foo x))
+
+- When you describe new anonimous function it should follow #'(lambda () ...) (not (lambda () ...)) convention.
+
+- When you need to validate some data, use (if data ...) not (if (not (null data)) ...)
+
+- Add documentation lines, if purpose of function/variable is not obvious

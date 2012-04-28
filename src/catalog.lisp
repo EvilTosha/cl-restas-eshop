@@ -1,12 +1,6 @@
-(in-package #:eshop)
+;;;; catalog.lisp
 
-(defun catalog.alphabet-group-sort-f (a b)
-  (if (or (null (name a))
-          (null (name b)))
-      nil
-      ;; else
-      (STRING< (name a)
-         (name b))))
+(in-package #:eshop)
 
 ;;шаблоны
 (defun catalog.catalog-update ()
@@ -55,7 +49,6 @@
 
 (defun catalog.catalog-entity ()
   (catalog.sitemap-entity nil))
-
 
 (defun catalog.sitemap-page (&optional error404)
   (catalog.sitemap-entity

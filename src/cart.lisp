@@ -1,3 +1,5 @@
+;;;; cart.lisp
+
 (in-package #:eshop)
 
 (defvar *order-id* nil)
@@ -38,16 +40,15 @@
          (item-link (cdr (assoc :ITEM--LINK item)))
          (img-link  (cdr (assoc :IMG--LINK item)))
          (object    (gethash (format nil "~a" articul) *storage*)))
-    (if (null object)
-        nil
-        (let ((pics (get-pics (articul object))))
-          (list :count count
-                :itemlink item-link
-                :firstpic (if (null pics) "" (car pics))
-                :articul (articul object)
-                :name (realname object)
-                :siteprice (siteprice object)
-                :price (price object))))))
+    (when object
+      (let ((pics (get-pics (articul object))))
+        (list :count count
+              :itemlink item-link
+              :firstpic (if (null pics) "" (car pics))
+              :articul (articul object)
+              :name (realname object)
+              :siteprice (siteprice object)
+              :price (price object))))))
 
 (defun checkout-page-0 ()
   (if (null (hunchentoot:cookie-in "cart"))
@@ -157,8 +158,7 @@ Content-Transfer-Encoding: base64
 
 --becd713b5f8316a655d07bd225b48c406--
 "
-				   (encode64 clientmail)
-				   ))
+				   (encode64 clientmail)))
       (close sendmail)
       (sb-ext:process-wait sendmail-process)
       (sb-ext:process-close sendmail-process))))
