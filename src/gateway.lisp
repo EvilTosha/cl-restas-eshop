@@ -64,8 +64,7 @@
                    ;; Засылаем первый пакет в *load-list*
                    (push raw *load-list*)
                    (push (hunchentoot:get-parameter "num") *order*)
-                   "ordinal"))
-                )))))
+                   "ordinal")))))))
 
 
 (defun gateway.check-price (product price siteprice)
@@ -96,8 +95,7 @@
 																							siteprice))
 								(mapcar #'(lambda (email)
 														(email.send-mail-warn (list email) mailbody (format nil "price ~a" (articul product))))
-												*conf.emails.gateway.warn*)
-								))))
+												*conf.emails.gateway.warn*)))))
 		t))
 
 
@@ -241,8 +239,7 @@
 													:external-format :utf-8)
 			(mapcar #'(lambda (data)
 									(format file "~&~a" (object-fields.string-delete-newlines (sb-ext:octets-to-string data :external-format :cp1251))))
-							(reverse raws))
-			)))
+							(reverse raws)))))
 
 (defun gateway.store-history (history)
 	"history имеет вид (list (list (time.get-date-time) *order* *load-list*))"
@@ -250,8 +247,6 @@
 							(log5:log-for info-console "~a|~a|~a" (car v) (second v) (length (third v)))
 							(gateway.store-full-gateway (third v) (time.decode-gateway-time (car v))))
 					history))
-
-
 
 (defun gateway.process-products1 (items)
   (loop :for elt  :in items :collect
@@ -266,8 +261,7 @@
              (realname  (cdr (assoc :realname elt)))
              (count-total    (cdr (assoc :count--total elt)))
              (count-transit  (cdr (assoc :count--transit elt))))
-         (gateway.process-product1 articul price siteprice isnew isspec name realname count-total count-transit bonuscount)
-         ))))
+         (gateway.process-product1 articul price siteprice isnew isspec name realname count-total count-transit bonuscount)))))
 
 
 
@@ -288,8 +282,7 @@
          (when (equal 0 price)
            (log5:log-for warning "Zero-price ~a" elt)
            (return-from iteration))
-         (gateway.process-product articul price siteprice isnew isspec name realname count-total count-transit bonuscount)
-         ))))
+         (gateway.process-product articul price siteprice isnew isspec name realname count-total count-transit bonuscount)))))
 
 (defun gateway.get-pathname-fulls (&optional (timestamp (get-universal-time)))
   "список файлов выгрузок до определенной даты"
@@ -383,8 +376,7 @@
           (gateway.process-products1 data)
           (gateway.update-actives data)
           (gateway.restore-singles1 lastgateway-ts timestamp)
-          (post-proccess-gateway)
-          )))
+          (post-proccess-gateway))))
 	(log5:log-for info "gateway restore finished")
   "test")
 

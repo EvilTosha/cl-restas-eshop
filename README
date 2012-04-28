@@ -1,0 +1,3 @@
+Internet shop server-side code, written on Common Lisp.
+SBCL required version 1.0.45+
+List of required libs can be viewed in load.lisp file

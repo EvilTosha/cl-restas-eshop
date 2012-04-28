@@ -78,6 +78,8 @@
 	(config.config-option-processing "PATHS" "path-to-logs" "path")
 	(config.config-option-processing "PATHS" "path-to-backups" "path")
 	(config.config-option-processing "PATHS" "path-to-big-images-backup" "path")
+	(config.config-option-processing "PATHS" "path-to-main-page" "path")
+	(config.config-option-processing "PATHS" "path-to-seo" "path")
 	;; CRITICAL section
 	;; these paths should be different on developer and release servers
 	(config.config-option-processing "CRITICAL" "path-to-conf" "path")

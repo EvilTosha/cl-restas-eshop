@@ -1,10 +1,4 @@
 ;;;; xls.lisp
-;;;;
-;;;; This file is part of the cl-eshop project, released under GNU Affero General Public License, Version 3.0
-;;;; See file COPYING for details.
-;;;;
-;;;; Author: Glukhov Michail aka Rigidus <i.am.rigidus@gmail.com>
-
 
 (in-package #:eshop)
 
@@ -36,18 +30,18 @@
                      (mapcar #'(lambda (y) (string-trim '(#\Space #\Tab #\") y))
                              (let ((inp) (sv) (ac) (rs))
                                (loop :for cr :across isg do
-																		 (if (null inp)
-																				 (cond ((equal #\" cr) (setf inp t))
-																							 ((equal #\, cr) (push "" rs)))
-																			 (cond ((and (null sv) (equal #\" cr)) (setf sv t))
-																						 ((and sv (equal #\" cr)) (progn (setf sv nil)
-																																						 (push #\" ac)))
-																						 ((and sv (equal #\, cr)) (progn (setf sv nil)
-																																						 (setf inp nil)
-																																						 (push (coerce (reverse ac) 'string) rs)
-																																						 (setf ac nil)))
-																						 ((equal #\Return cr) nil)
-																						 (t (push cr ac)))))
+																	(if (null inp)
+																			(cond ((equal #\" cr) (setf inp t))
+																						((equal #\, cr) (push "" rs)))
+																			(cond ((and (null sv) (equal #\" cr)) (setf sv t))
+																						((and sv (equal #\" cr)) (progn (setf sv nil)
+																																						(push #\" ac)))
+																						((and sv (equal #\, cr)) (progn (setf sv nil)
+																																						(setf inp nil)
+																																						(push (coerce (reverse ac) 'string) rs)
+																																						(setf ac nil)))
+																						((equal #\Return cr) nil)
+																						(t (push cr ac)))))
                                (when ac
                                  (if (and inp (null sv))
                                      (setf bin t))
@@ -66,18 +60,18 @@
          (cur-optgroup)
          (cur-options))
     (loop :for i :from 0 :to (- mx 1) :do
-					(let ((val       (if (nth i line)       (nth i line) ""))
-								(optgroup  (if (nth i optgroups)  (nth i optgroups) ""))
-								(field     (if (nth i fields)     (nth i fields) "")))
-						(cond ((equal i 0) (setf (getf flt :articul)
-																		 (parse-integer val)))
-									((equal i 1) (setf (getf flt :realname) val))
-									(t (progn (unless (equal 0 (length optgroup))
-															(unless (null cur-optgroup)
-																(push (list :optgroup_name cur-optgroup :options (reverse cur-options)) rs))
-															(setf cur-optgroup optgroup)
-															(setf cur-options nil))
-														(push (list :name field :value val) cur-options))))))
+			 (let ((val       (if (nth i line)       (nth i line) ""))
+						 (optgroup  (if (nth i optgroups)  (nth i optgroups) ""))
+						 (field     (if (nth i fields)     (nth i fields) "")))
+				 (cond ((equal i 0) (setf (getf flt :articul)
+																	(parse-integer val)))
+							 ((equal i 1) (setf (getf flt :realname) val))
+							 (t (progn (unless (equal 0 (length optgroup))
+													 (unless (null cur-optgroup)
+														 (push (list :optgroup_name cur-optgroup :options (reverse cur-options)) rs))
+													 (setf cur-optgroup optgroup)
+													 (setf cur-options nil))
+												 (push (list :name field :value val) cur-options))))))
     (push (list :optgroup_name cur-optgroup :options (reverse cur-options)) rs)
     (append flt (list :result-options (reverse rs)))))
 
@@ -87,34 +81,34 @@
         (otp)
         (log-output *standard-output*))
     (setf otp (with-output-to-string (*standard-output*)
-																		 (let* ((proc (sb-ext:run-program
-																									 (xls2csv obn)
-																									 (list "-q3" (format nil "~a" ifl)) :wait nil :output :stream))
-																						(optgroups)
-																						(fields))
-																			 (with-open-stream (in (sb-ext:process-output proc))
-																												 (loop
-																													:for ist = (read-line in nil)
-																													:until (or (null ist)
-																																		 (string= "" (string-trim "#\," ist)))
-																													:do (progn
-																																(multiple-value-bind (line esf)
-																																										 (ƒ ist px)
-																																										 (when esf
-																																											 (format log-output "~&~a|~a:~a" ifl line esf)
-																																											 (error "DTD"))
-																																										 (unless (null line)
-																																											 (cond ((null optgroups) (setf optgroups line))
-																																														 ((null fields) (setf fields line))
-																																														 (t (handler-case
-																																																 (let ((val (ƒ (list :line line
-																																																										 :optgroups optgroups
-																																																										 :fields fields)
-																																																							 px)))
-																																																	 (print "")
-																																																	 (print val)
-																																																	 (push val rs))
-																																																 (SB-INT:SIMPLE-PARSE-ERROR () nil))))))))))))
+								(let* ((proc (sb-ext:run-program
+															(xls2csv obn)
+															(list "-q3" (format nil "~a" ifl)) :wait nil :output :stream))
+											 (optgroups)
+											 (fields))
+									(with-open-stream (in (sb-ext:process-output proc))
+										(loop
+											 :for ist = (read-line in nil)
+											 :until (or (null ist)
+																	(string= "" (string-trim "#\," ist)))
+											 :do (progn
+														 (multiple-value-bind (line esf)
+																 (ƒ ist px)
+															 (when esf
+																 (format log-output "~&~a|~a:~a" ifl line esf)
+																 (error "DTD"))
+															 (unless (null line)
+																 (cond ((null optgroups) (setf optgroups line))
+																			 ((null fields) (setf fields line))
+																			 (t (handler-case
+																							(let ((val (ƒ (list :line line
+																																	:optgroups optgroups
+																																	:fields fields)
+																														px)))
+																								(print "")
+																								(print val)
+																								(push val rs))
+																						(SB-INT:SIMPLE-PARSE-ERROR () nil))))))))))))
     rs))
 
 
@@ -124,32 +118,32 @@
         (items nil)
         (num-all 0))
     (loop :for file :in (directory (format nil "~a/*.xls" (folder obn))) :do
-					(setf items (reverse (ƒ file px)))
-					(setf num-all (+ num-all (length items)))
-					(log5:log-for info-console "~a. Processing file: ~a | ~a" (incf cnt) file (length items))
-					(loop :for item :in items :do
-								(let* ((articul (getf item :articul))
-											 (realname (getf item :realname))
-											 (optgroups (loop :for optgroup :in (getf item :result-options) :collect
-																				(make-instance 'optgroup
-																											 :name (getf optgroup :optgroup_name)
-																											 :options (loop :for option :in (getf optgroup :options) :collect
-																																			(make-instance 'option
-																																										 :name (getf option :name)
-																																										 :value (getf option :value))))))
-											 (product (gethash (format nil "~a" articul) *storage*)))
-									(let ((pr (gethash articul *xls.product-table*)))
-										(if pr
-												(log5:log-for warning "WARN: ~a | ~a | ~a" articul pr file)
-											(setf (gethash articul *xls.product-table*) file)))
-									(if (null product)
-											(format nil "warn: product ~a (articul ~a) not found, ignore (file: ~a)" realname articul file)
-										(progn
-											(setf (optgroups product) optgroups)
-											;; Если есть значимое realname - перезаписать в продукте
-											(if (not (string= "" (string-trim '(#\Space #\Tab #\Newline)
-																												(format nil "~@[~a~]" realname))))
-													(setf (realname product) realname)))))))
+			 (setf items (reverse (ƒ file px)))
+			 (setf num-all (+ num-all (length items)))
+			 (log5:log-for info-console "~a. Processing file: ~a | ~a" (incf cnt) file (length items))
+			 (loop :for item :in items :do
+					(let* ((articul (getf item :articul))
+								 (realname (getf item :realname))
+								 (optgroups (loop :for optgroup :in (getf item :result-options) :collect
+															 (make-instance 'optgroup
+																							:name (getf optgroup :optgroup_name)
+																							:options (loop :for option :in (getf optgroup :options) :collect
+																													(make-instance 'option
+																																				 :name (getf option :name)
+																																				 :value (getf option :value))))))
+								 (product (gethash (format nil "~a" articul) *storage*)))
+						(let ((pr (gethash articul *xls.product-table*)))
+							(if pr
+									(log5:log-for warning "WARN: ~a | ~a | ~a" articul pr file)
+									(setf (gethash articul *xls.product-table*) file)))
+						(if (null product)
+								(format nil "warn: product ~a (articul ~a) not found, ignore (file: ~a)" realname articul file)
+								(progn
+									(setf (optgroups product) optgroups)
+									;; Если есть значимое realname - перезаписать в продукте
+									(if (not (string= "" (string-trim '(#\Space #\Tab #\Newline)
+																										(format nil "~@[~a~]" realname))))
+											(setf (realname product) realname)))))))
     (log5:log-for info "Successfully processed ~a files | ~a products" cnt num-all)
     ;;создаем новый yml файл
     (create-yml-file)))
@@ -161,40 +155,40 @@
         (items nil)
         (num-all 0))
     (loop :for file :in (directory (format nil "~a/*.xls" (folder obn))) :do
-					(setf items (reverse (ƒ file px)))
-					(setf num-all (+ num-all (length items)))
-					(log5:log-for info-console "~a. Processing file: ~a | ~a" (incf cnt) file (length items))
-					(loop :for item :in items :do
-								(let* ((articul (getf item :articul))
-											 (realname (getf item :realname))
-											 (optgroups (loop :for optgroup :in (getf item :result-options) :collect
-																				(list :name (getf optgroup :optgroup_name)
-																							:options (loop :for option :in (getf optgroup :options) :collect
-																														 (list  :name (getf option :name)
-																																		:value (getf option :value))))))
-											 (product (gethash (format nil "~a" articul) (storage *global-storage*))))
-									(let ((pr (gethash articul *xls.product-table*)))
-										(if pr
-												(progn
-													(log5:log-for warning "WARN:~a | ~a | ~a" articul pr file)
-													(setf *xls.errors* (concatenate 'string (format nil "<tr><td>~a</td>
+			 (setf items (reverse (ƒ file px)))
+			 (setf num-all (+ num-all (length items)))
+			 (log5:log-for info-console "~a. Processing file: ~a | ~a" (incf cnt) file (length items))
+			 (loop :for item :in items :do
+					(let* ((articul (getf item :articul))
+								 (realname (getf item :realname))
+								 (optgroups (loop :for optgroup :in (getf item :result-options) :collect
+															 (list :name (getf optgroup :optgroup_name)
+																		 :options (loop :for option :in (getf optgroup :options) :collect
+																								 (list  :name (getf option :name)
+																												:value (getf option :value))))))
+								 (product (gethash (format nil "~a" articul) (storage *global-storage*))))
+						(let ((pr (gethash articul *xls.product-table*)))
+							(if pr
+									(progn
+										(log5:log-for warning "WARN:~a | ~a | ~a" articul pr file)
+										(setf *xls.errors* (concatenate 'string (format nil "<tr><td>~a</td>
                                                                          <td><a href=\"http://320-8080.ru/~a\">~a</a></td>
                                                                          <td>~a</td>
                                                                          <td>~a</td></tr>" articul articul realname
                                                                          (car (last (split-sequence:split-sequence #\/ (format nil "~a" pr))))
                                                                          (car (last (split-sequence:split-sequence #\/ (format nil "~a" file))))) *xls.errors*))
-													(setf *xls.errors-num* (+ *xls.errors-num* 1)))
-											(setf (gethash articul *xls.product-table*) file)))
-									(if (null product)
-											(format nil "warn: product ~a (articul ~a) not found, ignore (file: ~a)" realname articul file)
-										(progn
-											(setf (optgroups product) optgroups)
-											(with-option1 product "Общие характеристики" "Производитель"
-																		(setf (vendor product) (getf option :value)))
-											;; Если есть значимое realname - перезаписать в продукте
-											(if (not (string= "" (string-trim '(#\Space #\Tab #\Newline)
-																												(format nil "~@[~a~]" realname))))
-													(setf (name-seo product) realname)))))))
+										(setf *xls.errors-num* (+ *xls.errors-num* 1)))
+									(setf (gethash articul *xls.product-table*) file)))
+						(if (null product)
+								(format nil "warn: product ~a (articul ~a) not found, ignore (file: ~a)" realname articul file)
+								(progn
+									(setf (optgroups product) optgroups)
+									(with-option1 product "Общие характеристики" "Производитель"
+																(setf (vendor product) (getf option :value)))
+									;; Если есть значимое realname - перезаписать в продукте
+									(if (not (string= "" (string-trim '(#\Space #\Tab #\Newline)
+																										(format nil "~@[~a~]" realname))))
+											(setf (name-seo product) realname)))))))
     (log5:log-for info "Successfully processed ~a files | ~a products" cnt num-all)))
 
 
@@ -207,3 +201,19 @@
     (mapcar #'(lambda (email)
                 (email.send-mail-warn (list email) *xls.errors* (format nil "дубли в dtd: ~a" *xls.errors-num*)))
             *conf.emails.xls.warn*)))
+
+(defun xls.restore-from-xls (filepath line-processor &optional (restore-name "restore-from-xls"))
+	(log5:log-for info "Start ~a from file ~a" restore-name filepath)
+	(let* ((file (format nil "~a" filepath))
+				 (proc (when (file-exists-p file)
+								 (sb-ext:run-program
+									"/usr/bin/xls2csv"
+									(list "-q3" file) :wait nil :output :stream))))
+		(when proc
+			(with-open-stream (stream (sb-ext:process-output proc))
+				(read-line stream nil)
+				(loop
+					 :for line = (read-line stream nil)
+					 :while (servo.is-valid-string line :unwanted-chars (list #\,) :del-method :trim)
+					 :do (funcall line-processor line))))
+    (log5:log-for info "DONE ~a" restore-name)))

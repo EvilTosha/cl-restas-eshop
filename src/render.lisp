@@ -120,9 +120,15 @@
                                                                             filters))))
                                                     sort-groups))))
                                 ;;else
-                                (let ((products-list (if (getf parameters :showall)
-                                                         (storage.get-filtered-products object #'atom)
-                                                         (storage.get-filtered-products object #'active))))
+                                (let* ((products-list (if (getf parameters :showall)
+																													(storage.get-filtered-products object #'atom)
+																													(storage.get-filtered-products object #'active)))
+																			 (cartrige-group (string= "cartridge-dlya-printerov" (key object)))
+																			 (printer-articul (and cartrige-group (getf parameters :printer-articul)))
+																			 (storage-printer (when printer-articul
+																													(gethash printer-articul (storage *global-storage*))))
+																			 (cartrige-printer (when printer-articul
+																													 (gethash printer-articul *printer-storage*))))
                                   (if (null (getf parameters :sort))
                                       (setf (getf parameters :sort) "pt"))
                                   (if (getf parameters :vendor)
@@ -132,6 +138,9 @@
                                                            products-list)))
                                   (if (getf parameters :fullfilter)
                                       (setf products-list (fullfilter-controller products-list object parameters)))
+																	(when (and printer-articul cartrige-printer)
+																		(setf products-list (mapcar #'(lambda (articul) (gethash articul (storage *global-storage*)))
+																																(cartrige.get-cartriges-by-model printer-articul))))
                                   (with-sorted-paginator
                                       products-list
                                     parameters
@@ -143,6 +152,17 @@
                                                                             (storage.get-filtered-products object #'active)))
                                       :accessories (catalog:accessories)
                                       :pager pager
+																			:cartrigeselect (when cartrige-group
+																												(catalog:cartige-select
+																												 (list
+																													:vendors (cartrige.get-vendors-list)
+																													:printer (when storage-printer
+																																		 (catalog:printer-view (list
+																																														:articul printer-articul
+																																														:pic (car (get-pics printer-articul))
+																																														:name (name-seo storage-printer)
+																																														:key (key storage-printer)
+																																														:price (siteprice storage-printer)))))))
                                       :products
                                       (loop
                                          :for product :in  paginated :collect (render.view product)))))))))
@@ -598,7 +618,6 @@
                              :link (format nil "?~a" (make-get-str url-parameters)))
                        veiws))
              vendors)
-    (print (length veiws))
     (setf veiws (sort veiws #'string<= :key #'(lambda (v) (string-upcase (getf v :vendor)))))
     (catalog:producers
      (list

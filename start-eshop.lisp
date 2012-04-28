@@ -17,9 +17,6 @@
 ;; load eshop
 (asdf:load-system :eshop)
 
-;; parse config
-(eshop:config.parse-config *path-to-config*)
-
 ;; swank server start
 (print swank::*application-hints-tables*)
 (setq swank:*use-dedicated-output-stream* nil)
@@ -28,11 +25,12 @@
 										 :port (eshop:config.get-option "START_OPTIONS" "swank-port"))
 
 ;; alternative order numbering for developers server
-(if (eshop:config.get-option "START_OPTIONS" "dbg-on")
+(if (and (not (eshop:config.get-option "START_OPTIONS" "release"))
+				 (eshop:config.get-option "START_OPTIONS" "dbg-on"))
 		(progn
 			;; нумерация заказов
 			(setf eshop::*order-id* 1)
-			(setf eshop:*path-order-id-file* "wolfor-order-id.txt")
+			(setf eshop::*path-order-id-file* "wolfor-order-id.txt")
 			;; адрес для карты сайта
 			;;(setf eshop:*path-sitemap* "wolfor-sitemap.xml")
 			;; Список email для рассылки писем от ошибках выгрузки 1с
@@ -51,25 +49,24 @@
 
 (let ((*package* (find-package :eshop)))
 	;;; content
-	(eshop::restore-skls-from-files)
+	(eshop:sklonenie.restore)
 	(when (eshop:config.get-option "START_OPTIONS" "load-storage")
-		(eshop::new-classes.unserialize-all)
-		(eshop::gateway.restore-history))
-  (eshop::report.set-salefilter)
+		(eshop:new-classes.unserialize-all)
+		(eshop:gateway.restore-history))
 	(when (eshop:config.get-option "START_OPTIONS" "load-xls")
-		(eshop::dtd)
+		(eshop:dtd)
 		(eshop::groupd.restore)
-		(eshop::groupd.holiday.restore)
-		)
+		(eshop::groupd.holiday.restore))
 	(when (eshop:config.get-option "START_OPTIONS" "load-content")
-		(eshop::static-pages.restore)
-		(eshop::articles.restore)
-		(eshop::main-page.restore))
+		(eshop:static-pages.restore)
+		(eshop:articles.restore)
+		(eshop:main-page.restore))
 	(when (eshop:config.get-option "START_OPTIONS" "run-cron-jobs")
 		;; making timer for backups
 		(cl-cron:make-cron-job #'eshop::backup.serialize-all :minute 0 :hour 17)
 		(cl-cron:start-cron))
   ;;; business logic
-	(eshop::report.create-marketing-filters))
+	(eshop::report.create-marketing-filters)
+	(eshop::report.set-salefilter))
 
-(log5:log-for eshop::info "ESHOP load finished")
+(print "ESHOP load finished")

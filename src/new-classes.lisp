@@ -88,7 +88,8 @@
 																	(let ((cur-pos (round (* 100 (/ (cl:file-position file) file-length)))))
 																		(when (> cur-pos percent)
 																			(setf percent cur-pos)
-																			(log5:log-for info-console "Done percent: ~a%" percent)))
+																			(when (= 0 (mod percent 10))
+																				(log5:log-for info-console "Done percent: ~a%" percent))))
 																	(storage.add-new-object item (key item)))
 																)))))))
 

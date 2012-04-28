@@ -16,12 +16,33 @@
 					 :config.has-option-p
 					 :servo.compile-soy
 					 :dtd
-					 ;;old
-					 :name
-					 :unserialize))
+					 :sklonenie.restore
+					 :new-classes.unserialize-all
+					 :gateway.restore-history
+					 :static-pages.restore
+					 :articles.restore
+					 :main-page.restore
+					 ))
 
-
-(defpackage #:eshop-test
-  (:use #:cl
-        #:eshop))
-
+;;; registering classes for proper compilation of methods
+;; articles.lisp
+(defclass article () ())
+;; main-page.lisp
+(defclass main-page-storage () ())
+(defclass main-page-product () ())
+;; xls.lisp
+(defclass nko () ())
+;; classes.lisp / new-classes.lisp
+;; TODO: get rid of classes.lisp
+(defclass group () ())
+(defclass product () ())
+(defclass filter () ())
+(defclass group-filter () ())
+;; oneclickcart.lisp
+(defclass oneclickcart.answer () ())
+;; list-filters.lisp
+(defclass field-filter () ())
+;; storage.lisp
+(defclass global-storage () ())
+;; cartrige.lisp
+(defclass printer () ())

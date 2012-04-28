@@ -10,10 +10,6 @@
                                ,alist)))
      (push (cons ,key  ,val) ,alist)))
 
-;; (macroexpand-1 '(re-assoc dumb :nameless (name object)))
-
-
-
 (defmacro with-sorted-paginator (get-products request-get-plist body)
   `(let* ((products ,get-products)
           (sorting  (getf ,request-get-plist :sort))
@@ -124,10 +120,6 @@
 			 (and (<= value-f value-x)
 						(>= value-t value-x)))))
 
-(defun sklonenie (name skl)
-	(setf name (string-downcase name)))
-
-
 ;;Фильтруем по наличию опции
 (defun filter-with-check-options (key-name option-group-name product request-plist filter-options)
 	(let ((number 0)
@@ -165,7 +157,6 @@
 		(with-option1 product
 			option-group-name option-name
 			(setf value-x (getf option :value)))
-		;; (format t "~&Значение опции: ~a ключ: ~a " value-x key-name)
 		(mapcar #'(lambda (option-value)
 								(let ((value-p (getf request-plist
 																		 (intern (string-upcase
@@ -174,18 +165,11 @@
 																											number))
 																						 :keyword))))
 									(incf number)
-									;; (format t "~&Опция в запросе: ~a ~a" option-value value-p)
 									(when (equal value-p "1")
 										(setf request-flag nil)
-										;; (format t "~&Опция в запросе: ~a" option-value)
 										(if (string= value-x option-value)
 												(setf result-flag t)))))
 						filter-options)
-		;; DBG
-		;; (if (string= (format nil "~a" key-name) "WARRANTY")
-		;;     (progn
-		;;       (print filter-options) ;;158712
-		;;       (format t "~a-- ~a : ~a" (articul product)  result-flag request-flag)))
 		(or result-flag
 				request-flag)))
 
@@ -217,7 +201,6 @@
 							(if (string= opt-val "Любой")
 									t
 									(string= value-x opt-val)))))))))
-
 
 (defun paginator-page-line (request-get-plist start stop current)
 	(loop :for i from start :to stop :collect
@@ -871,24 +854,28 @@
 
 (defmethod servo.available-for-order-p ((object product))
 	;; life-time is given in days
-	(< (get-universal-time) (+ (date-modified object) (* 60 60 24 (life-time (storage.main-parent object))))))
+	(< (get-universal-time) (+ (date-modified object) (* 60 60 24 (life-time (new-classes.parent object))))))
 
-(defun servo.string-replace-chars (string char-list &key (replacement nil) (test #'char=))
+(defun servo.string-replace-chars (string char-list &key (replacement "") (test #'char=))
 	"Replacing all chars in char-list from string"
 	(coerce
-	 (remove-if #'null
-							(map 'list (lambda (c)
-													 (if (some (lambda (c1) (funcall test c c1))
-																		 char-list)
-															 replacement
-															 c))
-									 string))
-	 'string))
+	 (map 'list (lambda (c)
+								(if (some (lambda (c1) (funcall test c c1))
+													char-list)
+										replacement
+										c))
+				string)
+	'string))
 
-(defun servo.is-valid-string (s &optional (whitespace-check t)
-															(unwanted-chars (list #\Space #\Tab #\Newline)))
+(defun servo.is-valid-string (s &key (whitespace-check t)
+															(unwanted-chars (list #\Space #\Tab #\Newline))
+															(del-method :replace-all))
 	(and s (string/= s "") (if whitespace-check
-														 (string/= "" (servo.string-replace-chars s unwanted-chars))
+														 (case del-method
+															 (:replace-all (string/= "" (servo.string-replace-chars s unwanted-chars)))
+															 (:trim (string-trim unwanted-chars s))
+															 (:left-trim (string-left-trim unwanted-chars s))
+															 (:right-trim (string-right-trim unwanted-chars s)))
 														 t)
 			 ;; for returning t if valid (not number)
 			 t))
