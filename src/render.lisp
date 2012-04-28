@@ -250,9 +250,9 @@
                                           value)
                                         " "
                                         (if (= 0 (yml.get-product-delivery-price1 object))
-                                            " "
+                                            " Акция: доставим бесплатно!"
                                             (if (= 100 (yml.get-product-delivery-price1 object))
-                                                "(скидка на доставку 70%)")))
+                                                " Акция: только в апреле доставим со скидкой 70%.")))
             :keyopts (render.get-catalog-keyoptions object)
             :oneclickbutton  (if (not (preorder object))
                                  (soy.buttons:add-one-click (list :articul (articul object))))
@@ -424,9 +424,9 @@
                                                     value)
                                                   " "
                                                   (if (= 0 (yml.get-product-delivery-price1 object))
-                                                      " (бесплатная доставка)"
+                                                      " Акция: доставим бесплатно!"
                                                       (if (= 100 (yml.get-product-delivery-price1 object))
-                                                          "(скидка на доставку 70%)")))
+                                                          " Акция: только в апреле доставим со скидкой 70%.")))
                              :others (soy.product:others
                                       (list :others (mapcar #'(lambda (x)
                                                                 (if (equal 'product (type-of x))
