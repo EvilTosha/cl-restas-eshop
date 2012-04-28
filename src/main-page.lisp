@@ -230,11 +230,11 @@
 		(log5:log-for info "Start main-page.restore...")
 		(loop
 			 :for filename
-			 :in (list "daily.xls"       "best.xls"       "hit.xls"       "new.xls"
+			 :in (list "daily.xls"         "best.xls"       "hit.xls"       "new.xls"
 								 "banners.xls"       "review.xls")
 			 :for storage
-			 :in (list (daily t-storage) (best t-storage) (hit t-storage) (new t-storage)
-								 (banner t-storage) (review t-storage))
+			 :in (list (daily t-storage)   (best t-storage) (hit t-storage) (new t-storage)
+								 (banner t-storage)  (review t-storage))
 			 :do (let ((num 0))
 						 (xls.restore-from-xls
 							(merge-pathnames filename (config.get-option "PATHS" "path-to-main-page"))

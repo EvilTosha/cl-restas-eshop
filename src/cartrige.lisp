@@ -4,10 +4,10 @@
 
 (defclass printer ()
 	((original-cartriges :initarg :original-cartriges :initform nil   :accessor original-cartriges)
-	 (other-cartriges :initarg :other-cartriges :initform nil   :accessor other-cartriges)
-	 (vendor    :initarg :vendor    :initform ""    :accessor vendor)
-	 (name      :initarg :name      :initform ""    :accessor name)
-	 (printer-type      :initarg :printer-type      :initform ""    :accessor printer-type)))
+	 (other-cartriges    :initarg :other-cartriges    :initform nil   :accessor other-cartriges)
+	 (vendor             :initarg :vendor             :initform ""    :accessor vendor)
+	 (name               :initarg :name               :initform ""    :accessor name)
+	 (printer-type       :initarg :printer-type       :initform ""    :accessor printer-type)))
 
 (defparameter *printer-storage* (make-hash-table :test #'equal))
 
@@ -16,9 +16,10 @@
 				 (vendor (getf get-data :vendor))
 				 (type (getf get-data :type))
 				 (printers (cartrige.get-printers-by-params :vendor vendor :printer-type type)))
-		(format nil "[~{~a~^,~}]" (mapcar #'(lambda (printer)
-																					 (format nil "{\"name\":\"~a\", \"key\":\"~a\"}" (name (gethash printer *printer-storage*)) printer))
-																			printers))))
+		(format nil "[~{~a~^,~}]"
+						(mapcar #'(lambda (printer)
+												(format nil "{\"name\":\"~a\", \"key\":\"~a\"}" (name (gethash printer *printer-storage*)) printer))
+										printers))))
 
 (restas:define-route cartrige-select-type-route ("/cartriges-select-type")
   (let* ((get-data (servo.alist-to-plist (hunchentoot:get-parameters hunchentoot:*request*)))

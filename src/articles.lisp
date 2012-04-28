@@ -7,23 +7,23 @@
 
 ;; описание полей статьи
 (defclass article ()
-  ((key         :initarg :key       :initform nil       :accessor key)
-   (name        :initarg :name      :initform nil       :accessor name)
-   (descr       :initarg :descr     :initform nil       :accessor descr)
-   (bredcrumbs  :initarg :bredcrumbs :initform nil      :accessor bredcrumbs)
-   (rightblock  :initarg :rightblock :initform nil      :accessor rightblock)
-   (title       :initarg :title      :initform nil      :accessor title)
-   (body        :initarg :body      :initform nil       :accessor body)
-   (date        :initarg :date      :initform nil       :accessor date)
-   (ctype        :initarg :ctype    :initform "article"  :accessor ctype) ;; article / static
-   (tags        :initarg :tags    :initform (make-hash-table :test #'equal) :accessor tags)))
+  ((key         :initarg :key        :initform nil                             :accessor key)
+   (name        :initarg :name       :initform nil                             :accessor name)
+   (descr       :initarg :descr      :initform nil                             :accessor descr)
+   (bredcrumbs  :initarg :bredcrumbs :initform nil                             :accessor bredcrumbs)
+   (rightblock  :initarg :rightblock :initform nil                             :accessor rightblock)
+   (title       :initarg :title      :initform nil                             :accessor title)
+   (body        :initarg :body       :initform nil                             :accessor body)
+   (date        :initarg :date       :initform nil                             :accessor date)
+   (ctype       :initarg :ctype      :initform "article"                       :accessor ctype) ;; article / static
+   (tags        :initarg :tags       :initform (make-hash-table :test #'equal) :accessor tags)))
 
 ;;тэги через запятую
 (defun make-tags-table (tags input-string)
   (let ((words (split-sequence:split-sequence #\, input-string)))
     (mapcar #'(lambda (w)
-                (if (not (null w))
-                    (setf (gethash (stripper w) tags) w)))
+                (when (servo.is-valid-string w)
+									(setf (gethash (stripper w) tags) w)))
             words)))
 
 (defmethod unserialize (filepath (dummy article))

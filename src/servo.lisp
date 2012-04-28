@@ -856,17 +856,16 @@
 	;; life-time is given in days
 	(< (get-universal-time) (+ (date-modified object) (* 60 60 24 (life-time (new-classes.parent object))))))
 
-(defun servo.string-replace-chars (string char-list &key (replacement nil) (test #'char=))
+(defun servo.string-replace-chars (string char-list &key (replacement "") (test #'char=))
 	"Replacing all chars in char-list from string"
 	(coerce
-	 (remove-if #'null
-							(map 'list (lambda (c)
-													 (if (some (lambda (c1) (funcall test c c1))
-																		 char-list)
-															 replacement
-															 c))
-									 string))
-	 'string))
+	 (map 'list (lambda (c)
+								(if (some (lambda (c1) (funcall test c c1))
+													char-list)
+										replacement
+										c))
+				string)
+	'string))
 
 (defun servo.is-valid-string (s &key (whitespace-check t)
 															(unwanted-chars (list #\Space #\Tab #\Newline))

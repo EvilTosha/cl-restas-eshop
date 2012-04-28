@@ -272,7 +272,7 @@
                                         (if (= 0 (yml.get-product-delivery-price1 object))
                                             " "
                                             (if (= 100 (yml.get-product-delivery-price1 object))
-                                                "(скидка на доставку 70%)")))
+                                                "(Акция: только в апреле доставим со скидкой 70%)")))
             :keyopts (render.get-catalog-keyoptions object)
             :oneclickbutton  (if (not (preorder object))
                                  (soy.buttons:add-one-click (list :articul (articul object))))
@@ -446,7 +446,7 @@
                                                   (if (= 0 (yml.get-product-delivery-price1 object))
                                                       " (бесплатная доставка)"
                                                       (if (= 100 (yml.get-product-delivery-price1 object))
-                                                          "(скидка на доставку 70%)")))
+                                                          "(Акция: только в апреле доставим со скидкой 70%)")))
                              :others (soy.product:others
                                       (list :others (mapcar #'(lambda (x)
                                                                 (if (equal 'product (type-of x))
@@ -618,7 +618,6 @@
                              :link (format nil "?~a" (make-get-str url-parameters)))
                        veiws))
              vendors)
-    (print (length veiws))
     (setf veiws (sort veiws #'string<= :key #'(lambda (v) (string-upcase (getf v :vendor)))))
     (catalog:producers
      (list
