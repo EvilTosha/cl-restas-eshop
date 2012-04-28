@@ -856,26 +856,28 @@
 	;; life-time is given in days
 	(< (get-universal-time) (+ (date-modified object) (* 60 60 24 (life-time (new-classes.parent object))))))
 
-(defun servo.string-replace-chars (string char-list &key (replacement "") (test #'char=))
+(defun servo.string-replace-chars (string char-list &key (replacement nil) (test #'char=))
 	"Replacing all chars in char-list from string"
 	(coerce
-	 (map 'list (lambda (c)
-								(if (some (lambda (c1) (funcall test c c1))
-													char-list)
-										replacement
-										c))
-				string)
-	'string))
+	 (remove-if #'null
+							(map 'list (lambda (c)
+													 (if (some (lambda (c1) (funcall test c c1))
+																		 char-list)
+															 replacement
+															 c))
+									 string))
+	 'string))
 
 (defun servo.is-valid-string (s &key (whitespace-check t)
 															(unwanted-chars (list #\Space #\Tab #\Newline))
 															(del-method :replace-all))
 	(and s (string/= s "") (if whitespace-check
-														 (case del-method
-															 (:replace-all (string/= "" (servo.string-replace-chars s unwanted-chars)))
-															 (:trim (string-trim unwanted-chars s))
-															 (:left-trim (string-left-trim unwanted-chars s))
-															 (:right-trim (string-right-trim unwanted-chars s)))
+                             (string/= ""
+                                       (case del-method
+                                         (:replace-all (servo.string-replace-chars s unwanted-chars))
+                                         (:trim (string-trim unwanted-chars s))
+                                         (:left-trim (string-left-trim unwanted-chars s))
+                                         (:right-trim (string-right-trim unwanted-chars s))))
 														 t)
 			 ;; for returning t if valid (not number)
 			 t))
