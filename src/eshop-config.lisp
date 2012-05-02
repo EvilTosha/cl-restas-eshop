@@ -35,12 +35,10 @@
               (let ((pathname (merge-pathnames fname (config.get-option "PATHS" "path-to-templates"))))
                 (format t "~&compile-template: ~a" pathname)
                 (closure-template:compile-template :common-lisp-backend pathname)))
-          '("404.soy"
-            "admin.soy"
+          '("admin.soy"
             "admin-table.soy"
             "articles.soy"
             "buttons.soy"
-            "cart-widget.soy"
             "catalog.soy"
             "checkout.soy"
             "class_forms.soy"

@@ -190,7 +190,7 @@
       (root:main (list :keywords "" ;;keywords
                        :description "" ;;description
                        :title (name object)
-                       :header (root:header (append (list :cart (root:cart))
+                       :header (root:header (append (list :cart (root:cart-widget))
                                                     (main-page-show-banner "line" (banner *main-page.storage*))))
                        :footer (root:footer)
                        :content  (static:main
@@ -204,7 +204,7 @@
                                    (title object)
                                    (name object))
                        :headext (soy.articles:head-share-buttons (list :key (key object)))
-                       :header (root:header (append (list :cart (root:cart))
+                       :header (root:header (append (list :cart (root:cart-widget))
                                                     (main-page-show-banner "line" (banner *main-page.storage*))))
                        :footer (root:footer)
                        :content (static:main

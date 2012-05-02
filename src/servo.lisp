@@ -267,7 +267,7 @@
 									 :description description
 									 :title title
 									 :header (root:header (append (list :cart (unless no-need-cart
-                                                              (root:cart)))
+                                                              (root:cart-widget)))
 																								(main-page-show-banner "line" (banner *main-page.storage*))))
 									 :footer (root:footer)
 									 :content (if content
