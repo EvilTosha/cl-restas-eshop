@@ -141,19 +141,15 @@
 
 (restas:define-route checkout0-route ("/checkout0")
   (newcart-show))
- ;; (checkout-page-0))
 
 (restas:define-route checkout1-route ("/checkout1")
   (newcart-show))
-  ;; (checkout-page-1))
 
 (restas:define-route checkout2-route ("/checkout2")
   (newcart-show))
-  ;; (checkout-page-2))
 
 (restas:define-route checkout3-route ("/checkout3")
   (newcart-show))
-  ;; (checkout-page-3))
 
 (restas:define-route thanks-route ("/thanks")
   (thanks-page))

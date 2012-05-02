@@ -186,8 +186,7 @@
         (setf pricesum sm)))
     (if (not (null products))
         (default-page
-            (soy.newcart:cart-content (list :accessories (soy.product:accessories)
-                                            :products (format nil "~{~a~}"
+            (soy.newcart:cart-content (list :products (format nil "~{~a~}"
                                                               (mapcar #'soy.newcart:cart-product
                                                                       products))))
             :no-need-cart t)

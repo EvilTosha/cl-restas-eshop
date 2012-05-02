@@ -50,32 +50,6 @@
               :siteprice (siteprice object)
               :price (price object))))))
 
-(defun checkout-page-0 ()
-  (if (null (hunchentoot:cookie-in "cart"))
-      "null cart"
-      (checkout-page (checkout:content0 (list :accessories (soy.product:accessories)
-                                              :order (checkout:order))))))
-
-(defun checkout-page-1 ()
-  (if (null (hunchentoot:cookie-in "cart"))
-      "null cart"
-      (checkout-page (checkout:content1 (list :accessories (soy.product:accessories)
-                                              :order (checkout:order)
-                                              )))))
-
-(defun checkout-page-2 ()
-  (if (null (hunchentoot:cookie-in "cart"))
-      "null cart"
-      (checkout-page (checkout:content2 (list :accessories (soy.product:accessories)
-                                                      :order (checkout:order)
-                                                      )))))
-
-(defun checkout-page-3 ()
-  (if (null (hunchentoot:cookie-in "cart"))
-      "null cart"
-      (checkout-page (checkout:content3 (list :accessories (soy.product:accessories)
-                                                      :order (checkout:order))))))
-
 
 ;;проверка заказа на валидность
 ;;TODO сделать полную проверку

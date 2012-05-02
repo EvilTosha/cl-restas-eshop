@@ -48,8 +48,8 @@
 
 (let ((*package* (find-package :eshop)))
 	;;; content
-	(eshop:sklonenie.restore)
-	(when (eshop:config.get-option "START_OPTIONS" "load-storage")
+  (when (eshop:config.get-option "START_OPTIONS" "load-storage")
+    (eshop:sklonenie.restore)
 		(eshop:new-classes.unserialize-all)
 		(eshop:gateway.restore-history))
 	(when (eshop:config.get-option "START_OPTIONS" "load-xls")
@@ -65,7 +65,8 @@
 		(cl-cron:make-cron-job #'eshop::backup.serialize-all :minute 0 :hour 17)
 		(cl-cron:start-cron))
   ;;; business logic
-	(eshop::report.create-marketing-filters)
-	(eshop::report.set-salefilter))
+  (when (eshop:config.get-option "START_OPTIONS" "make-marketing-filters")
+    (eshop::report.create-marketing-filters)
+    (eshop::report.set-salefilter)))
 
 (print "ESHOP load finished")

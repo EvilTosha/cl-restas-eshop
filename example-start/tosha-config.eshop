@@ -7,14 +7,15 @@ dbg-on = 1
 catch-errors = 0
 swank-port = 4005
 server-port = 8080
-load-storage = 1
-load-xls = 1
-load-content = 1
+load-storage = 0
+load-xls = 0
+load-content = 0
 run-cron-jobs = 0
+make-marketing-filters = 0
 
 [PATHS]
 path-to-last-backup = Dropbox/eshop-backups/
-path-to-templates = Dropbox/httpls/release/
+path-to-templates = Dropbox/httpls/dev/
 path-to-articles = Dropbox/content/articles/
 path-to-static-pages = Dropbox/content/static-pages/
 path-to-pics = htpics1/

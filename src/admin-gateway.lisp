@@ -90,7 +90,7 @@
     history-list))
 
 (defun show-admin-menu ()
-  (admin:menu
+  (soy.admin:menu
    (list :elts
          (list "<li><a href=\"/administration-super-panel\"><b>MAIN ADMIN</b></a></li>"
                "<li><a href=\"/administration-super-panel/history\">gateway</a></li>"
@@ -398,7 +398,7 @@
     (soy.admin:main
      (list :header (soy.admin:shortheader)
            :footer (soy.admin:footer)
-           :content (admin:content
+           :content (soy.admin:content
                      (list :menu (show-admin-menu)
                            :subcontent
                            (cond

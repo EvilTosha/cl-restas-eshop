@@ -434,9 +434,6 @@
                              :pics (cdr pics)
                              :firstpic (if (null pics) nil (car pics))
                              :optlist (render.render-optgroups (optgroups object))
-                             :accessories (soy.product:accessories)
-                             :reviews (soy.product:reviews)
-                             :simular (soy.product:simulars)
                              :slogan (concatenate 'string
                                                   (let ((value))
                                                     (with-option1 object "Secret" "Продающий текст"

@@ -68,7 +68,8 @@
 	(config.config-option-processing "START_OPTIONS" "load-xls" "bool")
 	(config.config-option-processing "START_OPTIONS" "load-content" "bool")
 	(config.config-option-processing "START_OPTIONS" "run-cron-jobs" "bool")
-	;; PATHS section
+  (config.config-option-processing "START_OPTIONS" "make-marketing-filters" "bool")
+  ;; PATHS section
 	(config.config-option-processing "PATHS" "path-to-last-backup" "path")
 	(config.config-option-processing "PATHS" "path-to-templates" "path")
 	(config.config-option-processing "PATHS" "path-to-articles" "path")
