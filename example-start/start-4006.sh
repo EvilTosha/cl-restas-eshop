@@ -1,6 +1,6 @@
 HOME_PATH="/home/eviltosha/"
 ESHOP_PATH=$HOME_PATH"cl-restas-eshop/"
-CONFIG_PATH=$ESHOP_PATH"4006-start.config"
+CONFIG_PATH=$ESHOP_PATH"4006-start.eshop"
 LIBS_PATH=$ESHOP_PATH"libs/"
 #TEMPLATES_PATH=$HOME_PATH"Dropbox/httpls/release/"
 
