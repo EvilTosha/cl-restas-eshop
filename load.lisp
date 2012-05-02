@@ -2,7 +2,7 @@
 
 (defun load.register-libs ()
 	(mapcar #'(lambda (lib-name)
-							(push (truename (pathname (format nil "~a~a" *path-to-libs* lib-name))) asdf:*central-registry*))
+							(push (truename (merge-pathnames lib-name *path-to-libs*)) asdf:*central-registry*))
 					(list
 					 ;; "slime-2011-09-01" ;; актуальный swank
 					 "slime-archimag" ;; SWANK

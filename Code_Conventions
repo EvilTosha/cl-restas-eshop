@@ -23,3 +23,18 @@ but not
 - When you need to validate some data, use (if data ...) not (if (not (null data)) ...)
 
 - Add documentation lines, if purpose of function/variable is not obvious
+
+- For creating pathnames use 'merge-pathnames function
+
+- All the pathnames should be in config files
+
+- Use for variables "talking names". Good: (let ((result 0) (product-counter 0)) ...); Bad: (let ((r 0) (pc 0)) ...)
+
+- All the closing parenthesis should be on the line with last expression/variable.
+Good:
+...
+result)))
+Bad:
+...
+result))
+)

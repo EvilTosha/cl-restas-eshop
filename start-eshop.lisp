@@ -4,17 +4,17 @@
 (defparameter *path-to-config* (sb-unix::posix-getenv "CONFIG_PATH"))
 
 ;; регестрация путей для asdf
-(load (format nil "~a~a" *path-to-eshop* "load.lisp"))
+(load (merge-pathnames "load.lisp" *path-to-eshop*))
 (load.register-libs)
-
 
 ;; load swank libs
 (asdf:load-system :swank)
 
 ;; для того чтобы загружался esrap
-(load (format nil "~a~a" *path-to-libs* "slime-archimag/contrib/swank-indentation.lisp"))
+(load (merge-pathnames "slime-archimag/contrib/swank-indentation.lisp" *path-to-libs*))
 
 ;; load eshop
+(push *path-to-eshop* asdf:*central-registry*)
 (asdf:load-system :eshop)
 
 ;; swank server start
@@ -39,13 +39,12 @@
 			(setf eshop::*conf.emails.cart* (list "wolforus@gmail.com"
 																						"slamly@gmail.com"))))
 
-;; запуск Restas
-(restas:start '#:eshop :port (eshop:config.get-option "START_OPTIONS" "server-port"))
 (if (eshop:config.get-option "START_OPTIONS" "dbg-on")
 		(restas:debug-mode-on)
 		(restas:debug-mode-off))
 (setf hunchentoot:*catch-errors-p* (eshop:config.get-option "START_OPTIONS" "catch-errors"))
-
+;; запуск Restas
+(restas:start '#:eshop :port (eshop:config.get-option "START_OPTIONS" "server-port"))
 
 (let ((*package* (find-package :eshop)))
 	;;; content

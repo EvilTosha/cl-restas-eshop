@@ -1,6 +1,6 @@
 HOME_PATH="/home/eviltosha/"
 ESHOP_PATH=$HOME_PATH"cl-restas-eshop/"
-CONFIG_PATH=$ESHOP_PATH"tosha-config.eshop"
+CONFIG_PATH=$ESHOP_PATH"example-start/tosha-config.eshop"
 LIBS_PATH=$ESHOP_PATH"libs/"
 #TEMPLATES_PATH=$HOME_PATH"Dropbox/httpls/release/"
 
