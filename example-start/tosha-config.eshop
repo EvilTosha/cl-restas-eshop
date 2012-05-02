@@ -4,14 +4,15 @@
 [START_OPTIONS]
 release = 0
 dbg-on = 1
+# catch-errors shold be 1 on release
 catch-errors = 0
 swank-port = 4005
 server-port = 8080
-load-storage = 0
-load-xls = 0
-load-content = 0
+load-storage = 1
+load-xls = 1
+load-content = 1
 run-cron-jobs = 0
-make-marketing-filters = 0
+make-marketing-filters = 1
 
 [PATHS]
 path-to-last-backup = Dropbox/eshop-backups/

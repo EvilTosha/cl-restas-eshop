@@ -378,7 +378,7 @@
           (gateway.restore-singles1 lastgateway-ts timestamp)
           (post-proccess-gateway))))
 	(log5:log-for info "gateway restore finished")
-  "test")
+  "done")
 
 (defun gateway.store-singles (history)
 	(mapcar #'(lambda (v)

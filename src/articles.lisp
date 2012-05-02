@@ -80,9 +80,9 @@
 
 ;;шаблоны
 (defun articles.update ()
-	(apply #'servo.compile-soy (list "index.html"
+	(apply #'servo.compile-soy (list "index.soy"
 																	 "articles.soy"
-																	 "footer.html")))
+																	 "footer.soy")))
 
 
 (defun articles.sort (unsort-articles)
@@ -190,8 +190,7 @@
       (root:main (list :keywords "" ;;keywords
                        :description "" ;;description
                        :title (name object)
-                       :header (root:header (append (list :logged (root:notlogged)
-                                                          :cart (root:cart))
+                       :header (root:header (append (list :cart (root:cart))
                                                     (main-page-show-banner "line" (banner *main-page.storage*))))
                        :footer (root:footer)
                        :content  (static:main
@@ -205,8 +204,7 @@
                                    (title object)
                                    (name object))
                        :headext (soy.articles:head-share-buttons (list :key (key object)))
-                       :header (root:header (append (list :logged (root:notlogged)
-                                                          :cart (root:cart))
+                       :header (root:header (append (list :cart (root:cart))
                                                     (main-page-show-banner "line" (banner *main-page.storage*))))
                        :footer (root:footer)
                        :content (static:main

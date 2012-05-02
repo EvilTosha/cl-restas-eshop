@@ -34,5 +34,5 @@
 
 ;;обновление шаблонов для отображения
 (defun static-pages.update ()
-	(apply #'servo.compile-soy (list "index.html")))
+	(apply #'servo.compile-soy (list "index.soy")))
 

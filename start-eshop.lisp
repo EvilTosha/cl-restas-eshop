@@ -54,9 +54,7 @@
 		(eshop:gateway.restore-history))
 	(when (eshop:config.get-option "START_OPTIONS" "load-xls")
 		(eshop:dtd)
-		(eshop::groupd.restore)
-		(eshop::cartrige.restore)
-		(eshop::groupd.holiday.restore))
+    (eshop:cartrige.restore))
 	(when (eshop:config.get-option "START_OPTIONS" "load-content")
 		(eshop:static-pages.restore)
 		(eshop:articles.restore)
@@ -67,6 +65,8 @@
 		(cl-cron:start-cron))
   ;;; business logic
   (when (eshop:config.get-option "START_OPTIONS" "make-marketing-filters")
+    (eshop::groupd.restore)
+    (eshop::groupd.holiday.restore)
     (eshop::report.create-marketing-filters)
     (eshop::report.set-salefilter)))
 

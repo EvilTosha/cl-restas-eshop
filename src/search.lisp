@@ -1,12 +1,6 @@
 ;;;; search.lisp
-;;;;
-;;;; This file is part of the eshop project, released under GNU Affero General Public License, Version 3.0
-;;;; See file COPYING for details.
-;;;;
-;;;; Author: Glukhov Michail aka Rigidus <i.am.rigidus@gmail.com>
 
 (in-package #:eshop)
-
 
 (defun search-engine (q size)
   (let* ((wordlist (mapcar #'string-downcase (split-sequence #\Space q)))
@@ -53,9 +47,6 @@
               (search-engine q 50)
               (list result))))))
 
-;; (get-match-products "asus")
-
-
 (defun get-safe-url-decode-value (param)
   param)
 
@@ -82,8 +73,7 @@
                  :in (remove-if #'(lambda (x)
                                     (null (active x)))
                                 products)
-                 :collect (render.view product)
-                 ))))
+                 :collect (render.view product)))))
 
 
 
@@ -98,7 +88,4 @@
            :subcontent (if (null centercontent)
                            "Ничего не найдено"
                            (format nil "~a" centercontent))))))
-
-			 ;; (get-safe-url-decode-value (hunchentoot:get-parameter "q"))
-
 

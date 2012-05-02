@@ -22,7 +22,7 @@
 					 :static-pages.restore
 					 :articles.restore
 					 :main-page.restore
-					 ))
+           :cartrige.restore))
 
 ;;; registering classes for proper compilation of methods
 ;; articles.lisp

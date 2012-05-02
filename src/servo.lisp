@@ -266,9 +266,8 @@
 	(root:main (list :keywords keywords
 									 :description description
 									 :title title
-									 :header (root:header (append (list :logged (root:notlogged)
-																											:cart (if (not no-need-cart)
-																																(root:cart)))
+									 :header (root:header (append (list :cart (unless no-need-cart
+                                                              (root:cart)))
 																								(main-page-show-banner "line" (banner *main-page.storage*))))
 									 :footer (root:footer)
 									 :content (if content

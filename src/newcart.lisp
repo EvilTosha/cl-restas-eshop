@@ -8,9 +8,9 @@
 
 ;;шаблоны
 (defun newcart-compile-templates ()
-	(apply #'servo.compile-soy (list "index.html"
+	(apply #'servo.compile-soy (list "index.soy"
 																	 "newcart.soy"
-																	 "footer.html")))
+																	 "footer.soy")))
 
 ;; возвращает список отображений продуктов, количество, суммарную цену заказа
 (defun newcart-cart-products (alist)
