@@ -39,6 +39,7 @@
 						 (:file "gateway" :depends-on ("admin-gateway"))
 						 (:file "email" :depends-on ("gateway"))
 						 (:file "groupd" :depends-on ("email"))
+						 (:file "cartrige" :depends-on ("groupd"))
 						 (:module "cl-cron"
 											:components ((:file "packages")
 																	 (:file "cl-cron"))

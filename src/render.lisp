@@ -156,7 +156,8 @@
 																												(catalog:cartige-select
 																												 (list
 																													:vendors (cartrige.get-vendors-list)
-																													:printer (when storage-printer
+																													:printer (when (and storage-printer
+																																							cartrige-printer)
 																																		 (catalog:printer-view (list
 																																														:articul printer-articul
 																																														:pic (car (get-pics printer-articul))

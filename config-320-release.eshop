@@ -4,7 +4,7 @@
 [START_OPTIONS]
 release = 1
 dbg-on = 0
-catch-errors = 0
+catch-errors = 1
 swank-port = 4444
 server-port = 4244
 load-storage = 1
