@@ -156,7 +156,8 @@
 																												(catalog:cartige-select
 																												 (list
 																													:vendors (cartrige.get-vendors-list)
-																													:printer (when storage-printer
+																													:printer (when (and storage-printer
+																																							cartrige-printer)
 																																		 (catalog:printer-view (list
 																																														:articul printer-articul
 																																														:pic (car (get-pics printer-articul))
@@ -270,9 +271,9 @@
                                           value)
                                         " "
                                         (if (= 0 (yml.get-product-delivery-price1 object))
-                                            " "
+                                            " Акция: доставим бесплатно!"
                                             (if (= 100 (yml.get-product-delivery-price1 object))
-                                                "(Акция: только в апреле доставим со скидкой 70%)")))
+                                                " Акция: только в апреле доставим со скидкой 70%.")))
             :keyopts (render.get-catalog-keyoptions object)
             :oneclickbutton  (if (not (preorder object))
                                  (soy.buttons:add-one-click (list :articul (articul object))))
@@ -441,9 +442,9 @@
                                                     value)
                                                   " "
                                                   (if (= 0 (yml.get-product-delivery-price1 object))
-                                                      " (бесплатная доставка)"
+                                                      " Акция: доставим бесплатно!"
                                                       (if (= 100 (yml.get-product-delivery-price1 object))
-                                                          "(Акция: только в апреле доставим со скидкой 70%)")))
+                                                          " Акция: только в апреле доставим со скидкой 70%.")))
                              :others (soy.product:others
                                       (list :others (mapcar #'(lambda (x)
                                                                 (if (equal 'product (type-of x))

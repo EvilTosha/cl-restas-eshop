@@ -4,7 +4,7 @@
 [START_OPTIONS]
 release = 1
 dbg-on = 0
-catch-errors = 0
+catch-errors = 1
 swank-port = 4444
 server-port = 4244
 load-storage = 1
@@ -22,6 +22,8 @@ path-to-dropbox = Dropbox/
 path-to-logs = eshop-logs/
 path-to-backups = eshop-logs/backups/
 path-to-big-images-backup = source-big-images-bkps/
+path-to-seo = eshop-dev/seo/
+path-to-main-page = Dropbox/mainPage/
 
 [CRITICAL] #should be different for dev and release servers
 path-to-conf = Dropbox/htconf/

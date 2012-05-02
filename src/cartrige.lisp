@@ -30,17 +30,19 @@
 (defun cartrige.add-printer (storage articul original-cartriges other-cartriges
 														 &optional vendor name printer-type)
 	(let ((printer (gethash articul (storage *global-storage*))))
-		(setf (gethash articul storage)
-					(make-instance 'printer
-												 :original-cartriges original-cartriges
-												 :other-cartriges other-cartriges
-												 :vendor (if vendor
-																		 vendor
-																		 (vendor printer))
-												 :name (if name
-																	 name
-																	 (name printer))
-												 :printer-type printer-type))))
+		(when (or original-cartriges
+							other-cartriges)
+			(setf (gethash articul storage)
+						(make-instance 'printer
+													 :original-cartriges original-cartriges
+													 :other-cartriges other-cartriges
+													 :vendor (if vendor
+																			 vendor
+																			 (vendor printer))
+													 :name (if name
+																		 name
+																		 (name printer))
+													 :printer-type printer-type)))))
 
 (defun cartrige.add-cartrige (storage printer-articul cartrige-articul &optional (cartrige-type :other))
 	(if (eq cartrige-type :original)

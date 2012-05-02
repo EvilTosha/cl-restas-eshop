@@ -107,9 +107,9 @@
                (yml.is-daily-product product))
               (setf result 0)
               (if (or
-                      (equal key "mobilephones")
-                      (equal key "planshetnie-komputery")
-                      (equal key "cifrovye-fotoapparaty")
+                      ;; (equal key "mobilephones")
+                      ;; (equal key "planshetnie-komputery")
+                      ;; (equal key "cifrovye-fotoapparaty")
                       ;; (equal key "kuhonnie-vesy")
                       ;; (equal key "kofevarki")
                       ;; (equal key "kofemolki")

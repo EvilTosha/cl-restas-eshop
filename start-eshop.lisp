@@ -55,6 +55,7 @@
 	(when (eshop:config.get-option "START_OPTIONS" "load-xls")
 		(eshop:dtd)
 		(eshop::groupd.restore)
+		(eshop::cartrige.restore)
 		(eshop::groupd.holiday.restore))
 	(when (eshop:config.get-option "START_OPTIONS" "load-content")
 		(eshop:static-pages.restore)
