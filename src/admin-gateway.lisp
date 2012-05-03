@@ -396,9 +396,7 @@
 (defun show-admin-page (&optional (key nil))
   (let ((new-post-data (servo.alist-to-plist (hunchentoot:post-parameters hunchentoot:*request*))))
     (soy.admin:main
-     (list :header (soy.admin:shortheader)
-           :footer (soy.admin:footer)
-           :content (soy.admin:content
+     (list :content (soy.admin:content
                      (list :menu (show-admin-menu)
                            :subcontent
                            (cond

@@ -179,7 +179,7 @@
 																																							(articles-view-articles (subseq articles 0 10))
 																																							nil))))))))))
 
-(defun get-article-breadcrumbs(article)
+(defun get-article-breadcrumbs (article)
 	(format nil "<a href=\"/\">Главная</a> /
                <a href=\"/articles\">Материалы</a> /
                ~a " (name article)))
@@ -190,7 +190,7 @@
       (root:main (list :keywords "" ;;keywords
                        :description "" ;;description
                        :title (name object)
-                       :header (root:header (append (list :cart (root:cart-widget))
+                       :header (soy.header:header (append (list :cart (soy.newcart:cart-widget))
                                                     (main-page-show-banner "line" (banner *main-page.storage*))))
                        :footer (root:footer)
                        :content  (static:main
@@ -204,7 +204,7 @@
                                    (title object)
                                    (name object))
                        :headext (soy.articles:head-share-buttons (list :key (key object)))
-                       :header (root:header (append (list :cart (root:cart-widget))
+                       :header (soy.header:header (append (list :cart (soy.newcart:cart-widget))
                                                     (main-page-show-banner "line" (banner *main-page.storage*))))
                        :footer (root:footer)
                        :content (static:main

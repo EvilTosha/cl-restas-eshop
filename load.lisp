@@ -30,7 +30,7 @@
 					 "cl-puri-1.5.5" ;;restas
 					 "parse-number-1.2" ;;restas
 					 "cl-routes-0.2.5" ;;restas
-					 "split-sequence-1.0" ;;restas
+					 "split-sequence-1.0" ;;restas; required for namespaces in templates
 					 "iterate-1.4.3" ;;restas
 					 "restas" ;; RESTAS
 					 "cl-closure-template" ;; шаблонизатор
