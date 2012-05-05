@@ -3,3 +3,6 @@ cl-cron.log
 /libs
 /old
 /backup
+/example-start/*
+!/example-start/tosha-config.eshop
+!/example-start/start-tosha.sh

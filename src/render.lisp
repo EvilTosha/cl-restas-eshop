@@ -13,7 +13,7 @@
                        (storage.get-filtered-products group #'active)))
     (setf filters (filters.get-filters group products))
     (if filters
-        (list (fullfilter:rightfilter
+        (list (soy.fullfilter:rightfilter
                (list :filters (mapcar #'(lambda (v)
                                           (filters.make-string-filter (car v)
                                                                       (cdr v)))
@@ -72,9 +72,9 @@
 (defmethod render.render ((object group) &optional (parameters (request-get-plist)))
   (let ((name (name object)))
     (default-page
-        (catalog:content
+        (soy.catalog:content
          (list :name name
-               :breadcrumbs (catalog:breadcrumbs (breadcrumbs-add-vendor1 (new-classes.breadcrumbs object) parameters))
+               :breadcrumbs (soy.catalog:breadcrumbs (breadcrumbs-add-vendor1 (new-classes.breadcrumbs object) parameters))
                :menu (new-classes.menu object)
                :rightblocks (append
                              (render.get-oneclick-filters object
@@ -89,12 +89,12 @@
                                      (null (getf parameters :fullfilter))
                                      (null (getf parameters :vendor)))
                                 ;; Отображаем группы
-                                (catalog:centergroup
+                                (soy.catalog:centergroup
                                  (list
                                   :producers (if (getf parameters :showall)
                                                  (render.show-producers (storage.get-filtered-products object #'atom))
                                                  nil)
-                                  :accessories (catalog:accessories)
+                                  :accessories (soy.catalog:accessories)
                                   :groups (let ((sort-groups (sort (remove-if-not #'active (groups object)) #'menu-sort)))
                                             (mapcar #'(lambda (child)
                                                         (let* ((show-func (if (getf parameters :showall)
@@ -144,21 +144,21 @@
                                   (with-sorted-paginator
                                       products-list
                                     parameters
-                                    (catalog:centerproduct
+                                    (soy.catalog:centerproduct
                                      (list
                                       :sorts (sorts parameters)
                                       :producers (render.show-producers (if (getf parameters :showall)
                                                                             (storage.get-filtered-products object #'atom)
                                                                             (storage.get-filtered-products object #'active)))
-                                      :accessories (catalog:accessories)
+                                      :accessories (soy.catalog:accessories)
                                       :pager pager
 																			:cartrigeselect (when cartrige-group
-																												(catalog:cartige-select
+																												(soy.catalog:cartige-select
 																												 (list
 																													:vendors (cartrige.get-vendors-list)
 																													:printer (when (and storage-printer
 																																							cartrige-printer)
-																																		 (catalog:printer-view (list
+																																		 (soy.catalog:printer-view (list
 																																														:articul printer-articul
 																																														:pic (car (get-pics printer-articul))
 																																														:name (name-seo storage-printer)
@@ -173,7 +173,7 @@
 
 (defmethod render.render ((object group-filter) &optional (parameters (request-get-plist)))
   (when (not (equal "" object))
-    (fullfilter:container
+    (soy.fullfilter:container
      (list :name (name object)
            :vendor (getf parameters :vendor)
            :sort (getf parameters :sort)
@@ -181,17 +181,15 @@
                          (mapcar #'(lambda (elt)
                                      (filter-element elt parameters))
                                  (base object)))
-           :advanced (if (advanced object)
-                         (format nil "~{~a~}"
-                                 (mapcar #'(lambda (elt)
-                                             (fullfilter:group
-                                              (list :name (car elt)
-                                                    :elts (mapcar #'(lambda (inelt)
-                                                                      (filter-element inelt parameters))
-                                                                  (cadr elt)))))
-                                         (advanced object)))
-                         ;;else
-                         nil)
+           :advanced (when (advanced object)
+                       (format nil "~{~a~}"
+                               (mapcar #'(lambda (elt)
+                                           (soy.fullfilter:group
+                                            (list :name (car elt)
+                                                  :elts (mapcar #'(lambda (inelt)
+                                                                    (filter-element inelt parameters))
+                                                                (cadr elt)))))
+                                       (advanced object))))
            :isshowadvanced (is-need-to-show-advanced object parameters)))))
 
 
@@ -211,8 +209,8 @@
        :grouplink (key group)
        :groupname (name group)
        :articul articul
-       :pic (car (get-pics articul))
-       :name (name-seo prod)
+       :pic pic
+       :name name
        :showsiteprice (get-format-price (siteprice prod))
        :showprice (get-format-price (price prod))
        :buttonaddcart (soy.buttons:add-product-cart (list
@@ -275,8 +273,8 @@
                                             (if (= 100 (yml.get-product-delivery-price1 object))
                                                 " Акция: только в апреле доставим со скидкой 70%.")))
             :keyopts (render.get-catalog-keyoptions object)
-            :oneclickbutton  (if (not (preorder object))
-                                 (soy.buttons:add-one-click (list :articul (articul object))))
+            :oneclickbutton  (unless (preorder object)
+                               (soy.buttons:add-one-click (list :articul (articul object))))
             :addbutton (if (preorder object)
                            (soy.buttons:add-predzakaz (list :articul (articul object)))
                            (soy.buttons:add-product-cart (list :articul (articul object)
@@ -309,9 +307,8 @@
                                                             :options options))
                                 ""))))
                   optgroups))))
-    (if (null optlist)
-        nil
-        (soy.product:optlist (list :optgroups optlist)))))
+    (when optlist
+      (soy.product:optlist (list :optgroups optlist)))))
 
 (defmethod render.get-catalog-keyoptions ((object product))
   (let ((parent (new-classes.parent object)))
@@ -416,7 +413,7 @@
                              :groupd_man (groupd.man.is-groupd object)
                              :groupd_woman (groupd.woman.is-groupd object)
 														 :groupd_holiday (groupd.holiday.is-groupd object)
-                             :bonuscount (if (and (bonuscount object)
+                             :bonuscount (when (and (bonuscount object)
                                                   (not (equal (bonuscount object) 0)))
                                              (* (bonuscount object) 10))
                              :formatsiteprice (get-format-price (siteprice object))
@@ -426,14 +423,13 @@
                              :equalprice (= (delta-price object) 0)
                              :diffprice (delta-price object)
                              ;;test
-                             :upsaleinfo (if (upsale-links group)
-																						 (soy.product:upsale (render.prepare-upsale-full group))
-																						 nil)
-                             ;;end test
+                             :upsaleinfo (when (and group (upsale-links group))
+                                           (soy.product:upsale (render.prepare-upsale-full group)))
+	                           ;;end test
                              :procent diff-percent
                              :subst (format nil "/~a" (articul object))
                              :pics (cdr pics)
-                             :firstpic (if (null pics) nil (car pics))
+                             :firstpic (when pics (car pics))
                              :optlist (render.render-optgroups (optgroups object))
                              :slogan (concatenate 'string
                                                   (let ((value))
@@ -463,7 +459,7 @@
                              :shortdescr (seo-text object)
                              :bestproducts (soy.product:similar-products
                                             (list :products (mapcar #'(lambda (prod)
-                                                                        (catalog:product
+                                                                        (soy.catalog:product
                                                                          (render.view prod)))
                                                                     (list-filters.limit-end (servo.find-relative-product-list object) 4))))
                              :seotextflag (and (not (null (seo-text object)))
@@ -477,9 +473,9 @@
                                                                                      :pic (if (null pics) nil (car pics))
                                                                                      :siteprice (siteprice object)
                                                                                      :price (price object))))
-                             :addoneclick (if (not (preorder object))
-                                              (soy.buttons:add-one-click (list :articul (articul object)
-                                                                               :available is-available)))))
+                             :addoneclick (unless (preorder object)
+                                            (soy.buttons:add-one-click (list :articul (articul object)
+                                                                             :available is-available)))))
     (default-page
         (soy.product:content product-view)
         :keywords (render.get-keywords object nil)
@@ -555,19 +551,19 @@
         products-list
       request-get-plist
       (default-page
-          (catalog:content
+          (soy.catalog:content
            (list :name (name object)
-                 :breadcrumbs (catalog:breadcrumbs (new-classes.breadcrumbs object))
+                 :breadcrumbs (soy.catalog:breadcrumbs (new-classes.breadcrumbs object))
                  :menu (new-classes.menu object)
                  :rightblocks (append
                                (render.get-oneclick-filters (new-classes.parent object)
                                                             (getf request-get-plist :showall))
                                (rightblocks (new-classes.parent object) request-get-plist))
-                 :subcontent (catalog:centerproduct
+                 :subcontent (soy.catalog:centerproduct
                               (list
                                :sorts (sorts request-get-plist)
                                :producers (render.show-producers all-products-list)
-                               :accessories (catalog:accessories)
+                               :accessories (soy.catalog:accessories)
                                :pager pager
                                :products (loop
                                             :for product
@@ -617,7 +613,7 @@
                        veiws))
              vendors)
     (setf veiws (sort veiws #'string<= :key #'(lambda (v) (string-upcase (getf v :vendor)))))
-    (catalog:producers
+    (soy.catalog:producers
      (list
       :vendorblocks (render.make-producters-base
                      veiws :cut 3)

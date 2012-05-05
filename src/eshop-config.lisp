@@ -40,7 +40,6 @@
             "articles.soy"
             "buttons.soy"
             "catalog.soy"
-            "checkout.soy"
             "class_forms.soy"
             "elka2012.soy"
             "footer.soy"

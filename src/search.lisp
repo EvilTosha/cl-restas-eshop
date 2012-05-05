@@ -64,10 +64,10 @@
                     (make-output (prefer search-result))))))))
 
 (defun prefer (products)
-  (catalog:centerproduct
+  (soy.catalog:centerproduct
    (list
     ;; :producers (group:make-vendor-filter (parent object))
-    :accessories (catalog:accessories)
+    :accessories (soy.catalog:accessories)
     :products (loop
                  :for product
                  :in (remove-if #'(lambda (x)
@@ -79,12 +79,12 @@
 
 (defun make-output (&optional (centercontent nil))
   (default-page
-    (catalog:content
+    (soy.catalog:content
      (list :name "Поиск мысли..."
            :breadcrumbs "<a href=\"/catalog\">Каталог</a> / Поиск"
            :menu (new-classes.menu)
-           :rightblocks (list (catalog:rightblock1)
-                              (catalog:rightblock2))
+           :rightblocks (list (soy.catalog:rightblock1)
+                              (soy.catalog:rightblock2))
            :subcontent (if (null centercontent)
                            "Ничего не найдено"
                            (format nil "~a" centercontent))))))

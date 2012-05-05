@@ -9,8 +9,7 @@
 ;;шаблоны
 (defun newcart-compile-templates ()
 	(apply #'servo.compile-soy (list "index.soy"
-																	 "newcart.soy"
-																	 "footer.soy")))
+																	 "newcart.soy")))
 
 ;; возвращает список отображений продуктов, количество, суммарную цену заказа
 (defun newcart-cart-products (alist)
@@ -149,8 +148,6 @@
              (< 0 count))
         (progn
           (soy.newcart:fullpage (list :head (root:newcart-head)
-                                      :header (soy.newcart:header)
-                                      :footer (root:newcart-footer)
                                       :leftcells (soy.newcart:leftcells
                                                   (list :bonuscount bonuscount
                                                         :bonusname (if bonuscount
@@ -166,8 +163,6 @@
           ;; страница для пустой корзины с автоматическим редиректом на главную
           (soy.newcart:fullpage (list :head (soy.newcart:head-redirect (list :timeout 5
                                                                              :url "/"))
-                                      :header (soy.newcart:header)
-                                      :footer (root:newcart-footer)
                                       :leftcells (soy.newcart:leftcells-empty)))))))
 
 
@@ -194,7 +189,6 @@
         (soy.newcart:fullpage (list :head (soy.newcart:head-redirect (list :timeout 5
                                                                            :url "/"))
                                     :header (soy.newcart:header)
-                                    :footer (root:newcart-footer)
                                     :leftcells (soy.newcart:leftcells-empty))))))
 
 ;; извлекает данные из ассоциативного списка и нормализовывает
@@ -273,7 +267,7 @@
             (if  (string= delivery-type "express")
                  (setf deliverysum (yml.get-delivery-price (newcart-cart-products cart))))
             (setf client-mail
-                  (sendmail:clientmail
+                  (soy.sendmail:clientmail
                    (list :datetime (time.get-date-time)
                          :order_id order-id
                          :name (report.convert-name (format nil "~a ~a" name family))
@@ -329,7 +323,7 @@
             (save-order-text order-id client-mail)
             ;; удаление страных символов
             (setf client-mail (remove-if #'(lambda(c) (< 10000 (char-code c))) client-mail))
-            (setf tks-mail (remove-if #'(lambda(c) (< 10000 (char-code c))) (sendmail:mailfile mail-file)))
+            (setf tks-mail (remove-if #'(lambda(c) (< 10000 (char-code c))) (soy.sendmail:mailfile mail-file)))
             (mapcar #'(lambda (email)
                         (send-mail (list email) client-mail filename tks-mail order-id))
                     *conf.emails.cart*)
@@ -339,7 +333,6 @@
             (soy.newcart:fullpage
              (list :head (root:newcart-head)
                    :header (soy.newcart:header-linked)
-                   :footer (root:newcart-footer)
                    :leftcells (soy.newcart:thanks
                                (list :sum pricesum
                                      :deliverysum deliverysum
@@ -385,6 +378,5 @@
           (soy.newcart:fullpage (list :head (soy.newcart:head-redirect (list :timeout 5
                                                                              :url "/"))
                                       :header (soy.newcart:header)
-                                      :footer (root:newcart-footer)
                                       :leftcells (soy.newcart:leftcells-empty)))))))
 

@@ -145,7 +145,7 @@
 
 (defun yml-page ()
   (setf (hunchentoot:content-type*) "application/xml; charset=utf-8")
-  (yml:xml (list :datetime (time.get-date-time)
+  (soy.yml:xml (list :datetime (time.get-date-time)
                  :marketname "ЦиFры 320-8080"
                  :marketcompany "ЦиFры 320-8080"
                  :marketurl "http://www.320-8080.ru/"
@@ -181,12 +181,12 @@
                                                (let ((yml-show))
                                                  (with-option1 product "Secret" "YML"
 																															 (setf yml-show (getf option :value)))
-                                                 (if (and (not (null yml-show))
+                                                 (if (and yml-show
                                                           (string= "No"
                                                                    (stripper yml-show)))
                                                      nil
                                                      t)))
-                                    :collect (yml:offer (list :articul (articul product)
+                                    :collect (soy.yml:offer (list :articul (articul product)
                                                               :available (servo.available-for-order-p product)
                                                               :deliveryprice (yml.get-product-delivery-price1 product)
                                                               :price (siteprice product)
@@ -213,7 +213,7 @@
 
 (defun yml-page-for-parser ()
   (setf (hunchentoot:content-type*) "application/xml; charset=utf-8")
-  (yml:xml (list :datetime (time.get-date-time)
+  (soy.yml:xml (list :datetime (time.get-date-time)
                  :marketname "ЦиFры 320-8080"
                  :marketcompany "ЦиFры 320-8080"
                  :marketurl "http://www.320-8080.ru/"
@@ -249,12 +249,12 @@
                                                (let ((yml-show))
                                                  (with-option1 product "Secret" "YML"
 																															 (setf yml-show (getf option :value)))
-                                                 (if (and (not (null yml-show))
+                                                 (if (and yml-show
                                                           (string= "No"
                                                                    (stripper yml-show)))
                                                      nil
                                                      t)))
-                                    :collect (yml:offer (list :articul (articul product)
+                                    :collect (soy.yml:offer (list :articul (articul product)
                                                               :price (siteprice product)
                                                               :category (gethash
                                                                          (key (new-classes.parent product))
@@ -344,7 +344,7 @@
                       nil
                       t)))
      :collect
-     (yml:offer (list :articul (articul product)
+     (soy.yml:offer (list :articul (articul product)
                       :deliveryprice (yml.get-product-delivery-price1 product)
                       :price (siteprice product)
                       :category (gethash
@@ -352,8 +352,7 @@
                                  *yml-group-ids*)
                       :picture  (let ((pics (get-pics
                                              (articul product))))
-                                  (if (null pics)
-                                      nil
+                                  (when pics
                                       (encode-uri (car pics))))
                       :name   (let ((yml-name))
                                 (with-option1 product "Secret" "Yandex"
@@ -369,7 +368,7 @@
 
 
 (defun make-yml-data()
-  (yml:xml
+  (soy.yml:xml
 	 (list :datetime (time.get-date-time)
 				 :marketname "ЦиFры 320-8080"
 				 :marketcompany "ЦиFры 320-8080"

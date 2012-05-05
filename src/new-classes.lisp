@@ -340,7 +340,7 @@
                       (if (and current-root
                                (equal (key val) (key current-root)))
                           ;; This is current
-                          (leftmenu:selected
+                          (soy.menu:selected
                            (list :divider (notevery #'(lambda (divider)
                                                         (string/= (key val) divider))
                                                     divider-list)
@@ -357,18 +357,16 @@
 																												(groups val))
 																						 #'menu-sort)
 																				:collect
-																				(list :key  (key child) :name (name child)))
-                                 ))
+																				(list :key  (key child) :name (name child)))))
 												;; else - this is ordinal
-												(leftmenu:ordinal (list :divider (notevery #'(lambda (divider)
+												(soy.menu:ordinal (list :divider (notevery #'(lambda (divider)
 																																			 (string/= (key val) divider))
 																																	 divider-list)
 																								:key  (key val)
 																								:name (name val)
-																								:icon (icon val)))
-												))
+																								:icon (icon val)))))
                   (sort root-groups #'new-classes.menu-sort))))
-    (leftmenu:main (list :elts src-lst))))
+    (soy.menu:main (list :elts src-lst))))
 
 
 ;;создание класса и методов отображения (в админке), изменения (из админки),

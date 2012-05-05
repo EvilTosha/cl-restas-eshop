@@ -43,8 +43,8 @@
 
 
 (defmethod rightblocks ((object group) (parameters list))
-  (list (catalog:rightblock1)
-        (catalog:rightblock2)
+  (list (soy.catalog:rightblock1)
+        (soy.catalog:rightblock2)
         (if (not (equal 'group (type-of object)))
             ""
 						(progn
@@ -54,12 +54,12 @@
 										(let ((descr (seo-text object)))
 											(if (null descr)
 													""
-													(catalog:seotext (list :text descr))))
+													(soy.catalog:seotext (list :text descr))))
 										;; show vendor descr
 										(let ((descr (gethash (string-downcase vndr) (vendors-seo object))))
 											(if (null descr)
 													""
-													(catalog:seotext (list :text descr))))))))))
+													(soy.catalog:seotext (list :text descr))))))))))
 
 
 (defmacro with-option (product optgroup-name option-name body)
@@ -269,7 +269,6 @@
 									 :header (soy.header:header (append (list :cart (unless no-need-cart
                                                               (soy.newcart:cart-widget)))
 																								(main-page-show-banner "line" (banner *main-page.storage*))))
-									 :footer (root:footer)
 									 :content (if content
 																content
 																(format nil "<pre>'~a' ~%'~a' ~%'~a'</pre>"
@@ -280,14 +279,12 @@
 
 (defun checkout-page (&optional (content nil))
 	(root:main (list :header (soy.header:shortheader)
-									 :footer (root:footer)
 									 :content (if content
 																content
 																"test page"))))
 
 (defun checkout-thankes-page (&optional (content nil))
 	(root:main (list :header (soy.header:short-linked-header)
-									 :footer (root:footer)
 									 :content (if content
 																content
 																"test page"))))
@@ -620,7 +617,7 @@
 				 (ishidden (search '(:hidden) elt))
 				 (contents
 					(cond ((equal :range (nth 2 elt))
-								 (fullfilter:range
+								 (soy.fullfilter:range
 									(list :unit (nth 3 elt)
 												:key key
 												:name name
@@ -630,42 +627,40 @@
 												:to (getf request-get-plist
 																	(intern (string-upcase (format nil "~a-t" key)) :keyword)))))
 								((equal :radio (nth 2 elt))
-								 (fullfilter:box
+								 (soy.fullfilter:box
 									(list :key key
 												:name name
 												:ishidden ishidden
 												:elts (let ((elts (nth 3 elt)))
 																(loop :for nameelt :in elts
-																	 :for i from 0 :collect
-																	 (fullfilter:radioelt
+																	 :for i :from 0 :collect
+																	 (soy.fullfilter:radioelt
 																		(list :key key
 																					:value i
 																					:name nameelt
 																					:checked (string= (format nil "~a" i)
 																														(getf request-get-plist (intern
 																																										 (string-upcase key)
-																																										 :keyword)))
-																					)))))))
+																																										 :keyword))))))))))
 								((equal :checkbox (nth 2 elt))
-								 (fullfilter:box
+								 (soy.fullfilter:box
 									(list :key key
 												:name name
 												:ishidden ishidden
 												:elts (let ((values (nth 3 elt)))
 																(loop :for value :in values
 																	 :for i from 0 :collect
-																	 (fullfilter:checkboxelt
+																	 (soy.fullfilter:checkboxelt
 																		(list :value value
 																					:key key
 																					:i i
 																					:checked (string= "1" (getf request-get-plist (intern
 																																												 (string-upcase
 																																													(format nil "~a-~a" key i))
-																																												 :keyword)))
-																					)))))))
+																																												 :keyword))))))))))
 								(t ""))))
 		(if ishidden
-				(fullfilter:hiddencontainer (list :key key
+				(soy.fullfilter:hiddencontainer (list :key key
 																					:name name
 																					:contents contents
 																					:isshow (if-need-to-show-hidden-block elt request-get-plist)))

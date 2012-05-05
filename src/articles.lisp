@@ -151,7 +151,7 @@
                      (get-articles-list request-get-plist) tags))
                    10)
       (default-page
-          (static:main
+          (soy.static:main
            (list :menu (new-classes.menu)
                  :breadcrumbs breadcrumbs
                  :subcontent  (soy.articles:articles-main
@@ -192,8 +192,7 @@
                        :title (name object)
                        :header (soy.header:header (append (list :cart (soy.newcart:cart-widget))
                                                     (main-page-show-banner "line" (banner *main-page.storage*))))
-                       :footer (root:footer)
-                       :content  (static:main
+                       :content  (soy.static:main
 																	(list :menu (new-classes.menu)
 																				:breadcrumbs (bredcrumbs object)
 																				:subcontent  (body object)
@@ -206,8 +205,7 @@
                        :headext (soy.articles:head-share-buttons (list :key (key object)))
                        :header (soy.header:header (append (list :cart (soy.newcart:cart-widget))
                                                     (main-page-show-banner "line" (banner *main-page.storage*))))
-                       :footer (root:footer)
-                       :content (static:main
+                       :content (soy.static:main
                                  (list :menu (new-classes.menu)
                                        :breadcrumbs (get-article-breadcrumbs object)
                                        :subcontent  (soy.articles:article-big (list :sharebuttons (soy.articles:share-buttons

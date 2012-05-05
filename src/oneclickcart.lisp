@@ -21,7 +21,7 @@
       (setf count cnt)
       (setf pricesum sm))
     (setf client-mail
-          (sendmail:clientmail-elka
+          (soy.sendmail:clientmail-elka
            (list :datetime (time.get-date-time)
                  :order_id order-id
                  :name (report.convert-name name)
@@ -54,7 +54,7 @@
     (save-order-text order-id client-mail)
     ;; удаление страных символов
     (setf client-mail (remove-if #'(lambda(c) (< 10000 (char-code c))) client-mail))
-    (setf tks-mail (remove-if #'(lambda(c) (< 10000 (char-code c))) (sendmail:mailfile mail-file)))
+    (setf tks-mail (remove-if #'(lambda(c) (< 10000 (char-code c))) (soy.sendmail:mailfile mail-file)))
     (mapcar #'(lambda (email)
                 (send-mail (list email) client-mail filename tks-mail order-id))
             *conf.emails.cart*)
@@ -78,7 +78,7 @@
       (setf count cnt)
       (setf pricesum sm))
     (setf client-mail
-          (sendmail:clientmail
+          (soy.sendmail:clientmail
            (list :datetime (time.get-date-time)
                  :order_id order-id
                  :name (report.convert-name name)
@@ -111,7 +111,7 @@
     (save-order-text order-id client-mail)
     ;; удаление страных символов
     (setf client-mail (remove-if #'(lambda(c) (< 10000 (char-code c))) client-mail))
-    (setf tks-mail (remove-if #'(lambda(c) (< 10000 (char-code c))) (sendmail:mailfile mail-file)))
+    (setf tks-mail (remove-if #'(lambda(c) (< 10000 (char-code c))) (soy.sendmail:mailfile mail-file)))
     (mapcar #'(lambda (email)
                 (send-mail (list email) client-mail filename tks-mail order-id))
             *conf.emails.cart*)
@@ -145,7 +145,7 @@
         (products)
         (cart (list (list (cons :id articul) (cons :count 1)))))
     (setf client-mail
-          (sendmail:clientmail
+          (soy.sendmail:clientmail
            (list :datetime (time.get-date-time)
                  :order_id order-id
                  :name (report.convert-name name)
@@ -178,7 +178,7 @@
     (save-order-text order-id client-mail)
     ;; удаление страных символов
     (setf client-mail (remove-if #'(lambda(c) (< 10000 (char-code c))) client-mail))
-    (setf tks-mail (remove-if #'(lambda(c) (< 10000 (char-code c))) (sendmail:mailfile mail-file)))
+    (setf tks-mail (remove-if #'(lambda(c) (< 10000 (char-code c))) (soy.sendmail:mailfile mail-file)))
     (mapcar #'(lambda (email)
                 (send-mail (list email) client-mail filename tks-mail order-id))
             *conf.emails.cart*)
@@ -198,7 +198,7 @@
         (products)
         (cart (list (list (cons :id articul) (cons :count 1)))))
     (setf client-mail
-          (sendmail:clientmail
+          (soy.sendmail:clientmail
            (list :datetime (time.get-date-time)
                  :order_id order-id
                  :name (report.convert-name name)
@@ -231,7 +231,7 @@
     (save-order-text order-id client-mail)
     ;; удаление страных символов
     (setf client-mail (remove-if #'(lambda(c) (< 10000 (char-code c))) client-mail))
-    (setf tks-mail (remove-if #'(lambda(c) (< 10000 (char-code c))) (sendmail:mailfile mail-file)))
+    (setf tks-mail (remove-if #'(lambda(c) (< 10000 (char-code c))) (soy.sendmail:mailfile mail-file)))
     (mapcar #'(lambda (email)
                 (send-mail (list email) client-mail filename tks-mail order-id))
             *conf.emails.cart*)

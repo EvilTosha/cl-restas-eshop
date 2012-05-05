@@ -1,4 +1,4 @@
-;;; prerender.lisp
+;;;; prerender.lisp
 ;;; set of methods for converting templates in articles to products views,
 ;;; images, buttons, etc
 ;;; teplates look like <!--#(temp_name);arg1;arg2;...;-->
@@ -70,9 +70,7 @@
                   (list :articul articul
                         :name name
                         :siteprice siteprice
-                        ;; :deliveryprice delivery-price
-                        :pic picname
-                        )))))
+                        :pic picname)))))
       ;;вставка кнопки покупки
       ((string= type "buy")
        (let* ((articul (nth 1 args))
@@ -80,7 +78,6 @@
          (when product
            (let ((name (name-seo product))
                  (siteprice (siteprice product))
-                 ;; (delivery-price (delivery-price product))
                  (picname (car (get-pics articul))))
              (format nil "<span class=\"add\" id=\"add-img\"><big class=\"price\"><b>~a</b><var> руб.</var></big>~a"
                      (get-format-price siteprice)
@@ -88,9 +85,7 @@
                                (list :articul articul
                                      :name name
                                      :siteprice siteprice
-                                     ;; :deliveryprice delivery-price
-                                     :pic picname
-                                     )))))))
+                                     :pic picname)))))))
       ((string= type "price")
        (let* ((articul (nth 1 args))
               (product (gethash articul (storage *global-storage*))))
