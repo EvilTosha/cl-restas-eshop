@@ -292,3 +292,13 @@ var i,y,x=\"3c7461626c6520636c6173733d226261636b5f746f5f7363686f6f6c223e0d0a3c74
 (restas:define-route holidays-route ("/holidays-2012")
 	(soy.holidays:body))
 
+
+(restas:define-route compare-route ("/compare")
+	 (soy.compare:compare-page
+		(list :keywords "" ;;keywords
+					:description "" ;;description
+					:title ""
+					:header (root:header (append (list :logged (root:notlogged)
+																						 :cart (root:cart))
+																			 (main-page-show-banner "line" (banner *main-page.storage*))))
+					:footer (root:footer))))

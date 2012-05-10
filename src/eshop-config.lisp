@@ -35,7 +35,7 @@
               (let ((pathname (merge-pathnames (pathname fname) (config.get-option "PATHS" "path-to-templates"))))
                 (format t "~&compile-template: ~a" pathname)
                 (closure-template:compile-template :common-lisp-backend pathname)))
-          '("index.html"            "product.soy"            "product-accessories.html"
+          '("index.soy"            "product.soy"            "product-accessories.html"
             "product-reviews.html"  "product-simulars.html"   "product-others.html"
             "catalog.html"          "catalog-in.html"         "catalog-staff.html"
             "footer.html" "holidays.soy"
@@ -56,7 +56,7 @@
             "new-catalog.soy"
             "class_forms.soy"
             "admin.soy"
-            "elka2012.soy"
+            "elka2012.soy" "compare.soy"
             )))
 
 (print "Compiling all templates")
