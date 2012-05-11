@@ -42,6 +42,7 @@
             "buttons.soy"
             "catalog.soy"
             "class_forms.soy"
+            "compare.soy"
             "elka2012.soy"
             "footer.soy"
             "fullfilter.soy"
@@ -57,8 +58,7 @@
             "sendmail.soy"
             "sitemap.soy"
             "static.soy"
-            "yml.soy"
-            )))
+            "yml.soy")))
 
 (print "Compiling all templates")
 (compile-templates)

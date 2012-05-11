@@ -3,7 +3,10 @@
 	:components
 	((:module "src"
 						:components
-						((:file "packages")
+						((:module "patch-closure-templates"
+											:components ((:file "common-lisp-backend")
+																	 (:file "parse")))
+						 (:file "packages")
 						 (:file "config" :depends-on ("packages"))
 						 (:file "time" :depends-on ("config"))
 						 (:file "eshop-config" :depends-on ("time"))

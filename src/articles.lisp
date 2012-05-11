@@ -15,7 +15,7 @@
    (title       :initarg :title      :initform nil                             :accessor title)
    (body        :initarg :body       :initform nil                             :accessor body)
    (date        :initarg :date       :initform nil                             :accessor date)
-   (ctype       :initarg :ctype      :initform "article"                       :accessor ctype) ;; article / static
+   (ctype       :initarg :ctype      :initform "article"                       :accessor ctype) ;; article / static / landscape
    (tags        :initarg :tags       :initform (make-hash-table :test #'equal) :accessor tags)))
 
 ;;тэги через запятую
@@ -38,6 +38,7 @@
          (descr (cdr (assoc :descr raw)))
          (tags-line (cdr (assoc :tags raw)))
          (title (cdr (assoc :title raw)))
+         (ctype (cdr (assoc :ctype raw)))
          (new (make-instance 'article
                              :key key
                              :name name
@@ -46,13 +47,14 @@
                              :body body
                              :rightblock rightblock
                              :title title
-                             :ctype (ctype dummy)
+                             :ctype (if ctype
+                                        ctype
+                                        (ctype dummy))
                              :date date)))
     (make-tags-table (tags new) tags-line)
     (setf (gethash key *storage-articles*) new)
     ;; Возвращаем key статьи
     key))
-
 
 ;; загрузка статей из папки
 (defun process-articles-dir (path &optional (ctype "article"))
@@ -184,52 +186,67 @@
                <a href=\"/articles\">Материалы</a> /
                ~a " (name article)))
 
+(defmethod articles.show-static ((object article))
+	(root:main (list :keywords "" ;;keywords
+									 :description "" ;;description
+									 :title (name object)
+									 :header (root:header (append (list :logged (root:notlogged)
+																											:cart (root:cart))
+																								(main-page-show-banner "line" (banner *main-page.storage*))))
+									 :footer (root:footer)
+									 :content  (static:main
+															(list :menu (new-classes.menu)
+																		:breadcrumbs (bredcrumbs object)
+																		:subcontent  (body object)
+																		:rightblock  (rightblock object))))))
+
+(defmethod articles.show-article  ((object article))
+	(root:main (list :keywords "" ;;keywords
+									 :description "" ;;description
+									 :title  (if (title object)
+															 (title object)
+															 (name object))
+									 :headext (soy.articles:head-share-buttons (list :key (key object)))
+									 :header (root:header (append (list :logged (root:notlogged)
+																											:cart (root:cart))
+																								(main-page-show-banner "line" (banner *main-page.storage*))))
+									 :footer (root:footer)
+									 :content (static:main
+														 (list :menu (new-classes.menu)
+																	 :breadcrumbs (get-article-breadcrumbs object)
+																	 :subcontent  (soy.articles:article-big (list :sharebuttons (soy.articles:share-buttons
+																																															 (list :key (key object)))
+																																								:name (name object)
+																																								:date (if (= (date object) 0)
+																																													nil
+																																													(time.article-encode-date object))
+																																								:body (prerender-string-replace (body object))
+																																								:articles (let ((articles (articles.sort (remove-if #'(lambda(v)(equal v object)) (get-articles-list)))))
+																																														(if articles
+																																																(articles-view-articles (subseq articles 0 7))
+																																																nil))
+																																								:tags
+																																								(if (< 0 (hash-table-count (tags object)))
+																																										(soy.articles:articles-tags
+																																										 (list :tags
+																																													 (loop
+																																															:for key being the hash-keys
+																																															:of (tags object)
+																																															:collect key)))
+																																										"")))
+																	 :rightblock (soy.articles:r_b_articles (list :articles (let ((articles (articles.sort (remove-if #'(lambda(v)(equal v object)) (get-articles-list)))))
+																																														(if articles
+																																																(articles-view-articles (subseq articles 0 10))
+																																																nil)))))))))
+
+(defmethod articles.show-landscape  ((object article))
+	(root:main-landscape (list :keywords "" ;;keywords
+									 :description "" ;;description
+									 :title (name object)
+									 :content  (body object))))
+
 ;; отображение страницы статьи
 (defmethod restas:render-object ((designer eshop-render) (object article))
-  (if (equal (ctype object) "static")
-      (root:main (list :keywords "" ;;keywords
-                       :description "" ;;description
-                       :title (name object)
-                       :header (soy.header:header (append (list :cart (root:cart))
-                                                          (main-page-show-banner "line" (banner *main-page.storage*))))
-                       :content  (soy.static:main
-                                  (list :menu (new-classes.menu)
-                                        :breadcrumbs (bredcrumbs object)
-                                        :subcontent  (body object)
-                                        :rightblock  (rightblock object)))))
-      (root:main (list :keywords "" ;;keywords
-                       :description "" ;;description
-                       :title  (if (title object)
-                                   (title object)
-                                   (name object))
-                       :headext (soy.articles:head-share-buttons (list :key (key object)))
-                       :header (soy.header:header (append (list :cart (root:cart))
-                                                          (main-page-show-banner "line" (banner *main-page.storage*))))
-                       :content (soy.static:main
-                                 (list :menu (new-classes.menu)
-                                       :breadcrumbs (get-article-breadcrumbs object)
-                                       :subcontent  (soy.articles:article-big (list :sharebuttons (soy.articles:share-buttons
-                                                                                                   (list :key (key object)))
-                                                                                    :name (name object)
-                                                                                    :date (if (= (date object) 0)
-                                                                                              nil
-                                                                                              (time.article-encode-date object))
-                                                                                    :body (prerender-string-replace (body object))
-                                                                                    :articles (let ((articles (articles.sort (remove-if #'(lambda(v)(equal v object)) (get-articles-list)))))
-                                                                                                (if articles
-                                                                                                    (articles-view-articles (subseq articles 0 7))
-                                                                                                    nil))
-                                                                                    :tags
-                                                                                    (if (< 0 (hash-table-count (tags object)))
-                                                                                        (soy.articles:articles-tags
-                                                                                         (list :tags
-                                                                                               (loop
-                                                                                                  :for key being the hash-keys
-                                                                                                  :of (tags object)
-                                                                                                  :collect key)))
-                                                                                        "")))
-                                       :rightblock (soy.articles:r_b_articles (list :articles (let ((articles (articles.sort (remove-if #'(lambda(v)(equal v object)) (get-articles-list)))))
-                                                                                                (if articles
-                                                                                                    (articles-view-articles (subseq articles 0 10))
-                                                                                                    nil))))))))))
-
+  (cond ((equal (ctype object) "static") (articles.show-static object))
+        ((equal (ctype object) "article") (articles.show-article object))
+        ((equal (ctype object) "landscape") (articles.show-landscape object))))

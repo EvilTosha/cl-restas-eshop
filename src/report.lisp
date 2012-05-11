@@ -426,11 +426,21 @@
           groups))
 
 (defun report.create-marketing-filters ()
-  (create-ipad3-filter (gethash "planshetnie-komputery" (storage *global-storage*)))
-  (report.set-filters (storage.get-groups-list)
-                      #'groupd.holiday.is-groupd
-                      "Для отдыха"
-                      "holidays"))
+	(create-ipad3-filter (gethash "planshetnie-komputery" (storage *global-storage*)))
+	(report.set-filters (list (gethash "noutbuki" (storage *global-storage*)))
+											#'(lambda (product)
+													(let ((opts))
+														(with-option1 product
+															"Общие характеристики" "Тип устройства"
+															(setf opts (getf option :value)))
+														(equal opts "Ультрабук")))
+											"Ультрабуки"
+											"ultrabooks")
+	(report.set-filters (storage.get-groups-list)
+											#'groupd.holiday.is-groupd
+											"Для отдыха"
+											"holidays"))
+
 ;; (groupd.man.restore)
 ;; (groupd.woman.restore)
 ;; (report.set-man-salefilter)

@@ -93,6 +93,7 @@
               (equal key "plity")
               (equal key "holodilniki-i-morozilniki")
               (equal key "duhovki")
+							(equal key "kondicioneri")
               (let ((diagonal))
                 (with-option1 product "Экран" "Диагональ экрана, дюйм"
                               (setf diagonal (getf option :value)))
