@@ -15,6 +15,7 @@
    (title       :initarg :title      :initform nil                             :accessor title)
    (body        :initarg :body       :initform nil                             :accessor body)
    (date        :initarg :date       :initform nil                             :accessor date)
+   (header      :initarg :header     :initform nil                             :accessor header)
    (ctype       :initarg :ctype      :initform "article"                       :accessor ctype) ;; article / static / landscape
    (tags        :initarg :tags       :initform (make-hash-table :test #'equal) :accessor tags)))
 
@@ -39,6 +40,7 @@
 				 (tags-line (cdr (assoc :tags raw)))
 				 (title (cdr (assoc :title raw)))
 				 (ctype (cdr (assoc :ctype raw)))
+         (header (cdr (assoc :header raw)))
 				 (new (make-instance 'article
 														 :key key
 														 :name name
@@ -50,6 +52,7 @@
 														 :ctype (if ctype
 																				ctype
 																				(ctype dummy))
+                             :header header
 														 :date date)))
 		(make-tags-table (tags new) tags-line)
 		(setf (gethash key *storage-articles*) new)
@@ -189,17 +192,17 @@
 
 (defmethod articles.show-static ((object article))
 	(root:main (list :keywords "" ;;keywords
-									 :description "" ;;description
-									 :title (name object)
-									 :header (root:header (append (list :logged (root:notlogged)
-																											:cart (root:cart))
-																								(main-page-show-banner "line" (banner *main-page.storage*))))
-									 :footer (root:footer)
-									 :content  (static:main
-															(list :menu (new-classes.menu)
-																		:breadcrumbs (bredcrumbs object)
-																		:subcontent  (body object)
-																		:rightblock  (rightblock object))))))
+                   :description "" ;;description
+                   :title (name object)
+                   :header (root:header (append (list :logged (root:notlogged)
+                                                      :cart (root:cart))
+                                                (main-page-show-banner "line" (banner *main-page.storage*))))
+                   :footer (root:footer)
+                   :content  (static:main
+                              (list :menu (new-classes.menu)
+                                    :breadcrumbs (bredcrumbs object)
+                                    :subcontent  (body object)
+                                    :rightblock  (rightblock object))))))
 
 (defmethod articles.show-article  ((object article))
 	(root:main (list :keywords "" ;;keywords
@@ -242,9 +245,10 @@
 
 (defmethod articles.show-landscape  ((object article))
 	(root:main-landscape (list :keywords "" ;;keywords
-									 :description "" ;;description
-									 :title (name object)
-									 :content  (body object))))
+                             :description "" ;;description
+                             :headeraddition (header object)
+                             :title (name object)
+                             :content  (body object))))
 
 ;; отображение страницы статьи
 (defmethod restas:render-object ((designer eshop-render) (object article))
