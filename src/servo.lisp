@@ -267,7 +267,7 @@
 									 :description description
 									 :title title
 									 :header (soy.header:header (append (list :cart (unless no-need-cart
-                                                              (soy.newcart:cart-widget)))
+                                                              (root:cart)))
 																								(main-page-show-banner "line" (banner *main-page.storage*))))
 									 :content (if content
 																content

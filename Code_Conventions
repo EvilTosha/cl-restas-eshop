@@ -28,7 +28,7 @@ but not
 
 - All the pathnames should be in config files
 
-- Use for variables "talking names". Good: (let ((result 0) (product-counter 0)) ...); Bad: (let ((r 0) (pc 0)) ...)
+- Use for variables "talking names". Good: Bad: (let ((r 0) (pc 0)) ...); (let ((result 0) (product-counter 0)) ...)
 
 - All the closing parenthesis should be on the line with last expression/variable.
 Good:
@@ -36,5 +36,10 @@ Good:
 result)))
 Bad:
 ...
-result))
-)
+result)
+))
+
+- One-line format strings should start with ~& and end with ~%; Example: (format nil "~&Test line~%")
+
+- Write format directives in uppercase for make them stand out from lowercase text surrounding. Example: (format nil "~&Number ~D~%" num)
+

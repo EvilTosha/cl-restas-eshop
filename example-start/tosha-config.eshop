@@ -6,7 +6,6 @@ release = 0
 dbg-on = 1
 # catch-errors shold be 1 on release
 catch-errors = 0
-swank-port = 4005
 server-port = 8080
 load-storage = 0
 load-xls = 0

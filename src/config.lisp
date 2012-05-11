@@ -38,7 +38,7 @@
 (defun config.config-option-processing (section option type)
 	(if (config.has-option-p section option)
 			(progn
-				(format t "Processing ~a/~a option..." section option)
+				(format *standard-output* "Processing ~a/~a option..." section option)
 				(config.set-option section option
 													 (let ((option-value
 																	(config.get-option section option)))
@@ -47,7 +47,7 @@
 															 ((string= type "bool") (config.bool-processing option-value))
 															 ((string= type "int") (config.int-processing option-value))
 															 ((string= type "string") (config.string-processing option-value)))))
-				(format t "   ~a~%" (config.get-option section option)))
+				(format *standard-output* "   ~a~%" (config.get-option section option)))
 			;; option doesn't exist
 			(error (format nil "Option ~a/~a doesn't exist" section option))))
 
@@ -62,7 +62,6 @@
 	(config.config-option-processing "START_OPTIONS" "release" "bool")
 	(config.config-option-processing "START_OPTIONS" "dbg-on" "bool")
 	(config.config-option-processing "START_OPTIONS" "catch-errors" "bool")
-	(config.config-option-processing "START_OPTIONS" "swank-port" "int")
 	(config.config-option-processing "START_OPTIONS" "server-port" "int")
 	(config.config-option-processing "START_OPTIONS" "load-storage" "bool")
 	(config.config-option-processing "START_OPTIONS" "load-xls" "bool")

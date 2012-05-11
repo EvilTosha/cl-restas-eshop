@@ -2,6 +2,7 @@
 (defparameter *path-to-libs* (sb-unix::posix-getenv "LIBS_PATH"))
 (defparameter *path-to-eshop* (sb-unix::posix-getenv "ESHOP_PATH"))
 (defparameter *path-to-config* (sb-unix::posix-getenv "CONFIG_PATH"))
+(defparameter *swank-port* (parse-integer (sb-unix::posix-getenv "SWANK_PORT")))
 
 ;; регестрация путей для asdf
 (load (merge-pathnames "load.lisp" *path-to-eshop*))
@@ -9,20 +10,19 @@
 
 ;; load swank libs
 (asdf:load-system :swank)
-
 ;; для того чтобы загружался esrap
 (load (merge-pathnames "slime-archimag/contrib/swank-indentation.lisp" *path-to-libs*))
-
-;; load eshop
-(push *path-to-eshop* asdf:*central-registry*)
-(asdf:load-system :eshop)
-
 ;; swank server start
 (print swank::*application-hints-tables*)
 (setq swank:*use-dedicated-output-stream* nil)
 (swank:create-server :coding-system "utf-8-unix"
 										 :dont-close t
-										 :port (eshop:config.get-option "START_OPTIONS" "swank-port"))
+										 :port *swank-port*)
+
+
+;; load eshop
+(push *path-to-eshop* asdf:*central-registry*)
+(asdf:load-system :eshop)
 
 ;; alternative order numbering for developers server
 (if (and (not (eshop:config.get-option "START_OPTIONS" "release"))
