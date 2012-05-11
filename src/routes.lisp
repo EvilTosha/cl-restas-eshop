@@ -284,7 +284,6 @@ var i,y,x=\"3c7461626c6520636c6173733d226261636b5f746f5f7363686f6f6c223e0d0a3c74
 		(list :keywords "" ;;keywords
 					:description "" ;;description
 					:title ""
-					:header (root:header (append (list :logged (root:notlogged)
-																						 :cart (root:cart))
+					:header (root:header (append (list :cart (root:cart))
 																			 (main-page-show-banner "line" (banner *main-page.storage*))))
-					:footer (root:footer))))
+					:footer (soy.footer:footer))))

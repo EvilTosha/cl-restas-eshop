@@ -266,7 +266,7 @@
   (root:main (list :keywords keywords
                    :description description
                    :title title
-                   :header (soy.header:header (append (list :cart (unless no-need-cart
+                   :header (root:header (append (list :cart (unless no-need-cart
                                                                     (root:cart)))
                                                       (main-page-show-banner "line" (banner *main-page.storage*))))
                    :content (if content
@@ -278,13 +278,13 @@
 
 
 (defun checkout-page (&optional (content nil))
-  (root:main (list :header (soy.header:shortheader)
+  (root:main (list :header (root:shortheader)
                    :content (if content
                                 content
                                 "test page"))))
 
 (defun checkout-thankes-page (&optional (content nil))
-  (root:main (list :header (soy.header:short-linked-header)
+  (root:main (list :header (root:short-linked-header)
                    :content (if content
                                 content
                                 "test page"))))
