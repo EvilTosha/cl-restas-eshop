@@ -3,13 +3,13 @@
 (in-package #:eshop)
 
 (defclass global-storage ()
-    ((storage :initarg :storage :initform (make-hash-table :test #'equal) :accessor storage)
-     (products :initarg :products :initform nil :accessor products)
-     (groups :initarg :groups :initform nil :accessor groups)
-     (filters :initarg :filters :initform nil :accessor filters)
-     (actual-groups :initarg :actual-groups :initform nil :accessor actual-groups)
-     (active-products :initarg :active-products :initform nil :accessor active-products)
-     (root-groups :initarg :root-groups :initform nil :accessor root-groups)))
+  ((storage :initarg :storage :initform (make-hash-table :test #'equal) :accessor storage)
+   (products :initarg :products :initform nil :accessor products)
+   (groups :initarg :groups :initform nil :accessor groups)
+   (filters :initarg :filters :initform nil :accessor filters)
+   (actual-groups :initarg :actual-groups :initform nil :accessor actual-groups)
+   (active-products :initarg :active-products :initform nil :accessor active-products)
+   (root-groups :initarg :root-groups :initform nil :accessor root-groups)))
 
 
 (defvar *global-storage* (make-instance 'global-storage))

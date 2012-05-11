@@ -82,10 +82,10 @@
              (format nil "<span class=\"add\" id=\"add-img\"><big class=\"price\"><b>~a</b><var> руб.</var></big>~a"
                      (get-format-price siteprice)
                      (soy.buttons:add-product-cart
-                               (list :articul articul
-                                     :name name
-                                     :siteprice siteprice
-                                     :pic picname)))))))
+                      (list :articul articul
+                            :name name
+                            :siteprice siteprice
+                            :pic picname)))))))
       ((string= type "price")
        (let* ((articul (nth 1 args))
               (product (gethash articul (storage *global-storage*))))

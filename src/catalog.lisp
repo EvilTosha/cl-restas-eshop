@@ -4,7 +4,7 @@
 
 ;;шаблоны
 (defun catalog.catalog-update ()
-	(apply #'servo.compile-soy (list "new-catalog.soy")))
+  (apply #'servo.compile-soy (list "new-catalog.soy")))
 
 (defun catalog.sitemap-entity (error404  &optional col1 col2)
   (soy.new-catalog:catalog-main
@@ -28,10 +28,10 @@
                                         (let* ((pic (when (not (equal "" (pic node)))
                                                       (pic node)))
                                                (style (when pic
-                                                       (multiple-value-bind (width height)
-                                                           (images-get-dimensions
-                                                            (format nil "~a/htimgs~a" *path-to-dropbox* (pic node)))
-                                                         (images-style-for-resize width height 70)))))
+                                                        (multiple-value-bind (width height)
+                                                            (images-get-dimensions
+                                                             (format nil "~a/htimgs~a" *path-to-dropbox* (pic node)))
+                                                          (images-style-for-resize width height 70)))))
                                           (list
                                            :maingrouplink (format nil "<a href=\"/~a\">~a</a>~%" (key node) (name node))
                                            :maingroupimg pic

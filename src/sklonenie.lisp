@@ -1,4 +1,4 @@
-;;; sklonenie.lisp
+;;;; sklonenie.lisp
 
 (in-package #:eshop)
 
@@ -19,17 +19,17 @@
     result))
 
 (defun sklonenie.restore ()
-	(let ((t-storage (make-hash-table :test #'equal)))
-		(xls.restore-from-xls
-		 (merge-pathnames "sklonenija.xls" (config.get-option "PATHS" "path-to-seo"))
-		 #'(lambda (line)
-				 (let* ((words (sklonenie-get-words line))
-								(skls (mapcar #'(lambda (w) (string-trim "#\""  w))
-															words))
-								(key (string-downcase (car skls))))
-					 (setf (gethash key t-storage) skls)))
-		 "sklonenie.restore")
-		(setf *group-skls* t-storage)))
+  (let ((t-storage (make-hash-table :test #'equal)))
+    (xls.restore-from-xls
+     (merge-pathnames "sklonenija.xls" (config.get-option "PATHS" "path-to-seo"))
+     #'(lambda (line)
+         (let* ((words (sklonenie-get-words line))
+                (skls (mapcar #'(lambda (w) (string-trim "#\""  w))
+                              words))
+                (key (string-downcase (car skls))))
+           (setf (gethash key t-storage) skls)))
+     "sklonenie.restore")
+    (setf *group-skls* t-storage)))
 
 (defmethod sklonenie-get-words ((isg string))
   (let ((bin))

@@ -1,3 +1,5 @@
+;;;; sitemap.lisp
+
 (in-package #:eshop)
 
 ;; example:
@@ -61,21 +63,21 @@
                                     :priority "0.5")
                               res))
                          (storage.get-vendors group)))
-          (groups *global-storage*))
+            (groups *global-storage*))
     res))
 
 (defun sitemap.get-static-routes ()
   (mapcar #'(lambda (k)
-               (list :loc (format nil "http://www.320-8080.ru/~a" k)
-                     :lastmod *sitemap-lastmod-time*
-                     :changefreq "monthly"
-                     :priority "0.5"))
-           (let ((statics))
-             (maphash #'(lambda (k v)
-                          (if (equal (type-of v) 'article)
-                              (push k statics)))
-                      (storage *global-storage*))
-             statics)))
+              (list :loc (format nil "http://www.320-8080.ru/~a" k)
+                    :lastmod *sitemap-lastmod-time*
+                    :changefreq "monthly"
+                    :priority "0.5"))
+          (let ((statics))
+            (maphash #'(lambda (k v)
+                         (if (equal (type-of v) 'article)
+                             (push k statics)))
+                     (storage *global-storage*))
+            statics)))
 
 (defun sitemap.get-special-routes ()
   (list

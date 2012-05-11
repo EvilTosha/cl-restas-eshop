@@ -1,13 +1,15 @@
+;;;; ranme.lisp
+
 (in-package #:eshop)
 
 ;;набор функций для переименования картинок в соответствии с SEO именами
 
 (defun rename-translit-char (char)
   (let ((letters (list "a" "b" "v" "g" "d" "e"
-                   "zh" "z" "i" "y" "k" "l" "m"
-                   "n" "o" "p" "r" "s" "t" "u"
-                   "f" "h" "ts" "ch" "sh" "shch"
-                   "" "y" "" "e" "yu" "ya"))
+                       "zh" "z" "i" "y" "k" "l" "m"
+                       "n" "o" "p" "r" "s" "t" "u"
+                       "f" "h" "ts" "ch" "sh" "shch"
+                       "" "y" "" "e" "yu" "ya"))
         (code (char-code char)))
     (if (or (< code 1072) (> code 1103))
         (string char)
@@ -49,9 +51,9 @@
          (result t))
     (dotimes (i (length pics))
       (when (not (equal (rename-new-name name (+ 1 i))
-                      (subseq (nth i pics) 0 (search "." (nth i pics)))))
-          (setf result nil)))
-		result))
+                        (subseq (nth i pics) 0 (search "." (nth i pics)))))
+        (setf result nil)))
+    result))
 
 
 ;;переименовывает все картинки в указанной папке именами для указанного продукта
@@ -128,10 +130,10 @@
 (defun rename-convert (path-from path-to &optional size-w size-h)
   (ensure-directories-exist path-to)
   (let* ((size (if size-w
-                  (if size-h
-                      (format nil "~ax~a" size-w size-h)
-                      (format nil "~a" size-w))
-                  nil))
+                   (if size-h
+                       (format nil "~ax~a" size-w size-h)
+                       (format nil "~a" size-w))
+                   nil))
          (proc (sb-ext:run-program "/usr/bin/convert"
                                    (append
                                     (list path-from)
@@ -173,7 +175,7 @@
 
 (defun rename-copy-folder (from to)
   (when (not (directory-exists-p from))
-		(log5:log-for warning "Directory doesn't exist!"))
+    (log5:log-for warning "Directory doesn't exist!"))
   (ensure-directories-exist to)
   (log5:log-for info "Start copy folder ~a to ~a" from to)
   (let ((files-list (rename-recursive-get-files from))
@@ -186,7 +188,7 @@
        (let ((new-to (format nil "~a~a" to (subseq (format nil "~a" file-or-dir) len))))
          (ensure-directories-exist new-to)
          (if (and (not (directory-pathname-p new-to))
-                    (not (file-exists-p new-to)))
+                  (not (file-exists-p new-to)))
              (progn
                (copy-file file-or-dir new-to)
                (incf counter))
@@ -211,10 +213,10 @@
                      (let* ((articul (car (last (split "/" path))))
                             (product (gethash articul (storage *global-storage*))))
                        (when product
-                           (rename-convert-from-folder product path)
-                           (rename-copy-folder path (format nil "~a~a/" backup articul))
-                           (rename-remove-folder path)
-                           )
+                         (rename-convert-from-folder product path)
+                         (rename-copy-folder path (format nil "~a~a/" backup articul))
+                         (rename-remove-folder path)
+                         )
                        )))))
       ;;else
       (log5:log-for warning "Folder ~a or ~a doesn't exist!" from backup)))
@@ -223,9 +225,9 @@
 (defun rename-remove-folder (path)
   (log5:log-for info "Start removing folder ~a" path)
   (let ((proc (sb-ext:run-program "/bin/rm"
-                            (list "-r"
-                                  path)
-                            :wait nil :output :stream)))
+                                  (list "-r"
+                                        path)
+                                  :wait nil :output :stream)))
     (with-open-stream (in (sb-ext:process-output proc))
       (loop
          :for line = (read-line in nil)

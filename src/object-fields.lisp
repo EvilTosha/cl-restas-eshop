@@ -1,3 +1,5 @@
+;;;; object-fields.lisp
+
 (in-package #:eshop)
 
 (defun object-fields.string-escaping (string)
@@ -14,7 +16,7 @@
 
 (defun object-fields.string-replace-newlines (string)
   "Processing string and replace newline characters with #Newline"
-	(regex-replace-all (format nil "~a" #\Return)
+  (regex-replace-all (format nil "~a" #\Return)
                      (regex-replace-all "\\n" string "#Newline")
                      ""))
 
@@ -108,7 +110,7 @@
        (list :name name :value value))))
 
 (defun object-fields.textedit-field-get-data (string)
-	"Replace #\Replace (#\Newline remains)"
+  "Replace #\Replace (#\Newline remains)"
   (servo.string-replace-chars string (list #\Return)))
 
 (defun object-fields.textedit-field-serialize (text)
@@ -123,7 +125,7 @@
        (list :name name :value value))))
 
 (defun object-fields.textedit-raw-field-get-data (string)
-	"Replace #\Replace (#\Newline remains)"
+  "Replace #\Replace (#\Newline remains)"
   (servo.string-replace-chars string (list #\Return)))
 
 (defun object-fields.textedit-raw-field-serialize (text)
@@ -202,8 +204,8 @@
     ;;выясняем нужно ли открывать группу
     (mapcar #'(lambda (open-group)
                 (when (eq (key group) (key open-group))
-                    (setf open t)
-                    (setf checked t)))
+                  (setf open t)
+                  (setf checked t)))
             open-groups)
     ;;строим список дочерних ветвей и проверяем нужно ли открыть данный узел
     (setf children
@@ -264,8 +266,8 @@
                                             name options))))
                             optgroups))))
     (if entity
-      (format nil "[~{~a~^,~}]" entity)
-      "null")))
+        (format nil "[~{~a~^,~}]" entity)
+        "null")))
 
 
 
@@ -299,8 +301,8 @@
                                     (append keyoption (list :number (- cnt 1)))))
                                value))
          :emptyfield (soy.class_forms:keyoption-field (list
-                                                        :number (format nil "' + $~aCnt + '"
-                                                                        name)))
+                                                       :number (format nil "' + $~aCnt + '"
+                                                                       name)))
          :name name
          :number (- (length value) 1)
          :disabled disabled)))
@@ -308,14 +310,14 @@
 
 (defun object-fields.keyoptions-field-get-data (string)
   string)
-  ;; (mapcar #'servo.alist-to-plist (decode-json-from-string string)))
+;; (mapcar #'servo.alist-to-plist (decode-json-from-string string)))
 
 (defun object-fields.keyoptions-field-serialize (keyoptions)
   (format nil "[~{~a~^,~}]"
           (mapcar #'(lambda (keyoption)
-                           (format nil "{\"optgroup\":~a,\"optname\":~a}"
-                                   (encode-json-to-string (getf keyoption :optgroup))
-                                   (encode-json-to-string (getf keyoption :optname))))
+                      (format nil "{\"optgroup\":~a,\"optname\":~a}"
+                              (encode-json-to-string (getf keyoption :optgroup))
+                              (encode-json-to-string (getf keyoption :optname))))
                   keyoptions)))
 
 
@@ -335,7 +337,7 @@
          :disabled disabled)))
 
 (defun object-fields.catalog-keyoptions-field-get-data (string)
-   string)
+  string)
 
 (defun object-fields.catalog-keyoptions-field-serialize (keyoptions)
   (format nil "[~{~a~^,~}]"

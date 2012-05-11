@@ -1,3 +1,5 @@
+;;;; render.lisp
+
 (in-package #:eshop)
 
 (defclass eshop-render () ())
@@ -121,14 +123,14 @@
                                                     sort-groups))))
                                 ;;else
                                 (let* ((products-list (if (getf parameters :showall)
-																													(storage.get-filtered-products object #'atom)
-																													(storage.get-filtered-products object #'active)))
-																			 (cartrige-group (string= "cartridge-dlya-printerov" (key object)))
-																			 (printer-articul (and cartrige-group (getf parameters :printer-articul)))
-																			 (storage-printer (when printer-articul
-																													(gethash printer-articul (storage *global-storage*))))
-																			 (cartrige-printer (when printer-articul
-																													 (gethash printer-articul *printer-storage*))))
+                                                          (storage.get-filtered-products object #'atom)
+                                                          (storage.get-filtered-products object #'active)))
+                                       (cartrige-group (string= "cartridge-dlya-printerov" (key object)))
+                                       (printer-articul (and cartrige-group (getf parameters :printer-articul)))
+                                       (storage-printer (when printer-articul
+                                                          (gethash printer-articul (storage *global-storage*))))
+                                       (cartrige-printer (when printer-articul
+                                                           (gethash printer-articul *printer-storage*))))
                                   (if (null (getf parameters :sort))
                                       (setf (getf parameters :sort) "pt"))
                                   (if (getf parameters :vendor)
@@ -138,9 +140,9 @@
                                                            products-list)))
                                   (if (getf parameters :fullfilter)
                                       (setf products-list (fullfilter-controller products-list object parameters)))
-																	(when (and printer-articul cartrige-printer)
-																		(setf products-list (mapcar #'(lambda (articul) (gethash articul (storage *global-storage*)))
-																																(cartrige.get-cartriges-by-model printer-articul))))
+                                  (when (and printer-articul cartrige-printer)
+                                    (setf products-list (mapcar #'(lambda (articul) (gethash articul (storage *global-storage*)))
+                                                                (cartrige.get-cartriges-by-model printer-articul))))
                                   (with-sorted-paginator
                                       products-list
                                     parameters
@@ -152,18 +154,18 @@
                                                                             (storage.get-filtered-products object #'active)))
                                       :accessories (soy.catalog:accessories)
                                       :pager pager
-																			:cartrigeselect (when cartrige-group
-																												(soy.catalog:cartige-select
-																												 (list
-																													:vendors (cartrige.get-vendors-list)
-																													:printer (when (and storage-printer
-																																							cartrige-printer)
-																																		 (soy.catalog:printer-view (list
-																																														:articul printer-articul
-																																														:pic (car (get-pics printer-articul))
-																																														:name (name-seo storage-printer)
-																																														:key (key storage-printer)
-																																														:price (siteprice storage-printer)))))))
+                                      :cartrigeselect (when cartrige-group
+                                                        (soy.catalog:cartige-select
+                                                         (list
+                                                          :vendors (cartrige.get-vendors-list)
+                                                          :printer (when (and storage-printer
+                                                                              cartrige-printer)
+                                                                     (soy.catalog:printer-view (list
+                                                                                                :articul printer-articul
+                                                                                                :pic (car (get-pics printer-articul))
+                                                                                                :name (name-seo storage-printer)
+                                                                                                :key (key storage-printer)
+                                                                                                :price (siteprice storage-printer)))))))
                                       :products
                                       (loop
                                          :for product :in  paginated :collect (render.view product)))))))))
@@ -227,14 +229,14 @@
 
 
 (defun render.get-upsale-products (gr)
-	(get-randoms-from-list (remove-if-not #'active (products gr)) 4))
+  (get-randoms-from-list (remove-if-not #'active (products gr)) 4))
 
 
 (defmethod render.prepare-upsale-full ((object group))
   (list :groupnameskl (sklonenie (name object) 2)
         :upsaleblocks (mapcar #'(lambda (gr)
-																	(render.prepare-upsale-block (name gr) (render.get-upsale-products gr)))
-															(upsale-links object))))
+                                  (render.prepare-upsale-block (name gr) (render.get-upsale-products gr)))
+                              (upsale-links object))))
 
 
 (defmethod render.view ((object product))
@@ -260,7 +262,7 @@
             :groupd (groupd.is-groupd object)
             :groupd_man (groupd.man.is-groupd object)
             :groupd_woman (groupd.woman.is-groupd object)
-						:groupd_holiday (groupd.holiday.is-groupd object)
+            :groupd_holiday (groupd.holiday.is-groupd object)
             :firstpic (car pics)
             :promotiontext (concatenate 'string
                                         (let ((value))
@@ -401,7 +403,7 @@
          (is-vintage (null (active object)))
          (is-available t ) ;;(servo.available-for-order-p object))
          (product-view)
-				 (group (new-classes.parent object)))
+         (group (new-classes.parent object)))
     (setf product-view (list :menu (new-classes.menu object)
                              :breadcrumbs (soy.product:breadcrumbs (new-classes.breadcrumbs object))
                              :articul (articul object)
@@ -412,10 +414,10 @@
                              :groupd (groupd.is-groupd object)
                              :groupd_man (groupd.man.is-groupd object)
                              :groupd_woman (groupd.woman.is-groupd object)
-														 :groupd_holiday (groupd.holiday.is-groupd object)
+                             :groupd_holiday (groupd.holiday.is-groupd object)
                              :bonuscount (when (and (bonuscount object)
-                                                  (not (equal (bonuscount object) 0)))
-                                             (* (bonuscount object) 10))
+                                                    (not (equal (bonuscount object) 0)))
+                                           (* (bonuscount object) 10))
                              :formatsiteprice (get-format-price (siteprice object))
                              :formatstoreprice (get-format-price
                                                 (+ (siteprice object)
@@ -425,7 +427,7 @@
                              ;;test
                              :upsaleinfo (when (and group (upsale-links group))
                                            (soy.product:upsale (render.prepare-upsale-full group)))
-	                           ;;end test
+                             ;;end test
                              :procent diff-percent
                              :subst (format nil "/~a" (articul object))
                              :pics (cdr pics)

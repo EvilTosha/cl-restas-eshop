@@ -1,3 +1,5 @@
+;;;;backup.lisp
+
 (in-package #:eshop)
 
 ;;; Backup functions and macros
@@ -50,8 +52,8 @@
 
 (defun backup.serialize-all (&key (backup-dir (format nil "~aeshop-logs/backups/" (user-homedir-pathname)))
                              product-filename
-														 group-filename
-														 (push-to-dropbox (config.get-option "START_OPTIONS" "release")))
+                             group-filename
+                             (push-to-dropbox (config.get-option "START_OPTIONS" "release")))
   "Serializing all products & groups to given files in given folder. If no filenames passed, it makes files with type-date-time.bkp template"
   (let* ((date-time (time.encode.backup-filename))
          (product-path (pathname
@@ -64,23 +66,23 @@
                           (format nil "~agroups/group-~a.bkp" backup-dir date-time)))))
     (ensure-directories-exist product-path)
     (ensure-directories-exist group-path)
-		(log5:log-for info "Start products serializing to ~a" product-path)
+    (log5:log-for info "Start products serializing to ~a" product-path)
     (backup.serialize-list-to-file (storage.get-products-list) product-path)
-		(log5:log-for info "Start groups serializing to ~a" group-path)
-		(backup.serialize-list-to-file (storage.get-groups-list) group-path)
+    (log5:log-for info "Start groups serializing to ~a" group-path)
+    (backup.serialize-list-to-file (storage.get-groups-list) group-path)
     ;; copying to Dropbox
     (when push-to-dropbox
-			(let ((dropbox-backup-path (config.get-option "CRITICAL" "path-to-dropbox-backup")))
-				(ensure-directories-exist dropbox-backup-path)
-				(cl-fad:copy-file product-path (merge-pathnames "products.bkp" dropbox-backup-path) :overwrite t)
-				(cl-fad:copy-file group-path   (merge-pathnames "groups.bkp" dropbox-backup-path) :overwrite t)))))
+      (let ((dropbox-backup-path (config.get-option "CRITICAL" "path-to-dropbox-backup")))
+        (ensure-directories-exist dropbox-backup-path)
+        (cl-fad:copy-file product-path (merge-pathnames "products.bkp" dropbox-backup-path) :overwrite t)
+        (cl-fad:copy-file group-path   (merge-pathnames "groups.bkp" dropbox-backup-path) :overwrite t)))))
 
 
 (defun backup.last-product-backup-pathname ()
-	(merge-pathnames #P"products.bkp" (config.get-option "PATHS" "path-to-last-backup")))
+  (merge-pathnames #P"products.bkp" (config.get-option "PATHS" "path-to-last-backup")))
 
 (defun backup.last-group-backup-pathname ()
-	(merge-pathnames #P"groups.bkp" (config.get-option "PATHS" "path-to-last-backup")))
+  (merge-pathnames #P"groups.bkp" (config.get-option "PATHS" "path-to-last-backup")))
 
 (defun backup.last-filter-backup-pathname ()
-	(merge-pathnames #P"filters.bkp" (config.get-option "PATHS" "path-to-last-backup")))
+  (merge-pathnames #P"filters.bkp" (config.get-option "PATHS" "path-to-last-backup")))

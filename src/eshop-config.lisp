@@ -1,5 +1,6 @@
+;;;; eshop-config.lisp
+
 (in-package #:eshop)
-(print "ESHOP config")
 
 ;; PATH
 (defparameter *path-to-dropbox* (format nil "~aDropbox" (user-homedir-pathname)))

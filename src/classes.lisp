@@ -194,14 +194,8 @@
                producers)
       producer-list)))
 
-;; (get-list-of-producers (gethash "noutbuki-i-netbuki" *storage*))
-
-
 (defmethod make-producers ((object group))
   (make-instance 'producers
                  :producers (get-list-of-producers object)
                  :producersall (get-list-of-producers object  #'(lambda (product) t))
                  ))
-
-
-;; -----------------------------------------------------------------------------------------

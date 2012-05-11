@@ -1,3 +1,5 @@
+;;;; images.lisp
+
 (in-package #:eshop)
 
 (defun images-get-dimensions (path-to-image)
@@ -12,7 +14,7 @@
 
 (defun images-style-for-resize (width height req-size)
   (if (>= width height)
-    (format nil "width:~apx" (min width req-size))
-    (when (> height width)
-      (format nil "height:~apx" (min height req-size)))))
+      (format nil "width:~apx" (min width req-size))
+      (when (> height width)
+        (format nil "height:~apx" (min height req-size)))))
 

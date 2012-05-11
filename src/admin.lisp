@@ -1,12 +1,14 @@
+;;;; admin.lisp
+
 (in-package #:eshop)
 
 (defvar *admin-test-request*)
 (defvar *admin-test-session*)
 
 (restas:define-route admin-testtest-route ("/administration-super-panel/testtest")
-   (setf *admin-test-request* hunchentoot:*request*)
-   (setf *admin-test-session* hunchentoot:*session*)
-   "TEST")
+  (setf *admin-test-request* hunchentoot:*request*)
+  (setf *admin-test-session* hunchentoot:*session*)
+  "TEST")
 
 ;; ADMIN ROUTE
 (restas:define-route admin-route ("/administration-super-panel")
@@ -74,32 +76,24 @@
 
 ;;шаблоны
 (defun admin-compile-templates ()
-	(apply #'servo.compile-soy (list "admin.soy"
-																		"class_forms.soy"
-																		"admin-table.soy")))
+  (apply #'servo.compile-soy (list "admin.soy"
+                                   "class_forms.soy"
+                                   "admin-table.soy")))
 
 ;;обновление главной страницы
 (defun admin-update ()
   (admin-compile-templates))
 
-(defun show-gateway-history ()
-  (let ((history-list
-         (mapcar #'(lambda (data)
-                     (car data))
-                 *history*)))
-    history-list))
-
 (defun show-admin-menu ()
   (soy.admin:menu
    (list :elts
          (list "<li><a href=\"/administration-super-panel\"><b>MAIN ADMIN</b></a></li>"
-               "<li><a href=\"/administration-super-panel/history\">gateway</a></li>"
                "<li><a href=\"/administration-super-panel/actions\">actions</a></li>"
                "<li><a href=\"/administration-super-panel/pics\">pics</a></li>"
                "<li><a href=\"/administration-super-panel/info\">info</a></li>"
                "<li><a href=\"/administration-super-panel/templates\">templates</a></li>"
-							 "<li><a href=\"/administration-super-panel/makebackup\">backup</a></li>"
-							 "<li><a href=\"/administration-super-panel/cron-jobs\">cron-jobs</a></li>"))))
+               "<li><a href=\"/administration-super-panel/makebackup\">backup</a></li>"
+               "<li><a href=\"/administration-super-panel/cron-jobs\">cron-jobs</a></li>"))))
 
 (defun admin.test-get-post-parse ()
   "parsing get & post parameters for testing"
@@ -202,12 +196,12 @@
                      :columns (mapcar #'admin.product-content-column fields)))))))
       (t "Ololo?"))))
 
-(defun admin-gateway.get-info ()
+(defun admin.get-info ()
   (list (format nil "~{~a<br>~}" (mapcar #'(lambda (v) (sb-thread:thread-name v)) (sb-thread:list-all-threads)))
         (regex-replace-all "\\n" (with-output-to-string (*standard-output*) (room)) "<br>")))
 
 
-(defun admin-gateway.edit-content (&optional new-post-data)
+(defun admin.edit-content (&optional new-post-data)
   (let* ((key (getf (request-get-plist) :key))
          (item (gethash key (storage *global-storage*)))
          (item-fields (when item (new-classes.make-fields item)))
@@ -228,14 +222,14 @@
                :target "edit"))
         "not found")))
 
-(defun admin-gateway.make-content (new-post-data)
+(defun admin.make-content (new-post-data)
   (let* ((key (getf (request-get-plist) :key))
          (type (getf (request-get-plist) :type))
          (item (gethash key (storage *global-storage*)))
          (post-data new-post-data))
     (if item
         ;;if item exist in storage, redirect to edit page (but url will be .../make?...)
-        (admin-gateway.edit-content new-post-data)
+        (admin.edit-content new-post-data)
         ;;else
         (if post-data
             (progn
@@ -257,7 +251,7 @@
               ;;don't work with filters
               (object-fields.product-groups-fix item)
               (storage.edit-object item) ;;adding item into storage
-              (admin-gateway.edit-content))
+              (admin.edit-content))
             ;;else (post-data is nil)
             (let ((empty-item (new-classes.get-instance type)))
               (setf (key empty-item) key)
@@ -269,7 +263,7 @@
                      :fields (new-classes.make-fields empty-item)
                      :target "make")))))))
 
-(defun admin-gateway.pics-deleting (new-post-data)
+(defun admin.pics-deleting (new-post-data)
   (let* ((key (getf new-post-data :key))
          (p (gethash key (storage *global-storage*)))
          (output (format nil "Product with key ~a not found" key)))
@@ -278,35 +272,35 @@
       (setf output (format nil "Successfully deleted ~a's pics" key)))
     (soy.admin:pics-deleting (list :output output))))
 
-(defun admin-gateway.compile-template (new-post-data)
+(defun admin.compile-template (new-post-data)
   (let ((name (getf new-post-data :name))
-         (output))
-		(if new-post-data
-				(setf output
-							(if (file-exists-p (pathname (merge-pathnames
-																						(pathname name)
-																						(config.get-option "PATHS" "path-to-templates"))))
-									(handler-case
-											(progn
-												(servo.compile-soy name)
-												(format nil "Successfully compiled ~a" name))
-										(error (e) (format  nil "ERROR:~%~a" e)))
-									(format nil "File ~a not found" name))))
+        (output))
+    (if new-post-data
+        (setf output
+              (if (file-exists-p (pathname (merge-pathnames
+                                            (pathname name)
+                                            (config.get-option "PATHS" "path-to-templates"))))
+                  (handler-case
+                      (progn
+                        (servo.compile-soy name)
+                        (format nil "Successfully compiled ~a" name))
+                    (error (e) (format  nil "ERROR:~%~a" e)))
+                  (format nil "File ~a not found" name))))
     (soy.admin:compile-template (list :output output))))
 
-(defun admin-gateway.make-backup (new-post-data)
+(defun admin.make-backup (new-post-data)
   (let ((dobackup (getf new-post-data :dobackup))
-				(output))
-		(if (and new-post-data (string= dobackup "dobackup"))
-				(setf output
-							(handler-case
-									(progn
-										(backup.serialize-all)
-										(format nil "Successfully made backup"))
-								(error (e) (format  nil "ERROR:~%~a" e)))))
+        (output))
+    (if (and new-post-data (string= dobackup "dobackup"))
+        (setf output
+              (handler-case
+                  (progn
+                    (backup.serialize-all)
+                    (format nil "Successfully made backup"))
+                (error (e) (format  nil "ERROR:~%~a" e)))))
     (soy.admin:make-backup (list :output output))))
 
-(defun admin-gateway.do-action (action)
+(defun admin.do-action (action)
   (handler-case
       (if (not (null action))
           (cond
@@ -363,7 +357,7 @@
             (t (format nil "DON't know action ~a" action))))
     (error (e) (format  nil "ERROR:~%~a" e))))
 
-(defun admin-gateway.parenting-content (new-post-data)
+(defun admin.parenting-content (new-post-data)
   (let ((post-data new-post-data))
     (when post-data
       (setf post-data (servo.plist-to-unique post-data))
@@ -380,18 +374,18 @@
                                  (gethash group (storage *global-storage*))))
                             groups))
                 products)))
-  (let ((unparented-products (storage.get-filtered-products
-                              (storage.get-products-list)
-                              #'(lambda (item)
-                                  (null (new-classes.parent item))))))
-    (soy.class_forms:parenting-page
-     (list :products (mapcar #'(lambda (product)
-                                 (soy.class_forms:unparented-product-checkbox
-                                  (list :key (key product)
-                                        :name (name-seo product))))
-                             unparented-products)
-           :length (length unparented-products)
-           :groups (object-fields.group-list-field-view nil "GROUPS" nil))))))
+    (let ((unparented-products (storage.get-filtered-products
+                                (storage.get-products-list)
+                                #'(lambda (item)
+                                    (null (new-classes.parent item))))))
+      (soy.class_forms:parenting-page
+       (list :products (mapcar #'(lambda (product)
+                                   (soy.class_forms:unparented-product-checkbox
+                                    (list :key (key product)
+                                          :name (name-seo product))))
+                               unparented-products)
+             :length (length unparented-products)
+             :groups (object-fields.group-list-field-view nil "GROUPS" nil))))))
 
 (defun show-admin-page (&optional (key nil))
   (let ((new-post-data (servo.alist-to-plist (hunchentoot:post-parameters hunchentoot:*request*))))
@@ -402,26 +396,24 @@
                            (cond
                              ((null key)
                               (format nil "<p> Админка в разработке </p>"))
-                             ((string= key "history")
-                              (format nil "~{~a<br>~}" (show-gateway-history)))
                              ((string= key "info")
-                              (soy.admin:info (list :info (admin-gateway.get-info))))
+                              (soy.admin:info (list :info (admin.get-info))))
                              ((string= key "actions")
                               (soy.admin:action-buttons (list :post new-post-data
-                                                              :info (admin-gateway.do-action (getf new-post-data :action)))))
+                                                              :info (admin.do-action (getf new-post-data :action)))))
                              ((string= key "edit")
-                              (admin-gateway.edit-content new-post-data))
+                              (admin.edit-content new-post-data))
                              ((string= key "make")
-                              (admin-gateway.make-content new-post-data))
+                              (admin.make-content new-post-data))
                              ((string= key "parenting")
-                              (admin-gateway.parenting-content new-post-data))
+                              (admin.parenting-content new-post-data))
                              ((string= key "pics")
-                              (admin-gateway.pics-deleting new-post-data))
+                              (admin.pics-deleting new-post-data))
                              ((string= key "templates")
-                              (admin-gateway.compile-template new-post-data))
-														 ((string= key "backup")
-                              (admin-gateway.make-backup new-post-data))
-														 ((string= key "cron-jobs")
+                              (admin.compile-template new-post-data))
+                             ((string= key "backup")
+                              (admin.make-backup new-post-data))
+                             ((string= key "cron-jobs")
                               (cron.html-print-job-list new-post-data))
                              (t (format nil "~a" key)))))))))
 
@@ -472,17 +464,17 @@
     result))
 
 ;; (defun admin.server-restart (&optional (port 4006))
-;; 	(let* ((string (with-output-to-string (*standard-output*) (sb-ext:run-program "/bin/netstat"
-;; 																																								(list "-plnt")
-;; 																																								:output *standard-output*)))
-;; 				 ;; TODO: use only one regexp
-;; 				 (pid (ppcre:scan-to-strings "(\\d)+(?=/sbcl)"
-;; 																		 (ppcre:scan-to-strings
-;; 																			(format nil "(?=~d)([^\\r\\n])+(\\d+)/sbcl" port) string))))
-;; 		(when pid
-;; 			(log5:log-for info "KILLING RELEASE SITE PROCESS; PID = ~a" pid)
-;; 			(sb-ext:run-program "/bin/kill" (list "-9" (format nil "~d" pid))))
-;; 		(let ((sh "/home/eviltosha/cl-restas-eshop/start-4006.sh"))
-;; 			(log5:log-for info "RESTART SERVER; sh = ~a" sh)
-;; 			(with-output-to-string (*standard-output*) (sb-ext:run-program "/bin/sh" (list sh))))))
+;;  (let* ((string (with-output-to-string (*standard-output*) (sb-ext:run-program "/bin/netstat"
+;;                                                                                (list "-plnt")
+;;                                                                                :output *standard-output*)))
+;;         ;; TODO: use only one regexp
+;;         (pid (ppcre:scan-to-strings "(\\d)+(?=/sbcl)"
+;;                                     (ppcre:scan-to-strings
+;;                                      (format nil "(?=~d)([^\\r\\n])+(\\d+)/sbcl" port) string))))
+;;    (when pid
+;;      (log5:log-for info "KILLING RELEASE SITE PROCESS; PID = ~a" pid)
+;;      (sb-ext:run-program "/bin/kill" (list "-9" (format nil "~d" pid))))
+;;    (let ((sh "/home/eviltosha/cl-restas-eshop/start-4006.sh"))
+;;      (log5:log-for info "RESTART SERVER; sh = ~a" sh)
+;;      (with-output-to-string (*standard-output*) (sb-ext:run-program "/bin/sh" (list sh))))))
 ;; ;;(log5:log-for info "server restart...."))))

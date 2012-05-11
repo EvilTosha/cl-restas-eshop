@@ -1,3 +1,5 @@
+;;;; report.lisp
+
 (in-package #:eshop)
 
 (defparameter *special-products* (make-hash-table :test #'equal))
@@ -52,16 +54,16 @@
     (mapcar #'(lambda (v) (mapcar #'(lambda (l)
                                       (when (and (not (equal (getf v :name) "Secret"))
                                                  l
-																								 (getf l :value)
-																								 (not (equal
+                                                 (getf l :value)
+                                                 (not (equal
                                                        (string-trim (list #\Space #\Tab #\Newline) (getf l :value))
                                                        ""))
-																								 (not (equal (getf l :name) "Производитель"))
-																								 (not (equal (getf l :name) "Модель")))
+                                                 (not (equal (getf l :name) "Производитель"))
+                                                 (not (equal (getf l :name) "Модель")))
                                         (setf flag t)))
-																	(getf v :options)))
-						(optgroups product))
-		flag))
+                                  (getf v :options)))
+            (optgroups product))
+    flag))
 
 (defun write-groups (stream)
   (format stream "~a;~a;~a;~a;~a;~a;~%"
@@ -74,19 +76,19 @@
   (maphash #'(lambda (k v)
                (declare (ignore k))
                (when (equal (type-of v)
-														'group)
+                            'group)
                  (format stream "\"~a\";http://www.320-8080.ru/~a;~a;~a;~a;~a;~%"
-												 (stripper (name v))
-												 (key v)
-												 (if (active v)
-														 "yes"
-														 "no")
-												 (if (and (not (null (seo-text v)))
-																	(not (string= "" (stripper (seo-text v)))))
-														 "yes"
-														 "no")
-												 (length (products v))
-												 (length (remove-if-not #'active (products v))))))
+                         (stripper (name v))
+                         (key v)
+                         (if (active v)
+                             "yes"
+                             "no")
+                         (if (and (not (null (seo-text v)))
+                                  (not (string= "" (stripper (seo-text v)))))
+                             "yes"
+                             "no")
+                         (length (products v))
+                         (length (remove-if-not #'active (products v))))))
            (storage *global-storage*)))
 
 (defun write-groups-active-product-num (stream)
@@ -98,14 +100,14 @@
   (maphash #'(lambda (k v)
                (declare (ignore k))
                (when (equal (type-of v)
-														'group)
+                            'group)
                  (format stream "\"~a\";http://www.320-8080.ru/~a;~a;~a;~%"
-												 (stripper (name v))
-												 (key v)
-												 (if (active v)
-														 "yes"
-														 "no")
-												 (length (remove-if-not #'active (get-recursive-products v))))))
+                         (stripper (name v))
+                         (key v)
+                         (if (active v)
+                             "yes"
+                             "no")
+                         (length (remove-if-not #'active (get-recursive-products v))))))
            (storage *global-storage*)))
 
 
@@ -156,7 +158,7 @@
   (maphash #'(lambda (k v)
                (declare (ignore k))
                (when (and (equal (type-of v)
-																 'group)
+                                 'group)
                           (null (groups v)))
 
                  (maphash #'(lambda (vendor num)
@@ -178,7 +180,7 @@
                                               "no"))
                                         (length products)
                                         (length (remove-if-not #'active products)))))
-													(storage.get-vendors (storage.get-filtered-products v #'atom)))))
+                          (storage.get-vendors (storage.get-filtered-products v #'atom)))))
            (storage *global-storage*)))
 
 (defun create-report (file-name report-func)
@@ -212,35 +214,23 @@
                              (siteprice v)))))
            (storage *global-storage*)))
 
-(defun show-last-history (stream)
-  (when (not (null *history*))
-    ;; Делаем все продукты неактивными
-    (maphash #'(lambda (k v)
-                 (declare (ignore k))
-                 (when (equal (type-of v) 'product)
-                   (setf (active v) nil)))
-             (storage *global-storage*))
-    (loop :for packet :in (reverse (caddr (car *history*))) :do
-       (format stream "~a" (sb-ext:octets-to-string packet :external-format :cp1251)))))
-
 (defun post-proccess-gateway ()
-	(mapcar #'(lambda (v)
-							(let ((p (gethash v (storage *global-storage*))))
-								(when (not (null p))
+  (mapcar #'(lambda (v)
+              (let ((p (gethash v (storage *global-storage*))))
+                (when (not (null p))
                   (setf (preorder p) t)
                   (setf (active p) t)
                   (setf (gethash v (storage *global-storage*)) p)
                   (setf (gethash v *special-products*) p))))
-					(list
-					 "999888"
-					 "711265"
-					 "834786"
-					 "938111"
-					 "777888"
-					 "888777"
-					 "999111"
-					 "999777"
-					 ))
+          (list
+           "999888"
+           "711265"
+           "834786"
+           "938111"
+           "777888"
+           "888777"
+           "999111"
+           "999777"))
   (let ((rs))
     (maphash #'(lambda (k v)
                  (declare (ignore k))
@@ -292,15 +282,15 @@
     (maphash #'(lambda (k v)
                  (declare (ignore k))
                  (when (equal (type-of v) 'product)
-									 (push v rs)))
+                   (push v rs)))
              (storage *global-storage*))
-		rs))
+    rs))
 
 (defun create-sale-filter (group)
   (let* ((key (format nil "~a-~a" (key group) "sale"))
          (filter)
          (tmp-filter (car (remove-if-not #'(lambda (v) (equal (key v) key))
-																				 (filters group)))))
+                                         (filters group)))))
     (if (not tmp-filter)
         (setf filter (make-instance 'filter))
         (setf filter tmp-filter))
@@ -315,8 +305,8 @@
 
 (defun report.add-products-to-group (product-list gr)
   (mapcar #'(lambda (v)
-							(let ((pr (gethash (format nil "~a" v) (storage *global-storage*))))
-								(when pr
+              (let ((pr (gethash (format nil "~a" v) (storage *global-storage*))))
+                (when pr
                   (setf (parents pr) (list gr))
                   (push pr (products gr))
                   (storage.edit-object pr))))
@@ -328,7 +318,7 @@
   (let* ((key (format nil "~a-~a" (key group) "bestprice"))
          (filter)
          (tmp-filter (car (remove-if-not #'(lambda (v) (equal (key v) key))
-																				 (filters group)))))
+                                         (filters group)))))
     (if (not tmp-filter)
         (setf filter (make-instance 'filter))
         (setf filter tmp-filter))
@@ -345,7 +335,7 @@
   (let* ((key (format nil "~a-~a" (key group) "ipad3"))
          (filter)
          (tmp-filter (car (remove-if-not #'(lambda (v) (equal (key v) key))
-																				 (filters group)))))
+                                         (filters group)))))
     (if (not tmp-filter)
         (setf filter (make-instance 'filter))
         (setf filter tmp-filter))
@@ -371,7 +361,7 @@
   (let* ((key (format nil "~a-~a" (key group) "23feb"))
          (filter)
          (tmp-filter (car (remove-if-not #'(lambda (v) (equal (key v) key))
-																				 (filters group)))))
+                                         (filters group)))))
     (if (not tmp-filter)
         (setf filter (make-instance 'filter))
         (setf filter tmp-filter))
@@ -389,7 +379,7 @@
   (let* ((key (format nil "~a-~a" (key group) "8mart"))
          (filter)
          (tmp-filter (car (remove-if-not #'(lambda (v) (equal (key v) key))
-																				 (filters group)))))
+                                         (filters group)))))
     (if (not tmp-filter)
         (setf filter (make-instance 'filter))
         (setf filter tmp-filter))
@@ -404,20 +394,20 @@
 
 (defun report.set-man-salefilter ()
   (mapcar #'(lambda (gr)
-							(create-man-sale-filter gr))
+              (create-man-sale-filter gr))
           (storage.get-groups-list)))
 
 (defun report.set-woman-salefilter ()
   (mapcar #'(lambda (gr)
-							(create-woman-sale-filter gr))
+              (create-woman-sale-filter gr))
           (storage.get-groups-list)))
 
 
 (defun report.edit-filter (group filter-func name filter-key)
-	(let* ((key (format nil "~a-~a" (key group) filter-key))
+  (let* ((key (format nil "~a-~a" (key group) filter-key))
          (filter)
          (tmp-filter (car (remove-if-not #'(lambda (v) (equal (key v) key))
-																				 (filters group)))))
+                                         (filters group)))))
     (if (not tmp-filter)
         (setf filter (make-instance 'filter))
         (setf filter tmp-filter))
@@ -431,22 +421,22 @@
     filter))
 
 (defun report.set-filters (groups filter-func name filter-key)
-	(mapcar #'(lambda (gr)
-							(report.edit-filter gr filter-func name filter-key))
+  (mapcar #'(lambda (gr)
+              (report.edit-filter gr filter-func name filter-key))
           groups))
 
 (defun report.create-marketing-filters ()
-	(create-ipad3-filter (gethash "planshetnie-komputery" (storage *global-storage*)))
-	(report.set-filters (storage.get-groups-list)
-											#'groupd.holiday.is-groupd
-											"Для отдыха"
-											"holidays"))
+  (create-ipad3-filter (gethash "planshetnie-komputery" (storage *global-storage*)))
+  (report.set-filters (storage.get-groups-list)
+                      #'groupd.holiday.is-groupd
+                      "Для отдыха"
+                      "holidays"))
 ;; (groupd.man.restore)
-  ;; (groupd.woman.restore)
-  ;; (report.set-man-salefilter)
-  ;; (report.set-woman-salefilter)
-  ;; (eshop::create-bestprice-filter (gethash "noutbuki" (eshop::storage eshop::*global-storage*)))
-  ;; (eshop::create-bestprice-filter (gethash "netbuki" (eshop::storage eshop::*global-storage*)))
+;; (groupd.woman.restore)
+;; (report.set-man-salefilter)
+;; (report.set-woman-salefilter)
+;; (eshop::create-bestprice-filter (gethash "noutbuki" (eshop::storage eshop::*global-storage*)))
+;; (eshop::create-bestprice-filter (gethash "netbuki" (eshop::storage eshop::*global-storage*)))
 
 
 (defun report.set-salefilter ()
@@ -475,54 +465,54 @@
 
 
 (defun report.do-seo-reports ()
-	(let ((name (format nil "reports/seo-report-groups-~a.csv" (time.encode.backup-filename))))
-		(log5:log-for info "Do groups SEO report")
-		(create-report name #'write-groups))
-	(let ((name (format nil "reports/seo-report-vendors-~a.csv" (time.encode.backup-filename))))
-		(log5:log-for info "Do vendors SEO report")
-		(create-report name #'write-vendors))
-	(let ((name (format nil "reports/seo-report-products-~a.csv" (time.encode.backup-filename))))
-		(log5:log-for info "Do products SEO report")
-		(create-report name #'write-products)))
+  (let ((name (format nil "reports/seo-report-groups-~a.csv" (time.encode.backup-filename))))
+    (log5:log-for info "Do groups SEO report")
+    (create-report name #'write-groups))
+  (let ((name (format nil "reports/seo-report-vendors-~a.csv" (time.encode.backup-filename))))
+    (log5:log-for info "Do vendors SEO report")
+    (create-report name #'write-vendors))
+  (let ((name (format nil "reports/seo-report-products-~a.csv" (time.encode.backup-filename))))
+    (log5:log-for info "Do products SEO report")
+    (create-report name #'write-products)))
 
 
 (defun report.write-alias (&optional (stream *standard-output*))
-	(format stream "имя группы; наличие алиасов; группа опций ; опция; имя алиаса; ед. измерения;")
-	(mapcar #'(lambda (gr)
-							(if (null (catalog-keyoptions gr))
-									(format stream "~&~a; нет;" (name gr))
-									(mapcar #'(lambda (alias)
-															(let ((alias-temp (remove-if #'null
-																													 (mapcar #'(lambda (v)
-																																			 (if (not (equal (type-of v)
-																																											 'keyword))
-																																					 (stripper v)))
-																																	 alias))))
-																(format stream "~&\"~a\";~a;~{\" ~a \";~}"
-																				(stripper (name gr))
-																				(if alias-temp "есть" "нет")
-																				alias-temp)))
-													(catalog-keyoptions gr))))
-					(storage.get-groups-list)))
+  (format stream "имя группы; наличие алиасов; группа опций ; опция; имя алиаса; ед. измерения;")
+  (mapcar #'(lambda (gr)
+              (if (null (catalog-keyoptions gr))
+                  (format stream "~&~a; нет;" (name gr))
+                  (mapcar #'(lambda (alias)
+                              (let ((alias-temp (remove-if #'null
+                                                           (mapcar #'(lambda (v)
+                                                                       (if (not (equal (type-of v)
+                                                                                       'keyword))
+                                                                           (stripper v)))
+                                                                   alias))))
+                                (format stream "~&\"~a\";~a;~{\" ~a \";~}"
+                                        (stripper (name gr))
+                                        (if alias-temp "есть" "нет")
+                                        alias-temp)))
+                          (catalog-keyoptions gr))))
+          (storage.get-groups-list)))
 
 (defun report.write-keyoptions (&optional (stream *standard-output*))
-	(format stream "имя группы; наличие ключевых опций; группа опций ; опция;")
-	(mapcar #'(lambda (gr)
-							(if (null (keyoptions gr))
-									(format stream "~&~a; нет;" (name gr))
-									(mapcar #'(lambda (alias)
-															(let ((alias-temp (remove-if #'null
-																													 (mapcar #'(lambda (v)
-																																			 (if (not (equal (type-of v)
-																																											 'keyword))
-																																					 (stripper v)))
-																																	 alias))))
-																(format stream "~&\"~a\";~a;~{\" ~a \";~}"
-																				(stripper (name gr))
-																				(if alias-temp "есть" "нет")
-																				alias-temp)))
-													(keyoptions gr))))
-					(storage.get-groups-list)))
+  (format stream "имя группы; наличие ключевых опций; группа опций ; опция;")
+  (mapcar #'(lambda (gr)
+              (if (null (keyoptions gr))
+                  (format stream "~&~a; нет;" (name gr))
+                  (mapcar #'(lambda (alias)
+                              (let ((alias-temp (remove-if #'null
+                                                           (mapcar #'(lambda (v)
+                                                                       (if (not (equal (type-of v)
+                                                                                       'keyword))
+                                                                           (stripper v)))
+                                                                   alias))))
+                                (format stream "~&\"~a\";~a;~{\" ~a \";~}"
+                                        (stripper (name gr))
+                                        (if alias-temp "есть" "нет")
+                                        alias-temp)))
+                          (keyoptions gr))))
+          (storage.get-groups-list)))
 
 
 (defun report.do-alias-reports ()

@@ -1,3 +1,5 @@
+;;;; new-classes.lisp
+
 (in-package #:eshop)
 
 ;;макрос для создания класса по списку параметров
@@ -5,9 +7,9 @@
   `(defclass ,name ()
      ,(mapcar #'(lambda (field)
                   `(,(getf field :name)
-										:initarg ,(intern (format nil "~a" (getf field :name)) :keyword)
-										:initform ,(getf field :initform)
-										:accessor ,(getf field :name)))
+                     :initarg ,(intern (format nil "~a" (getf field :name)) :keyword)
+                     :initform ,(getf field :initform)
+                     :accessor ,(getf field :name)))
               class-fields)))
 
 
@@ -19,9 +21,9 @@
        (mapcar #'(lambda (field)
                    `(,(intern (string-upcase
                                (format nil "object-fields.~a-field-view" (getf field :type))))
-										 (,(getf field :name)  object)
-										 ,(format nil "~a" (getf field :name))
-										 ,(getf field :disabled)))
+                      (,(getf field :name)  object)
+                      ,(format nil "~a" (getf field :name))
+                      ,(getf field :disabled)))
                class-fields))))
 
 
@@ -35,7 +37,7 @@
                      `(setf (,(getf field :name) object)
                             (,(intern (string-upcase
                                        (format nil "object-fields.~a-field-get-data" (getf field :type))))
-														 (getf post-data-plist ,(intern (string-upcase (format nil "~a" (getf field :name))) :keyword))))))
+                              (getf post-data-plist ,(intern (string-upcase (format nil "~a" (getf field :name))) :keyword))))))
                class-fields))))
 
 
@@ -43,12 +45,12 @@
 (defmethod new-classes.decode (in-string (dummy group-filter))
   (if (or (string= in-string "") (null in-string))
       nil
-		(let ((*package* (find-package :eshop)))
-			(let* ((tmp (read-from-string in-string)))
-				(make-instance 'group-filter
-											 :name (getf tmp :name)
-											 :base (getf tmp :base)
-											 :advanced (getf tmp :advanced))))))
+      (let ((*package* (find-package :eshop)))
+        (let* ((tmp (read-from-string in-string)))
+          (make-instance 'group-filter
+                         :name (getf tmp :name)
+                         :base (getf tmp :base)
+                         :advanced (getf tmp :advanced))))))
 
 ;;макрос для создания метода десериализации класса из файла, по данным имени класса и списку полей
 (defmacro new-classes.make-unserialize-method (name class-fields)
@@ -59,54 +61,50 @@
           ;;создаем объект с прочитанными из файла полями
           ((item
             ,(let ((res (append (list `make-instance) (list `(quote ,name)))))
-							 (mapcar
-								#'(lambda (field)
-										(setf res
-													(append res
-																	(let ((name (intern (string-upcase (format nil "~a" (getf field :name))) :keyword))
-																				(initform (getf field :initform)))
-																		`(,name
-																			(let ((val (cdr (assoc ,name raw))))
-																				(if val
-																						val
-																					,initform)))))))
-								class-fields)
-							 res)))
+                  (mapcar
+                   #'(lambda (field)
+                       (setf res
+                             (append res
+                                     (let ((name (intern (string-upcase (format nil "~a" (getf field :name))) :keyword))
+                                           (initform (getf field :initform)))
+                                       `(,name
+                                         (let ((val (cdr (assoc ,name raw))))
+                                           (if val
+                                               val
+                                               ,initform)))))))
+                   class-fields)
+                  res)))
         item))
     (defmethod unserialize-from-file (filepath (dummy ,name))
       (let ((percent 0))
         (with-open-file (file filepath)
-												(let ((curline "")
-															(needconc nil)
-															(file-length (cl:file-length file)))
-													(loop for line = (read-line file nil 'EOF)
-																until (eq line 'EOF)
-																do
-																(let ((str line)
-																			(item (unserialize (decode-json-from-string line)
-																												 dummy)))
-																	(let ((cur-pos (round (* 100 (/ (cl:file-position file) file-length)))))
-																		(when (> cur-pos percent)
-																			(setf percent cur-pos)
-																			(when (= 0 (mod percent 10))
-																				(log5:log-for info-console "Done percent: ~a%" percent))))
-																	(storage.add-new-object item (key item)))
-																)))))))
+          (let ((file-length (cl:file-length file)))
+            (loop for line = (read-line file nil 'EOF)
+               until (eq line 'EOF)
+               do
+                 (let ((item (unserialize (decode-json-from-string line)
+                                          dummy)))
+                   (let ((cur-pos (round (* 100 (/ (cl:file-position file) file-length)))))
+                     (when (> cur-pos percent)
+                       (setf percent cur-pos)
+                       (when (= 0 (mod percent 10))
+                         (log5:log-for info-console "Done percent: ~a%" percent))))
+                   (storage.add-new-object item (key item))))))))))
 
 (defun new-classes.unserialize-optgroups (filepath)
   (let ((num 0))
     (with-open-file (file filepath)
-										(loop for line = (read-line file nil 'EOF)
-													until (eq line 'EOF)
-													do
-													(let* ((item (servo.alist-to-plist (decode-json-from-string line)))
-																 (key (format nil "~a" (getf item :key)))
-																 (optgroups (getf item :optgroups))
-																 (product (gethash key (storage *global-storage*))))
-														(incf num)
-														(when product
-															(setf (optgroups product) optgroups)
-															(setf (optgroups product) (new-classes.get-transform-optgroups product))))))
+      (loop for line = (read-line file nil 'EOF)
+         until (eq line 'EOF)
+         do
+           (let* ((item (servo.alist-to-plist (decode-json-from-string line)))
+                  (key (format nil "~a" (getf item :key)))
+                  (optgroups (getf item :optgroups))
+                  (product (gethash key (storage *global-storage*))))
+             (incf num)
+             (when product
+               (setf (optgroups product) optgroups)
+               (setf (optgroups product) (new-classes.get-transform-optgroups product))))))
     num))
 
 
@@ -183,7 +181,7 @@
                                              (incf num)
                                              (if (oddp num)
                                                  (string-downcase v)
-																							 v))
+                                                 v))
                                          (vendors-seo item)))))
     ;;convert vendors-seo from list to hashtable
     (setf (vendors-seo item) (servo.list-to-hashtasble
@@ -194,8 +192,8 @@
 										;;в случае если на месте ключей уже лежат группы
 										(if (equal (type-of group-key) 'group)
 												group-key
-												(if group-key
-														(gethash group-key (storage *global-storage*)))))
+                        (if group-key
+                            (gethash group-key (storage *global-storage*)))))
 								(upsale-links item)))
   ;; после десериализации в parent лежит список key родительских групп
   (let ((parents (copy-list (parents item))))
@@ -204,8 +202,8 @@
                       ;;в случае если на месте ключей уже лежат группы
                       (if (equal (type-of parent-key) 'group)
                           parent-key
-												(if parent-key
-														(gethash parent-key (storage *global-storage*)))))
+                          (if parent-key
+                              (gethash parent-key (storage *global-storage*)))))
                   parents))
     ;; удаляем nil для битых ключей
     ;; TODO обрабатывать исключение если ключи не были найдены
@@ -303,12 +301,12 @@
       (progn
         (if (equal (type-of in) 'product)
             (push (list :key (articul in) :val (name-seo in)) out)
-					(push (list :key (key in) :val (name in)) out))
+            (push (list :key (key in) :val (name in)) out))
         (setf in (new-classes.parent in))
         (new-classes.breadcrumbs in out))
-		;; else -  end of recursion
-		(list :breadcrumbelts (butlast out)
-					:breadcrumbtail (car (last out)))))
+      ;; else -  end of recursion
+      (list :breadcrumbelts (butlast out)
+            :breadcrumbtail (car (last out)))))
 
 (defun new-classes.get-root-parent (item)
   (if (and item
@@ -316,7 +314,7 @@
       (let ((parent (new-classes.parent item)))
         (if (or (null item) (null parent))
             item
-					(new-classes.get-root-parent parent)))))
+            (new-classes.get-root-parent parent)))))
 
 
 (defun new-classes.menu-sort (a b)
@@ -324,9 +322,9 @@
   (if (or (null (order a))
           (null (order b)))
       nil
-		;; else
-		(< (order a)
-			 (order b))))
+      ;; else
+      (< (order a)
+         (order b))))
 
 
 ;;TODO временно убрана проверка на пустые группы, тк это поле невалидно
@@ -348,23 +346,23 @@
                                  :name (name val)
                                  :icon (icon val)
                                  :subs (loop
-																				:for child
-																				:in (sort
-																						 (remove-if #'(lambda (g)
-																														(or
-																														 ;; (empty g)
-																														 (not (active g))))
-																												(groups val))
-																						 #'menu-sort)
-																				:collect
-																				(list :key  (key child) :name (name child)))))
-												;; else - this is ordinal
-												(soy.menu:ordinal (list :divider (notevery #'(lambda (divider)
-																																			 (string/= (key val) divider))
-																																	 divider-list)
-																								:key  (key val)
-																								:name (name val)
-																								:icon (icon val)))))
+                                          :for child
+                                          :in (sort
+                                               (remove-if #'(lambda (g)
+                                                              (or
+                                                               ;; (empty g)
+                                                               (not (active g))))
+                                                          (groups val))
+                                               #'menu-sort)
+                                          :collect
+                                          (list :key  (key child) :name (name child)))))
+                          ;; else - this is ordinal
+                          (soy.menu:ordinal (list :divider (notevery #'(lambda (divider)
+                                                                         (string/= (key val) divider))
+                                                                     divider-list)
+                                                  :key  (key val)
+                                                  :name (name val)
+                                                  :icon (icon val)))))
                   (sort root-groups #'new-classes.menu-sort))))
     (soy.menu:main (list :elts src-lst))))
 
@@ -447,10 +445,10 @@
   (defun new-classes.get-instance (type)
     (let ((type-string (format nil "~(~a~)" type)))
       (cond
-			 ((or (equal "product" type-string))
-				product-instance)
-			 ((equal "group" type-string)
-				group-instance)
-			 ((equal "filter" type-string)
-				filter-instance)))))
+        ((or (equal "product" type-string))
+         product-instance)
+        ((equal "group" type-string)
+         group-instance)
+        ((equal "filter" type-string)
+         filter-instance)))))
 

@@ -8,8 +8,8 @@
 
 ;;шаблоны
 (defun newcart-compile-templates ()
-	(apply #'servo.compile-soy (list "index.soy"
-																	 "newcart.soy")))
+  (apply #'servo.compile-soy (list "index.soy"
+                                   "newcart.soy")))
 
 ;; возвращает список отображений продуктов, количество, суммарную цену заказа
 (defun newcart-cart-products (alist)
@@ -152,7 +152,7 @@
                                                   (list :bonuscount bonuscount
                                                         :bonusname (if bonuscount
                                                                        (nth (skls.get-count-skls bonuscount)
-																																						(list "бонус" "бонуса" "бонусов")))))
+                                                                            (list "бонус" "бонуса" "бонусов")))))
                                       :rightcells (soy.newcart:rightcells
                                                    (list :notfinished "true"
                                                          :deliverysum pricesum
@@ -357,7 +357,7 @@
                                                     "<p class=\"h2\">Покупка в кредит</p>")
                                                    ((string= payment "payment_method-4")
                                                     (format nil "<p class=\"h2\">Оплата по безналичному расчету</p>
-						                             <p>Реквизиты:<br/>~a</p>" bankaccount))
+                                         <p>Реквизиты:<br/>~a</p>" bankaccount))
                                                    (t nil))
                                      :addr (if (string= delivery-type "pickup")
                                                addr

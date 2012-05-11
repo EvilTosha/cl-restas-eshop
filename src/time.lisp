@@ -1,3 +1,5 @@
+;;;; time.lisp
+
 (in-package #:eshop)
 
 ;;TODO убрать значение в time-zone после рестарта
@@ -32,30 +34,30 @@
 
 ;; декодирование даты вида 2011-09-30 12:01
 (defun time.decode-gateway-time (input-string)
-    (let ((r 0)
-          (counts)
-          (dates)
-          (times)
-          (date)
-          (month)
-          (year)
-          (minute)
-          (hour))
-      (when (and (not (null input-string))
-                 (not (string= ""
-                               (stripper input-string))))
-        ;; разделяем на даты и на часы минуты
-        (setf counts (split-sequence:split-sequence #\  input-string))
-        ;; получаем год месяц и день
-        (setf dates (split-sequence:split-sequence #\- (first counts)))
-        ;; получаем часы и минуты
-        (setf times (split-sequence:split-sequence #\: (second counts)))
-        ;; установки переменных
-        (setf year (parse-integer (first dates)))
-        (setf month (parse-integer (second dates)))
-        (setf date (parse-integer (third dates)))
-        (setf hour (parse-integer (first times)))
-        (setf minute (parse-integer (second times)))
+  (let ((r 0)
+        (counts)
+        (dates)
+        (times)
+        (date)
+        (month)
+        (year)
+        (minute)
+        (hour))
+    (when (and (not (null input-string))
+               (not (string= ""
+                             (stripper input-string))))
+      ;; разделяем на даты и на часы минуты
+      (setf counts (split-sequence:split-sequence #\  input-string))
+      ;; получаем год месяц и день
+      (setf dates (split-sequence:split-sequence #\- (first counts)))
+      ;; получаем часы и минуты
+      (setf times (split-sequence:split-sequence #\: (second counts)))
+      ;; установки переменных
+      (setf year (parse-integer (first dates)))
+      (setf month (parse-integer (second dates)))
+      (setf date (parse-integer (third dates)))
+      (setf hour (parse-integer (first times)))
+      (setf minute (parse-integer (second times)))
       (setf r (encode-universal-time 0 minute hour date month year)))
     r))
 
@@ -98,12 +100,12 @@
 
 
 (defun time.decode-date-time (uni-time)
-   (multiple-value-bind (second minute hour date month year)
-       (decode-universal-time uni-time)
+  (multiple-value-bind (second minute hour date month year)
+      (decode-universal-time uni-time)
 
-     (format nil
-             "~a:~a:~a ~a.~a.~a"
-             hour minute second date month year)))
+    (format nil
+            "~a:~a:~a ~a.~a.~a"
+            hour minute second date month year)))
 
 
 (defun time.get-full-human-time ()
@@ -121,7 +123,7 @@
         (year))
     (when (and (not (null input-string))
                (not (string= ""
-                     (stripper input-string))))
+                             (stripper input-string))))
       (setf counts (split-sequence:split-sequence #\. input-string))
       (setf date (parse-integer (first counts)))
       (setf month (parse-integer (second counts)))
@@ -146,32 +148,32 @@
 
 (defun time.decode.backup (input-string)
   "декодирование даты вида 2011-09-30_12:01:23"
-    (let ((r 0)
-          (counts)
-          (dates)
-          (times)
-          (date)
-          (month)
-          (year)
-          (minute)
-          (hour)
-          (second))
-      (when (and (not (null input-string))
-                 (not (string= ""
-                               (stripper input-string))))
-        ;; разделяем на даты и на часы минуты
-        (setf counts (split-sequence:split-sequence #\_  input-string))
-        ;; получаем год месяц и день
-        (setf dates (split-sequence:split-sequence #\- (first counts)))
-        ;; получаем часы и минуты
-        (setf times (split-sequence:split-sequence #\: (second counts)))
-        ;; установки переменных
-        (setf year (parse-integer (first dates)))
-        (setf month (parse-integer (second dates)))
-        (setf date (parse-integer (third dates)))
-        (setf hour (parse-integer (first times)))
-        (setf minute (parse-integer (second times)))
-        (setf second (parse-integer (third times)))
+  (let ((r 0)
+        (counts)
+        (dates)
+        (times)
+        (date)
+        (month)
+        (year)
+        (minute)
+        (hour)
+        (second))
+    (when (and (not (null input-string))
+               (not (string= ""
+                             (stripper input-string))))
+      ;; разделяем на даты и на часы минуты
+      (setf counts (split-sequence:split-sequence #\_  input-string))
+      ;; получаем год месяц и день
+      (setf dates (split-sequence:split-sequence #\- (first counts)))
+      ;; получаем часы и минуты
+      (setf times (split-sequence:split-sequence #\: (second counts)))
+      ;; установки переменных
+      (setf year (parse-integer (first dates)))
+      (setf month (parse-integer (second dates)))
+      (setf date (parse-integer (third dates)))
+      (setf hour (parse-integer (first times)))
+      (setf minute (parse-integer (second times)))
+      (setf second (parse-integer (third times)))
       (setf r (encode-universal-time second minute hour date month year)))
     r))
 

@@ -28,40 +28,17 @@
                   (SB-INT:SIMPLE-FILE-ERROR () 1)))
           (get-order-id)))))
 
-(defun cart-processor (alist)
-  (loop :for item :in alist :collect (item-processor item)))
-
-(defun item-processor (item)
-  (let* ((articul   (parse-integer (cdr (assoc :ID item)) :junk-allowed t))
-         (group-id  (cdr (assoc :GROUP--ID item)))
-         (name      (cdr (assoc :NAME item)))
-         (price     (cdr (assoc :PRICE item)))
-         (count     (cdr (assoc :COUNT item)))
-         (item-link (cdr (assoc :ITEM--LINK item)))
-         (img-link  (cdr (assoc :IMG--LINK item)))
-         (object    (gethash (format nil "~a" articul) *storage*)))
-    (when object
-      (let ((pics (get-pics (articul object))))
-        (list :count count
-              :itemlink item-link
-              :firstpic (if (null pics) "" (car pics))
-              :articul (articul object)
-              :name (realname object)
-              :siteprice (siteprice object)
-              :price (price object))))))
-
-
 ;;проверка заказа на валидность
 ;;TODO сделать полную проверку
 (defun if-order-valid (products)
   (not (null products)))
 
 (defun save-order-text (file-name body)
-	(when (config.get-option "START_OPTIONS" "release")
-		(let ((filename (format nil "~a/orders/~a.html" *path-to-dropbox* file-name)))
-			(with-open-file
-					(stream filename :direction :output :if-exists :supersede)
-				(format stream "~a" body)))))
+  (when (config.get-option "START_OPTIONS" "release")
+    (let ((filename (format nil "~a/orders/~a.html" *path-to-dropbox* file-name)))
+      (with-open-file
+          (stream filename :direction :output :if-exists :supersede)
+        (format stream "~a" body)))))
 
 
 (defun send-mail (to clientmail filename mailfile order-id)
@@ -74,14 +51,14 @@
          (sendmail (sb-ext:process-input sendmail-process)))
     (unwind-protect
          (progn
-		   (format sendmail "From: shop@320-8080.ru~%")
-		   (format sendmail "To: ~a~%" (car to))
-		   (format sendmail "Subject: ~a~a~%" "www.320-8080.ru - 3AKA3 " order-id)
-		   (format sendmail "MIME-Version: ~a~%" "1.0")
-		   (format sendmail "Content-Type: ~a~%" "multipart/mixed; boundary = becd713b5f8316a655d07bd225b48c406")
-		   (format sendmail "%")
-		   (format sendmail
-				   "This is a MIME encoded message.
+           (format sendmail "From: shop@320-8080.ru~%")
+           (format sendmail "To: ~a~%" (car to))
+           (format sendmail "Subject: ~a~a~%" "www.320-8080.ru - 3AKA3 " order-id)
+           (format sendmail "MIME-Version: ~a~%" "1.0")
+           (format sendmail "Content-Type: ~a~%" "multipart/mixed; boundary = becd713b5f8316a655d07bd225b48c406")
+           (format sendmail "%")
+           (format sendmail
+                   "This is a MIME encoded message.
 
 --becd713b5f8316a655d07bd225b48c406
 Content-Type: text/html; charset=windows-1251
@@ -97,9 +74,9 @@ Content-Transfer-Encoding: base64
 
 --becd713b5f8316a655d07bd225b48c406--
 "
-				   (encode64 clientmail)
-				   filename
-				   (encode64 (encode1251 mailfile))))
+                   (encode64 clientmail)
+                   filename
+                   (encode64 (encode1251 mailfile))))
       (close sendmail)
       (sb-ext:process-wait sendmail-process)
       (sb-ext:process-close sendmail-process))))
@@ -115,14 +92,14 @@ Content-Transfer-Encoding: base64
          (sendmail (sb-ext:process-input sendmail-process)))
     (unwind-protect
          (progn
-		   (format sendmail "From: shop@320-8080.ru~%")
-		   (format sendmail "To: ~a~%" (car to))
-		   (format sendmail "Subject: ~a~a~%" "www.320-8080.ru - 3AKA3 " order-id)
-		   (format sendmail "MIME-Version: ~a~%" "1.0")
-		   (format sendmail "Content-Type: ~a~%" "multipart/mixed; boundary = becd713b5f8316a655d07bd225b48c406")
-		   (format sendmail "%")
-		   (format sendmail
-				   "This is a MIME encoded message.
+           (format sendmail "From: shop@320-8080.ru~%")
+           (format sendmail "To: ~a~%" (car to))
+           (format sendmail "Subject: ~a~a~%" "www.320-8080.ru - 3AKA3 " order-id)
+           (format sendmail "MIME-Version: ~a~%" "1.0")
+           (format sendmail "Content-Type: ~a~%" "multipart/mixed; boundary = becd713b5f8316a655d07bd225b48c406")
+           (format sendmail "%")
+           (format sendmail
+                   "This is a MIME encoded message.
 
 --becd713b5f8316a655d07bd225b48c406
 Content-Type: text/html; charset=windows-1251
@@ -132,7 +109,7 @@ Content-Transfer-Encoding: base64
 
 --becd713b5f8316a655d07bd225b48c406--
 "
-				   (encode64 clientmail)))
+                   (encode64 clientmail)))
       (close sendmail)
       (sb-ext:process-wait sendmail-process)
       (sb-ext:process-close sendmail-process))))
@@ -148,12 +125,12 @@ Content-Transfer-Encoding: base64
 
 (defun encode1251 (param)
   (let (($ret nil))
-	(loop
-	   for x across param collect x
-	   do (if (equal x (code-char 10))
-			  (progn
-				(push (code-char 13) $ret)
-				(push x $ret))
-			  (push x $ret)))
-	(coerce (reverse $ret) 'string)))
+    (loop
+       for x across param collect x
+       do (if (equal x (code-char 10))
+              (progn
+                (push (code-char 13) $ret)
+                (push x $ret))
+              (push x $ret)))
+    (coerce (reverse $ret) 'string)))
 

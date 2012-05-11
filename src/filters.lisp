@@ -1,3 +1,5 @@
+;;;; filters.lisp
+
 (in-package #:eshop)
 
 ;;Возвращает длину списка активных продуктов-потомков подходящих под фильтр
@@ -34,8 +36,8 @@
 (defmethod filters.get-filters ((filters list) (products list))
   "Возвращает список ненулевых фильтров на списке объектов и количество объесктов в выборке"
   (remove-if #'null (mapcar #'(lambda (filter)
-              (let ((num (length
-                          (remove-if-not #'(lambda (p) (funcall (func filter) p)) products))))
-                (if (not (= num 0))
-                    (cons filter num))))
-              filters)))
+                                (let ((num (length
+                                            (remove-if-not #'(lambda (p) (funcall (func filter) p)) products))))
+                                  (if (not (= num 0))
+                                      (cons filter num))))
+                            filters)))
