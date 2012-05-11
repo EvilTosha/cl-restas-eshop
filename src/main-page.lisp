@@ -70,7 +70,9 @@
 		(if banner
 				(list :url (format nil "~a"
 													 (servo.edit-get-param (encode-uri (nth 1 (opts banner))) "bannerType" type))
-							:src (nth 2 (opts banner)))
+							:src (nth 2 (opts banner))
+              :name (name banner)
+              :src2 (nth 3 (opts banner)))
 				(list :url ""
 							:src ""))))
 

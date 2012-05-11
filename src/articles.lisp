@@ -196,7 +196,7 @@
                    :title (name object)
                    :header (root:header (append (list :logged (root:notlogged)
                                                       :cart (root:cart))
-                                                (main-page-show-banner "line" (banner *main-page.storage*))))
+                                                (main-page-show-banner "line-text" (banner *main-page.storage*))))
                    :footer (root:footer)
                    :content  (static:main
                               (list :menu (new-classes.menu)
