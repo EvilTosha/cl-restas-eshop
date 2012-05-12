@@ -193,11 +193,10 @@
 	(root:main (list :keywords "" ;;keywords
                    :description "" ;;description
                    :title (name object)
-                   :header (root:header (append (list :logged (root:notlogged)
-                                                      :cart (root:cart))
+                   :header (root:header (append (list :cart (root:cart))
                                                 (main-page-show-banner "line-text" (banner *main-page.storage*))))
-                   :footer (root:footer)
-                   :content  (static:main
+                   :footer (soy.footer:footer)
+                   :content  (soy.static:main
                               (list :menu (new-classes.menu)
                                     :breadcrumbs (bredcrumbs object)
                                     :subcontent  (body object)
