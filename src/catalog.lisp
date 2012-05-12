@@ -4,7 +4,7 @@
 
 ;;шаблоны
 (defun catalog.catalog-update ()
-  (apply #'servo.compile-soy (list "new-catalog.soy")))
+  (servo.compile-soy "new-catalog.soy"))
 
 (defun catalog.sitemap-entity (error404  &optional col1 col2)
   (soy.new-catalog:catalog-main
@@ -25,7 +25,7 @@
                    (mapcar #'(lambda (node)
                                (format nil "~a"
                                        (soy.new-catalog:catalog-item
-                                        (let* ((pic (when (not (equal "" (pic node)))
+                                        (let* ((pic (unless (equal "" (pic node))
                                                       (pic node)))
                                                (style (when pic
                                                         (multiple-value-bind (width height)
@@ -65,6 +65,5 @@
                    "<a href=\"/pricesc\">Услуги</a>"
                    "<a href=\"/delivery\">Доставка и Самовывоз</a>"
                    "<a href=\"/warranty\">Гарантия</a>"
-                   "<a href=\"/corporate\">Корпоративным клиентам</a>"
-                   )))))
+                   "<a href=\"/corporate\">Корпоративным клиентам</a>")))))
 

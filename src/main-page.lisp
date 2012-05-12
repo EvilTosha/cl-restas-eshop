@@ -13,7 +13,7 @@
 
 ;;обновление главной страницы
 (defun main-page-update ()
-  (apply #'servo.compile-soy (list "main-page.soy")))
+  (servo.compile-soy "main-page.soy"))
 
 
 ;; Имя берется из объявления

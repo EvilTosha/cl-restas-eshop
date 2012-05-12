@@ -4,8 +4,8 @@
 
 ;;обновление страницы
 (defun oneclickcart-update ()
-  (apply #'servo.compile-soy (list "oneclickcart.soy"
-                                   "buttons.soy")))
+  (servo.compile-soy "oneclickcart.soy"
+                     "buttons.soy"))
 
 
 (defun oneclick-sendmail (phone articul name email)

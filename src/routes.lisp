@@ -61,8 +61,8 @@
          (filter (caddr request-list))
          (grp (gethash key (storage *global-storage*)))
          (fltr (gethash filter (storage *global-storage*))))
-    (and (not (null grp))
-         (not (null fltr))
+    (and grp
+         fltr
          (equal (type-of grp) 'group)
          (equal (type-of fltr) 'filter)
          (equal (key (new-classes.parent fltr)) key))))
@@ -81,17 +81,15 @@
 
 (defun test-route-storage-object ()
   (let ((obj (gethash (cadr (request-list)) (storage *global-storage*))))
-    (if (not (null obj))
-        (if (and (equal (type-of obj)
-                        'group)
-                 (not (null (getf (request-get-plist) :vendor))))
-            (let ((vendor (getf (request-get-plist) :vendor)))
-              (not (= (length (remove-if-not #'(lambda (p)
-                                                 (vendor-filter-controller p (request-get-plist)))
-                                             (get-recursive-products obj)))
-                      0)))
-            t)
-        nil)))
+    (when obj
+      (if (and (equal (type-of obj)
+                      'group)
+               (getf (request-get-plist) :vendor))
+          (let ((vendor (getf (request-get-plist) :vendor)))
+            (notevery #'(lambda (p)
+                          (vendor-filter-controller p (request-get-plist)))
+                      (get-recursive-products obj)))
+          t))))
 
 (defun route-storage-object (key)
   (gethash key (storage *global-storage*)))
@@ -156,25 +154,13 @@
 
 ;; GATEWAY
 
-;; (restas:define-route gateway-route ("/gateway")
-;;   (gateway-page))
-
 (restas:define-route gateway/post-route ("/gateway" :method :post)
   (gateway-page))
-
-
-;; (restas:define-route gateway/-route ("/gateway/")
-;;   (gateway-page))
-
-;; (restas:define-route gateway/post/-route ("/gateway/" :method :post)
-;;   (gateway-page))
-
 
 ;; SEARCH
 
 (restas:define-route search-route ("/search")
   (search-page))
-
 
 ;; YML
 

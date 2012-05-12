@@ -76,9 +76,9 @@
 
 ;;шаблоны
 (defun admin-compile-templates ()
-  (apply #'servo.compile-soy (list "admin.soy"
-                                   "class_forms.soy"
-                                   "admin-table.soy")))
+  (servo.compile-soy "admin.soy"
+                     "class_forms.soy"
+                     "admin-table.soy"))
 
 ;;обновление главной страницы
 (defun admin-update ()
@@ -200,8 +200,8 @@
       (setf post-data (admin.post-data-preprocessing (servo.plist-to-unique post-data)))
       (new-classes.edit-fields item post-data)
       ;; need to fix
-      (if (and (equal (type-of item) 'group) (not (null (getf post-data :fullfilter))))
-          (setf (fullfilter item) (getf post-data :fullfilter)))
+      (when (and (equal (type-of item) 'group) (getf post-data :fullfilter))
+        (setf (fullfilter item) (getf post-data :fullfilter)))
       (object-fields.product-groups-fix item)
       (setf item-fields (new-classes.make-fields item)))
     (if item
@@ -414,33 +414,31 @@
         (raw-fullfilter (getf post-data :raw-fullfilter)))
     ;;keyoptions
     (loop
-       for cnt from 0
-       while (getf post-data
+       :for cnt :from 0
+       :while (getf post-data
                    (intern (string-upcase (format nil "keyoption-og-~a" cnt)) :keyword))
-       do
-         (let ((optgroup (getf post-data
-                               (intern (string-upcase (format nil "keyoption-og-~a" cnt)) :keyword)))
-               (optname (getf post-data
-                              (intern (string-upcase (format nil "keyoption-on-~a" cnt)) :keyword))))
-           (when (and (string/= "" optgroup) (string/= "" optname))
-             (push (list :optgroup optgroup :optname optname) keyoptions))))
+       :do (let ((optgroup (getf post-data
+                                 (intern (string-upcase (format nil "keyoption-og-~a" cnt)) :keyword)))
+                 (optname (getf post-data
+                                (intern (string-upcase (format nil "keyoption-on-~a" cnt)) :keyword))))
+             (when (and (string/= "" optgroup) (string/= "" optname))
+               (push (list :optgroup optgroup :optname optname) keyoptions))))
     (setf result (append result (list :keyoptions (nreverse keyoptions))))
     ;;catalog keyoptions
     (loop
-       for cnt from 0
-       while (getf post-data
+       :for cnt :from 0
+       :while (getf post-data
                    (intern (string-upcase (format nil "catalog-keyoption-og-~a" cnt)) :keyword))
-       do
-         (let ((optgroup (getf post-data
-                               (intern (string-upcase (format nil "catalog-keyoption-og-~a" cnt)) :keyword)))
-               (optname (getf post-data
-                              (intern (string-upcase (format nil "catalog-keyoption-on-~a" cnt)) :keyword)))
-               (showname (getf post-data
-                               (intern (string-upcase (format nil "catalog-keyoption-sn-~a" cnt)) :keyword)))
-               (units (getf post-data
-                            (intern (string-upcase (format nil "catalog-keyoption-un-~a" cnt)) :keyword))))
-           (when (and (string/= "" optgroup) (string/= "" optname) (string/= "" showname))
-             (push (list :optgroup optgroup :optname optname :showname showname :units units) catalog-keyoptions))))
+       :do (let ((optgroup (getf post-data
+                                 (intern (string-upcase (format nil "catalog-keyoption-og-~a" cnt)) :keyword)))
+                 (optname (getf post-data
+                                (intern (string-upcase (format nil "catalog-keyoption-on-~a" cnt)) :keyword)))
+                 (showname (getf post-data
+                                 (intern (string-upcase (format nil "catalog-keyoption-sn-~a" cnt)) :keyword)))
+                 (units (getf post-data
+                              (intern (string-upcase (format nil "catalog-keyoption-un-~a" cnt)) :keyword))))
+             (when (and (string/= "" optgroup) (string/= "" optname) (string/= "" showname))
+               (push (list :optgroup optgroup :optname optname :showname showname :units units) catalog-keyoptions))))
     (setf result (append result (list :catalog-keyoptions (nreverse catalog-keyoptions))))
     ;; fullfilter decode
     (if raw-fullfilter

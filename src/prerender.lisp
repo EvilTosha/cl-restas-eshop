@@ -5,14 +5,6 @@
 
 (in-package #:eshop)
 
-(defun prerender-str-to-args (string)
-  (let* ((res) (prev 0))
-    (dotimes (cur (length string))
-      (when (equal (char string cur) #\;)
-        (pushnew (subseq string prev cur) res)
-        (setf prev (+ 1 cur))))
-    (nreverse res)))
-
 ;;составление строки по данным аргументам
 (defun prerender-args-to-html (args)
   (let* ((type (string-trim '(#\Space) (nth 0 args))))
@@ -31,22 +23,22 @@
               (height (nth 5 args))
               (width (nth 4 args))
               (style ""))
-         (if height
-             (setf style (format nil "~aheight:~apx;" style
-                                 (string-trim '(#\Space) height))))
-         (if width
-             (setf style (format nil "~awidth:~apx;" style
-                                 (string-trim '(#\Space) width))))
-         (if (and (not picname) (get-pics articul))
-             (setf picname (car (get-pics articul))))
+         (when height
+           (setf style (format nil "~aheight:~apx;" style
+                               (string-trim '(#\Space) height))))
+         (when width
+           (setf style (format nil "~awidth:~apx;" style
+                               (string-trim '(#\Space) width))))
+         (when (and (not picname) (get-pics articul))
+           (setf picname (car (get-pics articul))))
          (when (and product (name-seo product) picname)
            (let* ((path (format nil "~a/~a/~a" size articul picname))
                   (path* (format nil "~a/~a/~a" size path-art picname)))
-             (if (and (not height) (not width))
-                 (multiple-value-bind
-                       (width height)
-                     (images-get-dimensions (format nil "~a/~a" (config.get-option "PATHS" "path-to-pics") path*))
-                   (setf style (images-style-for-resize width height 600))))
+             (when (and (not height) (not width))
+               (multiple-value-bind
+                     (width height)
+                   (images-get-dimensions (format nil "~a/~a" (config.get-option "PATHS" "path-to-pics") path*))
+                 (setf style (images-style-for-resize width height 600))))
              (format nil "<a href=\"/~a\" title=\"~a\">~%
                                    <img src=\"/pic/~a\" alt=\"~a\" style=\"~a\"/>~%
                                 </a>~%"
@@ -102,6 +94,7 @@
         string
         (concatenate 'string (subseq string 0 start)
                      (prerender-args-to-html
-                      (prerender-str-to-args
-                       (subseq string (+ 5 start) (+ 1 end))))
+                      (split-sequence #\;
+                                      (subseq string (+ 5 start) (+ 1 end))
+                                      :remove-empty-subseqs t))
                      (prerender-string-replace (subseq string (+ 4 end)))))))

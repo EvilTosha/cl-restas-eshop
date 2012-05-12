@@ -8,7 +8,7 @@
 (defun get-order-id ()
   (let ((current-order-id *order-id*)
         (order-id-pathname (format nil "~a~a" (config.get-option "CRITICAL" "path-to-conf") *path-order-id-file*)))
-    (if (not (null *order-id*))
+    (if *order-id*
         (progn
           (incf *order-id*)
           (with-open-file (file order-id-pathname
@@ -17,6 +17,7 @@
                                 :external-format :utf-8)
             (format file "~a" *order-id*))
           current-order-id)
+        ;;else
         (progn
           ;;если в файле шлак, то сбрасываем счетчик заказов до 1
           (setf *order-id*
@@ -30,7 +31,7 @@
 
 ;;проверка заказа на валидность
 ;;TODO сделать полную проверку
-(defun if-order-valid (products)
+(defun order-valid-p (products)
   (not (null products)))
 
 (defun save-order-text (file-name body)
