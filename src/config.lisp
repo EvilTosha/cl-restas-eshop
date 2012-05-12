@@ -78,6 +78,7 @@
   (config.config-option-processing "PATHS" "path-to-static-pages" "path")
   (config.config-option-processing "PATHS" "path-to-dropbox" "path")
   (config.config-option-processing "PATHS" "path-to-logs" "path")
+  (config.config-option-processing "PATHS" "path-to-gateway" "path")
   (config.config-option-processing "PATHS" "path-to-backups" "path")
   (config.config-option-processing "PATHS" "path-to-big-images-backup" "path")
   (config.config-option-processing "PATHS" "path-to-main-page" "path")

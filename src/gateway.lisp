@@ -112,13 +112,11 @@
                                                         (not (equal "" name)))
                                                    name
                                                    (name-provider product))
-            (name-seo product)        (if (or (null (name-seo product))
-                                              (string= ""  (name-seo product)))
-                                          (if (or (null realname)
-                                                  (string= "" realname))
-                                              name
-                                              realname)
-                                          (name-seo product))
+            (name-seo product)        (if (servo.is-valid-string (name-seo product))
+                                          (name-seo product)
+                                          (if (servo.is-valid-string realname)
+                                              realname
+                                              name))
             (delta-price product)     (if (= 0 siteprice)
                                           0
                                           (- price siteprice))
@@ -196,7 +194,7 @@
           (setf (count-transit  product) count-transit))
       ;; проставляем флаг active
       (setf (active product) (if (= (count-total product) 0) nil t))
-      (when (not old-product)
+      (unless old-product
         (storage.edit-object product)))))
 
 
@@ -212,8 +210,8 @@
       (format file "~a>>~a~%" filename raws))))
 
 (defun gateway.store-full-gateway (raws &optional (timestamp (get-universal-time)))
-  (let* ((filename (time.encode.backup timestamp))
-         (pathname (format nil "~a/gateway/~a.bkp" *path-to-logs* filename)))
+  (let* ((filename (format nil "~a.bkp" (time.encode.backup timestamp)))
+         (pathname (merge-pathnames filename (config.get-option "PATHS" "path-to-gateway"))))
     (with-open-file (file pathname
                           :direction :output
                           :if-exists :supersede

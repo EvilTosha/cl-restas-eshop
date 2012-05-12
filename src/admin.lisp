@@ -84,16 +84,6 @@
 (defun admin-update ()
   (admin-compile-templates))
 
-(defun show-admin-menu ()
-  (soy.admin:menu
-   (list :elts
-         (list "<li><a href=\"/administration-super-panel\"><b>MAIN ADMIN</b></a></li>"
-               "<li><a href=\"/administration-super-panel/actions\">actions</a></li>"
-               "<li><a href=\"/administration-super-panel/pics\">pics</a></li>"
-               "<li><a href=\"/administration-super-panel/info\">info</a></li>"
-               "<li><a href=\"/administration-super-panel/templates\">templates</a></li>"
-               "<li><a href=\"/administration-super-panel/makebackup\">backup</a></li>"
-               "<li><a href=\"/administration-super-panel/cron-jobs\">cron-jobs</a></li>"))))
 
 (defun admin.test-get-post-parse ()
   "parsing get & post parameters for testing"
@@ -390,32 +380,30 @@
 (defun show-admin-page (&optional (key nil))
   (let ((new-post-data (servo.alist-to-plist (hunchentoot:post-parameters hunchentoot:*request*))))
     (soy.admin:main
-     (list :content (soy.admin:content
-                     (list :menu (show-admin-menu)
-                           :subcontent
-                           (cond
-                             ((null key)
-                              (format nil "<p> Админка в разработке </p>"))
-                             ((string= key "info")
-                              (soy.admin:info (list :info (admin.get-info))))
-                             ((string= key "actions")
-                              (soy.admin:action-buttons (list :post new-post-data
-                                                              :info (admin.do-action (getf new-post-data :action)))))
-                             ((string= key "edit")
-                              (admin.edit-content new-post-data))
-                             ((string= key "make")
-                              (admin.make-content new-post-data))
-                             ((string= key "parenting")
-                              (admin.parenting-content new-post-data))
-                             ((string= key "pics")
-                              (admin.pics-deleting new-post-data))
-                             ((string= key "templates")
-                              (admin.compile-template new-post-data))
-                             ((string= key "backup")
-                              (admin.make-backup new-post-data))
-                             ((string= key "cron-jobs")
-                              (cron.html-print-job-list new-post-data))
-                             (t (format nil "~a" key)))))))))
+     (list :content
+           (cond
+             ((null key)
+              (format nil "<p> Админка в разработке </p>"))
+             ((string= key "info")
+              (soy.admin:info (list :info (admin.get-info))))
+             ((string= key "actions")
+              (soy.admin:action-buttons (list :post new-post-data
+                                              :info (admin.do-action (getf new-post-data :action)))))
+             ((string= key "edit")
+              (admin.edit-content new-post-data))
+             ((string= key "make")
+              (admin.make-content new-post-data))
+             ((string= key "parenting")
+              (admin.parenting-content new-post-data))
+             ((string= key "pics")
+              (admin.pics-deleting new-post-data))
+             ((string= key "templates")
+              (admin.compile-template new-post-data))
+             ((string= key "backup")
+              (admin.make-backup new-post-data))
+             ((string= key "cron-jobs")
+              (cron.html-print-job-list new-post-data))
+             (t (format nil "~a" key)))))))
 
 
 (defun admin.post-data-preprocessing (post-data)
