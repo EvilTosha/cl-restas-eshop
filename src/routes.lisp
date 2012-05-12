@@ -86,7 +86,7 @@
                       'group)
                (getf (request-get-plist) :vendor))
           (let ((vendor (getf (request-get-plist) :vendor)))
-            (notevery #'(lambda (p)
+            (some #'(lambda (p)
                           (vendor-filter-controller p (request-get-plist)))
                       (get-recursive-products obj)))
           t))))
