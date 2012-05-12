@@ -60,19 +60,21 @@
 (defun main-page-show-banner (type storage)
   (let ((banners (main-page-get-active-banners storage type))
         (banner (make-instance 'main-page-product)))
-    ;;должен быть хотябы один баннер
-    (if (> (length banners) 0)
-        (progn
-          ;; выбираем случайный товаров баннер с учетом их веса
-          (setf banner (gethash (caar (main-page-get-randoms-from-weight-list banners 1))
-                                storage)))
-        (log5:log-for warning "WARNING: No banner"))
-    (if banner
-        (list :url (format nil "~a"
-                           (servo.edit-get-param (encode-uri (nth 1 (opts banner))) "bannerType" type))
-              :src (nth 2 (opts banner)))
-        (list :url ""
-              :src ""))))
+		;;должен быть хотябы один баннер
+		(if (> (length banners) 0)
+				(progn
+					;; выбираем случайный товаров баннер с учетом их веса
+					(setf banner (gethash (caar (main-page-get-randoms-from-weight-list banners 1))
+																storage)))
+				(log5:log-for warning "WARNING: No banner"))
+		(if banner
+				(list :url (format nil "~a"
+													 (servo.edit-get-param (encode-uri (nth 1 (opts banner))) "bannerType" type))
+							:src (nth 2 (opts banner))
+              :name (name banner)
+              :src2 (nth 3 (opts banner)))
+				(list :url ""
+							:src ""))))
 
 ;;отображение отзыва
 (defun main-page-show-lastreview (storage)

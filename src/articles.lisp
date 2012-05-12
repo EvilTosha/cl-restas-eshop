@@ -15,6 +15,7 @@
    (title       :initarg :title      :initform nil                             :accessor title)
    (body        :initarg :body       :initform nil                             :accessor body)
    (date        :initarg :date       :initform nil                             :accessor date)
+   (header      :initarg :header     :initform nil                             :accessor header)
    (ctype       :initarg :ctype      :initform "article"                       :accessor ctype) ;; article / static / landscape
    (tags        :initarg :tags       :initform (make-hash-table :test #'equal) :accessor tags)))
 
@@ -27,34 +28,36 @@
             words)))
 
 (defmethod unserialize (filepath (dummy article))
-  (let* ((file-content (alexandria:read-file-into-string filepath))
-         (raw (decode-json-from-string file-content))
-         (key (pathname-name filepath))
-         (body (cdr (assoc :body raw)))
-         (breadcrumbs (cdr (assoc :breadcrumbs raw)))
-         (rightblock (cdr (assoc :rightblock raw)))
-         (name (cdr (assoc :name raw)))
-         (date (time.article-decode-date (cdr (assoc :date raw))))
-         (descr (cdr (assoc :descr raw)))
-         (tags-line (cdr (assoc :tags raw)))
-         (title (cdr (assoc :title raw)))
-         (ctype (cdr (assoc :ctype raw)))
-         (new (make-instance 'article
-                             :key key
-                             :name name
-                             :descr descr
-                             :bredcrumbs breadcrumbs
-                             :body body
-                             :rightblock rightblock
-                             :title title
-                             :ctype (if ctype
-                                        ctype
-                                        (ctype dummy))
-                             :date date)))
-    (make-tags-table (tags new) tags-line)
-    (setf (gethash key *storage-articles*) new)
-    ;; Возвращаем key статьи
-    key))
+	(let* ((file-content (alexandria:read-file-into-string filepath))
+				 (raw (decode-json-from-string file-content))
+				 (key (pathname-name filepath))
+				 (body (cdr (assoc :body raw)))
+				 (breadcrumbs (cdr (assoc :breadcrumbs raw)))
+				 (rightblock (cdr (assoc :rightblock raw)))
+				 (name (cdr (assoc :name raw)))
+				 (date (time.article-decode-date (cdr (assoc :date raw))))
+				 (descr (cdr (assoc :descr raw)))
+				 (tags-line (cdr (assoc :tags raw)))
+				 (title (cdr (assoc :title raw)))
+				 (ctype (cdr (assoc :ctype raw)))
+         (header (cdr (assoc :header raw)))
+				 (new (make-instance 'article
+														 :key key
+														 :name name
+														 :descr descr
+														 :bredcrumbs breadcrumbs
+														 :body body
+														 :rightblock rightblock
+														 :title title
+														 :ctype (if ctype
+																				ctype
+																				(ctype dummy))
+                             :header header
+														 :date date)))
+		(make-tags-table (tags new) tags-line)
+		(setf (gethash key *storage-articles*) new)
+		;; Возвращаем key статьи
+		key))
 
 ;; загрузка статей из папки
 (defun process-articles-dir (path &optional (ctype "article"))
@@ -188,16 +191,16 @@
 
 (defmethod articles.show-static ((object article))
 	(root:main (list :keywords "" ;;keywords
-									 :description "" ;;description
-									 :title (name object)
-									 :header (root:header (append (list :cart (root:cart))
-																								(main-page-show-banner "line" (banner *main-page.storage*))))
-									 :footer (soy.footer:footer)
-									 :content  (soy.static:main
-															(list :menu (new-classes.menu)
-																		:breadcrumbs (bredcrumbs object)
-																		:subcontent  (body object)
-																		:rightblock  (rightblock object))))))
+                   :description "" ;;description
+                   :title (name object)
+                   :header (root:header (append (list :cart (root:cart))
+                                                (main-page-show-banner "line-text" (banner *main-page.storage*))))
+                   :footer (soy.footer:footer)
+                   :content  (soy.static:main
+                              (list :menu (new-classes.menu)
+                                    :breadcrumbs (bredcrumbs object)
+                                    :subcontent  (body object)
+                                    :rightblock  (rightblock object))))))
 
 (defmethod articles.show-article  ((object article))
 	(root:main (list :keywords "" ;;keywords
@@ -239,9 +242,10 @@
 
 (defmethod articles.show-landscape  ((object article))
 	(root:main-landscape (list :keywords "" ;;keywords
-									 :description "" ;;description
-									 :title (name object)
-									 :content  (body object))))
+                             :description "" ;;description
+                             :headeraddition (header object)
+                             :title (name object)
+                             :content  (body object))))
 
 ;; отображение страницы статьи
 (defmethod restas:render-object ((designer eshop-render) (object article))
