@@ -238,6 +238,6 @@
 		(list :keywords "" ;;keywords
 					:description "" ;;description
 					:title ""
-					:header (root:header (append (list :cart (root:cart))
+					:header (soy.header:header (append (list :cart (soy.index:cart))
 																			 (main-page-show-banner "line" (banner *main-page.storage*))))
 					:footer (soy.footer:footer))))

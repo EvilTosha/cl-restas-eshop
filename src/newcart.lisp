@@ -147,7 +147,7 @@
              (< 0 pricesum)
              (< 0 count))
         (progn
-          (soy.newcart:fullpage (list :head (root:newcart-head)
+          (soy.newcart:fullpage (list :head (soy.newcart:newcart-head)
                                       :leftcells (soy.newcart:leftcells
                                                   (list :bonuscount bonuscount
                                                         :bonusname (if bonuscount
@@ -331,7 +331,7 @@
             (if (not (string= email ""))
                 (send-client-mail (list email) client-mail order-id))
             (soy.newcart:fullpage
-             (list :head (root:newcart-head)
+             (list :head (soy.newcart:newcart-head)
                    :header (soy.newcart:header-linked)
                    :leftcells (soy.newcart:thanks
                                (list :sum pricesum

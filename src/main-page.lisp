@@ -95,7 +95,7 @@
 ;;отображение главной страницы
 (defun main-page-show (&optional (request-str ""))
   (default-page
-      (root:content
+      (soy.index:content
        (list :menu (new-classes.menu request-str)
              :dayly  (soy.main-page:daily (list :items (main-page-products-show (daily *main-page.storage*) 6)))
              :banner (soy.main-page:banner (main-page-show-banner "center" (banner *main-page.storage*)))

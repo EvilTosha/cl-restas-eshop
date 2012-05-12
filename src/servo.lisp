@@ -263,31 +263,31 @@
 
 
 (defun default-page (&optional (content nil) &key keywords description title no-need-cart)
-  (root:main (list :keywords keywords
-                   :description description
-                   :title title
-                   :header (root:header (append (list :cart (unless no-need-cart
-                                                                    (root:cart)))
-                                                      (main-page-show-banner "line" (banner *main-page.storage*))))
-                   :content (if content
-                                content
-                                (format nil "<pre>'~a' ~%'~a' ~%'~a'</pre>"
-                                        (request-str)
-                                        (hunchentoot:request-uri *request*)
-                                        (hunchentoot:header-in* "User-Agent"))))))
+  (soy.index:main (list :keywords keywords
+                        :description description
+                        :title title
+                        :header (soy.header:header (append (list :cart (unless no-need-cart
+                                                                         (soy.index:cart)))
+                                                           (main-page-show-banner "line" (banner *main-page.storage*))))
+                        :content (if content
+                                     content
+                                     (format nil "<pre>'~a' ~%'~a' ~%'~a'</pre>"
+                                             (request-str)
+                                             (hunchentoot:request-uri *request*)
+                                             (hunchentoot:header-in* "User-Agent"))))))
 
 
 (defun checkout-page (&optional (content nil))
-  (root:main (list :header (root:shortheader)
-                   :content (if content
-                                content
-                                "test page"))))
+  (soy.index:main (list :header (soy.header:shortheader)
+                        :content (if content
+                                     content
+                                     "test page"))))
 
 (defun checkout-thankes-page (&optional (content nil))
-  (root:main (list :header (root:short-linked-header)
-                   :content (if content
-                                content
-                                "test page"))))
+  (soy.index:main (list :header (soy.header:short-linked-header)
+                        :content (if content
+                                     content
+                                     "test page"))))
 
 (defun request-str ()
   (let* ((request-full-str (hunchentoot:url-decode (hunchentoot:request-uri hunchentoot:*request*)))

@@ -43,3 +43,6 @@ result)
 
 - Write format directives in uppercase for make them stand out from lowercase text surrounding. Example: (format nil "~&Number ~D~%" num)
 
+- When you want to iterate a list and check its elements with some predicate use every, some, notany and notevery directives instead of explicit mapcar and remove-if
+
+- Use short commands for simple number checks, such as evenp, oddp, plusp, zerop, etc.

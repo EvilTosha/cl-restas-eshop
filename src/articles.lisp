@@ -186,59 +186,59 @@
                ~a " (name article)))
 
 (defmethod articles.show-static ((object article))
-	(root:main (list :keywords "" ;;keywords
-                   :description "" ;;description
-                   :title (name object)
-                   :header (root:header (append (list :cart (root:cart))
-                                                (main-page-show-banner "line-text" (banner *main-page.storage*))))
-                   :footer (soy.footer:footer)
-                   :content  (soy.static:main
-                              (list :menu (new-classes.menu)
-                                    :breadcrumbs (bredcrumbs object)
-                                    :subcontent  (body object)
-                                    :rightblock  (rightblock object))))))
+	(soy.index:main (list :keywords "" ;;keywords
+                        :description "" ;;description
+                        :title (name object)
+                        :header (soy.header:header (append (list :cart (soy.index:cart))
+                                                           (main-page-show-banner "line-text" (banner *main-page.storage*))))
+                        :footer (soy.footer:footer)
+                        :content  (soy.static:main
+                                   (list :menu (new-classes.menu)
+                                         :breadcrumbs (bredcrumbs object)
+                                         :subcontent  (body object)
+                                         :rightblock  (rightblock object))))))
 
 (defmethod articles.show-article  ((object article))
-	(root:main (list :keywords "" ;;keywords
-									 :description "" ;;description
-									 :title  (if (title object)
-															 (title object)
-															 (name object))
-									 :headext (soy.articles:head-share-buttons (list :key (key object)))
-									 :header (root:header (append (list :cart (root:cart))
-																								(main-page-show-banner "line" (banner *main-page.storage*))))
-									 :footer (soy.footer:footer)
-									 :content (soy.static:main
-														 (list :menu (new-classes.menu)
-																	 :breadcrumbs (get-article-breadcrumbs object)
-																	 :subcontent  (soy.articles:article-big (list :sharebuttons (soy.articles:share-buttons
-																																															 (list :key (key object)))
-																																								:name (name object)
-																																								:date (unless (zerop (date object))
-                                                                                        (time.article-encode-date object))
-																																								:body (prerender-string-replace (body object))
-																																								:articles (let ((articles (articles.sort (remove-if #'(lambda(v)(equal v object)) (get-articles-list)))))
-																																														(when articles
-																																																(articles-view-articles (subseq articles 0 7))))
-																																								:tags
-																																								(if (minusp (hash-table-count (tags object)))
-																																										(soy.articles:articles-tags
-																																										 (list :tags
-																																													 (loop
-																																															:for key being the hash-keys
-																																															:of (tags object)
-																																															:collect key)))
-																																										"")))
-																	 :rightblock (soy.articles:r_b_articles (list :articles (let ((articles (articles.sort (remove-if #'(lambda(v)(equal v object)) (get-articles-list)))))
-																																														(when articles
-                                                                                              (articles-view-articles (subseq articles 0 10)))))))))))
+	(soy.index:main (list :keywords "" ;;keywords
+                        :description "" ;;description
+                        :title  (if (title object)
+                                    (title object)
+                                    (name object))
+                        :headext (soy.articles:head-share-buttons (list :key (key object)))
+                        :header (soy.header:header (append (list :cart (soy.index:cart))
+                                                           (main-page-show-banner "line" (banner *main-page.storage*))))
+                        :footer (soy.footer:footer)
+                        :content (soy.static:main
+                                  (list :menu (new-classes.menu)
+                                        :breadcrumbs (get-article-breadcrumbs object)
+                                        :subcontent  (soy.articles:article-big (list :sharebuttons (soy.articles:share-buttons
+                                                                                                    (list :key (key object)))
+                                                                                     :name (name object)
+                                                                                     :date (unless (zerop (date object))
+                                                                                             (time.article-encode-date object))
+                                                                                     :body (prerender-string-replace (body object))
+                                                                                     :articles (let ((articles (articles.sort (remove-if #'(lambda(v)(equal v object)) (get-articles-list)))))
+                                                                                                 (when articles
+                                                                                                   (articles-view-articles (subseq articles 0 7))))
+                                                                                     :tags
+                                                                                     (if (minusp (hash-table-count (tags object)))
+                                                                                         (soy.articles:articles-tags
+                                                                                          (list :tags
+                                                                                                (loop
+                                                                                                   :for key being the hash-keys
+                                                                                                   :of (tags object)
+                                                                                                   :collect key)))
+                                                                                         "")))
+                                        :rightblock (soy.articles:r_b_articles (list :articles (let ((articles (articles.sort (remove-if #'(lambda(v)(equal v object)) (get-articles-list)))))
+                                                                                                 (when articles
+                                                                                                   (articles-view-articles (subseq articles 0 10)))))))))))
 
 (defmethod articles.show-landscape  ((object article))
-	(root:main-landscape (list :keywords "" ;;keywords
-                             :description "" ;;description
-                             :headeraddition (header object)
-                             :title (name object)
-                             :content  (body object))))
+	(soy.index:main-landscape (list :keywords "" ;;keywords
+                                  :description "" ;;description
+                                  :headeraddition (header object)
+                                  :title (name object)
+                                  :content  (body object))))
 
 ;; отображение страницы статьи
 (defmethod restas:render-object ((designer eshop-render) (object article))
