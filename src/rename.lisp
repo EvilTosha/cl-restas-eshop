@@ -6,6 +6,9 @@
 (defgeneric rename.restore-pics-from-backup (product &optional path-to-backup)
   (:documentation "Get pics from backup folder and convert it to working directories"))
 
+(defgeneric rename-remove-product-pics (product)
+    (:documentation "Remove allsize pics from images dirs"))
+
 (defun rename-translit-char (char)
   (let ((letters (list "a" "b" "v" "g" "d" "e"
                        "zh" "z" "i" "y" "k" "l" "m"
@@ -220,7 +223,7 @@
          :do (log5:log-for info line))))
   (log5:log-for info "Finish removing folder"))
 
-(defun rename-remove-product-pics (product)
+(defmethod rename-remove-product-pics ((product product))
   (let* ((articul (articul product))
          (dirs (list "big" "goods" "middle" "minigoods" "small"))
          (path-art (rename.make-articul-subpath articul)))
@@ -229,14 +232,21 @@
        :in dirs
        :do (rename-remove-folder (format nil "~a/~a/~a" (config.get-option "PATHS" "path-to-pics") dir path-art)))))
 
+
+(defmethod rename-remove-product-pics ((product string))
+  (let ((product-object (gethash product (storage *global-storage*))))
+    (if product-object
+        (rename-remove-product-pics product-object)
+        (log5:log-for warning
+                      "Attempt to remove pics for product with invalid articul ~a" product))))
+
 (defmethod rename.restore-pics-from-backup
     ((product product)
      &optional (path-to-backup
                 (config.get-option "PATHS" "path-to-big-images-backup")))
   (when product
-    (let* ((articul (articul product))
-           (path-art (rename.make-articul-subpath articul))
-           (dir-pathname (merge-pathnames path-art path-to-backup)))
+    (let* ((articul (format nil "~a" (articul product)))
+           (dir-pathname (merge-pathnames articul path-to-backup)))
       (if (directory-exists-p dir-pathname)
           (progn
             (rename-remove-product-pics product)
