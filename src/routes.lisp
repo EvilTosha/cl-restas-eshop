@@ -23,11 +23,11 @@
 
 (restas:define-route request-static-route-css ("/css/*")
   (let ((full-uri (format nil "~a" (restas:request-full-uri))))
-    (pathname (concatenate 'string *path-to-dropbox* "/htimgs/" (subseq full-uri (search "/css/" full-uri))))))
+    (pathname (concatenate 'string *path-to-dropbox* "/htimgs/" (if (config.get-option "START_OPTIONS" "dbg-on") "dev/") (subseq full-uri (search "/css/" full-uri))))))
 
 (restas:define-route request-static-route-js ("/js/*")
   (let ((full-uri (format nil "~a" (restas:request-full-uri))))
-    (pathname (concatenate 'string *path-to-dropbox* "/htimgs/" (subseq full-uri (search "/js/" full-uri))))))
+    (pathname (concatenate 'string *path-to-dropbox* "/htimgs/" (if (config.get-option "START_OPTIONS" "dbg-on") "dev/") (subseq full-uri (search "/js/" full-uri))))))
 
 (restas:define-route request-route-static-favicon ("/favicon.ico")
   (pathname (concatenate 'string  *path-to-dropbox* "/htimgs/img/favicon.ico")))

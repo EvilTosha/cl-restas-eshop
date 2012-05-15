@@ -147,7 +147,7 @@
              (< 0 pricesum)
              (< 0 count))
         (progn
-          (soy.newcart:fullpage (list :head (soy.newcart:newcart-head)
+          (soy.newcart:fullpage (list :head (soy.newcart:head)
                                       :leftcells (soy.newcart:leftcells
                                                   (list :bonuscount bonuscount
                                                         :bonusname (if bonuscount

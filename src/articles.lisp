@@ -112,7 +112,7 @@
 
 (defun get-articles-by-tags (articles-list &optional tags)
   (let ((articles))
-    (if (not (servo.is-valid-string tags :unvanted-chars (list #\' #\" #\\ #\~ #\Newline)))
+    (if (not (servo.is-valid-string tags :unwanted-chars (list #\' #\" #\\ #\~ #\Newline)))
         (mapcar #'(lambda (v) (push v articles))
                 articles-list)
         ;;else
