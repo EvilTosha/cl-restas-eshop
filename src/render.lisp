@@ -165,7 +165,8 @@
                                                                                                 :pic (car (get-pics printer-articul))
                                                                                                 :name (name-seo storage-printer)
                                                                                                 :key (key storage-printer)
-                                                                                                :price (siteprice storage-printer)))))))
+                                                                                                :price (if (active storage-printer)
+                                                                                                            (siteprice storage-printer))))))))
                                       :products
                                       (loop
                                          :for product :in  paginated :collect (render.view product)))))))))
