@@ -16,6 +16,7 @@
    (body        :initarg :body       :initform nil                             :accessor body)
    (date        :initarg :date       :initform nil                             :accessor date)
    (header      :initarg :header     :initform nil                             :accessor header)
+   (pic         :initarg :pic        :initform nil                             :accessor pic)
    (ctype       :initarg :ctype      :initform "article"                       :accessor ctype) ;; article / static / landscape
    (tags        :initarg :tags       :initform (make-hash-table :test #'equal) :accessor tags)))
 
@@ -23,8 +24,9 @@
 (defun make-tags-table (tags input-string)
   (let ((words (split-sequence:split-sequence #\, input-string)))
     (mapcar #'(lambda (w)
-                (when (servo.is-valid-string w)
-                  (setf (gethash (stripper w) tags) w)))
+                (let ((pure-tag (string-trim '(#\Space #\Tab #\Newline) w)))
+                  (when (servo.is-valid-string pure-tag)
+                    (setf (gethash (string-downcase pure-tag) tags) pure-tag))))
             words)))
 
 (defmethod unserialize (filepath (dummy article))
@@ -41,6 +43,7 @@
 				 (title (cdr (assoc :title raw)))
 				 (ctype (cdr (assoc :ctype raw)))
          (header (cdr (assoc :header raw)))
+         (pic (cdr (assoc :pic raw)))
 				 (new (make-instance 'article
 														 :key key
 														 :name name
@@ -53,6 +56,7 @@
 																				ctype
 																				(ctype dummy))
                              :header header
+                             :pic pic
 														 :date date)))
 		(make-tags-table (tags new) tags-line)
 		(setf (gethash key *storage-articles*) new)
@@ -120,7 +124,7 @@
           (let ((tags (split-sequence:split-sequence #\, tags)))
             (mapcar #'(lambda (v)
                         (when (every #'(lambda (tag)
-                                         (gethash tag (tags v)))
+                                         (gethash (string-downcase tag) (tags v)))
                                      tags)
                           (push v articles)))
                     articles-list))))
@@ -130,7 +134,9 @@
   (mapcar #'(lambda (v)
               (list  :name (name v)
                      :date (time.article-encode-date v)
-                     :key (key v)))
+                     :key (key v)
+                     :pic (pic v)
+                     :descr (descr v)))
           articles))
 
 ;; отображение списка статей
@@ -166,19 +172,24 @@
                                                                         :date (time.article-encode-date v)
                                                                         :descr (descr v)
                                                                         :key (key v)
+                                                                        :pic (pic v)
                                                                         :tags
                                                                         (if (< 0 (hash-table-count (tags v)))
                                                                             (soy.articles:articles-tags
                                                                              (list :tags
                                                                                    (loop
-                                                                                      :for key being the hash-keys
+                                                                                      :for key being the hash-keys using (hash-value name)
                                                                                       :of (tags v)
-                                                                                      :collect key)))
+                                                                                      :collect name)))
                                                                             "")))
                                                               paginated)))))
-                 :rightblock (soy.articles:r_b_articles (list :articles (let ((articles (articles.sort (get-articles-list))))
-                                                                          (when articles
-                                                                            (articles-view-articles (subseq articles 0 10))))))))))))
+                 :rightblock (soy.articles:r_b_articles
+                              (list :articles (let ((arts (articles.sort (get-articles-by-tags (get-articles-list) "новости"))))
+                                                (articles-view-articles (list-filters.limit-end arts 5)))
+                                    :articles_1 (let ((arts (articles.sort (get-articles-by-tags (get-articles-list) "Акции"))))
+                                                  (articles-view-articles (list-filters.limit-end arts 5)))
+                                    :articles_2 (let ((arts (articles.sort (get-articles-by-tags (get-articles-list) "обзоры"))))
+                                                  (articles-view-articles (list-filters.limit-end arts 5)))))))))))
 
 (defun get-article-breadcrumbs (article)
   (format nil "<a href=\"/\">Главная</a> /
@@ -189,7 +200,8 @@
 	(soy.index:main (list :keywords "" ;;keywords
                         :description "" ;;description
                         :title (name object)
-                        :header (soy.header:header (append (list :cart (soy.index:cart))
+                        :header (soy.header:header (append (list :cart (soy.index:cart)
+                                                                 :bannertype "line-text")
                                                            (main-page-show-banner "line-text" (banner *main-page.storage*))))
                         :footer (soy.footer:footer)
                         :content  (soy.static:main
@@ -217,21 +229,29 @@
                                                                                      :date (unless (zerop (date object))
                                                                                              (time.article-encode-date object))
                                                                                      :body (prerender-string-replace (body object))
-                                                                                     :articles (let ((articles (articles.sort (remove-if #'(lambda(v)(equal v object)) (get-articles-list)))))
-                                                                                                 (when articles
-                                                                                                   (articles-view-articles (subseq articles 0 7))))
+                                                                                     :articles ""
                                                                                      :tags
-                                                                                     (if (minusp (hash-table-count (tags object)))
+                                                                                     (if (plusp (hash-table-count (tags object)))
                                                                                          (soy.articles:articles-tags
                                                                                           (list :tags
                                                                                                 (loop
-                                                                                                   :for key being the hash-keys
+                                                                                                   :for key being the hash-keys using (hash-value name)
                                                                                                    :of (tags object)
-                                                                                                   :collect key)))
+                                                                                                   :collect name)))
                                                                                          "")))
-                                        :rightblock (soy.articles:r_b_articles (list :articles (let ((articles (articles.sort (remove-if #'(lambda(v)(equal v object)) (get-articles-list)))))
-                                                                                                 (when articles
-                                                                                                   (articles-view-articles (subseq articles 0 10)))))))))))
+                                        :rightblock (soy.articles:r_b_articles
+                                                     (list :articles (let ((arts (articles.sort
+                                                                                  (remove-if #'(lambda(v)(equal v object))
+                                                                                             (get-articles-by-tags (get-articles-list) "новости")))))
+                                                                       (articles-view-articles (list-filters.limit-end arts 5)))
+                                                           :articles_1 (let ((arts (articles.sort
+                                                                                    (remove-if #'(lambda(v)(equal v object))
+                                                                                               (get-articles-by-tags (get-articles-list) "Акции")))))
+                                                                         (articles-view-articles (list-filters.limit-end arts 5)))
+                                                           :articles_2 (let ((arts (articles.sort
+                                                                                    (remove-if #'(lambda(v)(equal v object))
+                                                                                               (get-articles-by-tags (get-articles-list) "обзоры")))))
+                                                                         (articles-view-articles (list-filters.limit-end arts 5))))))))))
 
 (defmethod articles.show-landscape  ((object article))
 	(soy.index:main-landscape (list :keywords "" ;;keywords

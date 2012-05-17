@@ -192,6 +192,12 @@
     (if (null (getf request-get-plist :tags))
         (setf (getf request-get-plist :tags) "Статьи"))
     (articles-page request-get-plist)))
+;;список акции
+(restas:define-route article-akcii-route ("/articles/akcii" :requirement #'test-article-get-parameters)
+  (let ((request-get-plist (request-get-plist)))
+    (if (null (getf request-get-plist :tags))
+        (setf (getf request-get-plist :tags) "Акции"))
+    (articles-page request-get-plist)))
 
 ;;список новостей
 (restas:define-route article-news-route ("/articles/news" :requirement #'test-article-get-parameters)

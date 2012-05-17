@@ -104,10 +104,10 @@
              :best (soy.main-page:best (list :items (main-page-products-show (best *main-page.storage*) 12)))
              :hit (soy.main-page:hit (list :items (main-page-products-show (hit *main-page.storage*) 2)))
              :new  (soy.main-page:new (list :items (main-page-products-show (new *main-page.storage*) 6)))
-             :post (let ((articles (articles.sort (get-articles-list))))
-                     (if articles
-                         (soy.main-page:post (list :items (articles-view-articles (subseq articles 0 6))))
-                         (soy.main-page:post (list :items nil))))
+             :post (soy.main-page:post
+                    (list :news (articles-view-articles (list-filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "новости")) 3))
+                          :akcii (articles-view-articles(list-filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "акции")) 3))
+                          :reviews (articles-view-articles(list-filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "обзоры")) 3))))
              :plus (soy.main-page:plus)))
       :KEYWORDS "компьютеры, купить компьютер, компьютерная техника, Петербург, Спб, Питер, Санкт-Петербург, продажа компьютеров, магазин компьютерной техники, магазин компьютеров, интернет магазин компьютеров, интернет магазин компьютерной техники, продажа компьютерной техники, магазин цифровой техники, цифровая техника, Цифры, 320-8080"
       :DESCRIPTION "Купить компьютер и другую технику вы можете в Цифрах. Цифровая техника в Интернет-магазине 320-8080.ru"
@@ -121,7 +121,7 @@
    (review         :initarg :review      :initform (make-hash-table :test #'equal)     :accessor review)
    (banner         :initarg :banner      :initform (make-hash-table :test #'equal)     :accessor banner)))
 
-(defvar *main-page.storage* (make-instance 'main-page-storage))
+(defparameter *main-page.storage* (make-instance 'main-page-storage))
 
 ;; продукт для главной
 (defclass main-page-product ()
