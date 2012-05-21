@@ -32,6 +32,17 @@
 (config.parse-config)
 
 (defun compile-templates ()
+    ;; (let ((templates-path (config.get-option "PATHS" "path-to-templates"))
+  ;;       (templates))
+  ;;   (mapcar #'(lambda (x)
+  ;;               (if (not (cl-fad:directory-pathname-p x))
+  ;;                   (push x templates)))
+  ;;           (directory (format nil "~a/*" templates-path)))
+  ;;   (mapcar #'(lambda (file)
+  ;;               (log5:log-for info-console "Load article: ~a" file)
+  ;;               (unserialize (format nil "~a" file) (make-instance 'article :ctype ctype)))
+  ;;           files)))
+
   (mapcar #'(lambda (fname)
               (let ((pathname (merge-pathnames fname (config.get-option "PATHS" "path-to-templates"))))
                 (format t "~&compile-template: ~a" pathname)
