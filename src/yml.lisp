@@ -193,9 +193,7 @@
                                                                       :available (servo.available-for-order-p product)
                                                                       :deliveryprice (yml.get-product-delivery-price1 product)
                                                                       :price (siteprice product)
-                                                                      :category (gethash
-                                                                                 (key (new-classes.parent product))
-                                                                                 *yml-group-ids*)
+                                                                      :category (yml-id (new-classes.parent product))
                                                                       :picture  (let ((pics (get-pics
                                                                                              (articul product))))
                                                                                   (if (null pics)
