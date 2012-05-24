@@ -103,10 +103,10 @@
                 (> diagonal 32)))
           (setf result 500)
           (if (or
-               (and (equal (vendor product) "Brother")
-                    (or (equal key "printery")
-                        (equal key "mfu")
-                        (equal key "faxes")))
+               ;; (and (equal (vendor product) "Brother")
+               ;;      (or (equal key "printery")
+               ;;          (equal key "mfu")
+               ;;          (equal key "faxes")))
                (yml.is-daily-product product))
               (setf result 0)
               (if (or
@@ -159,13 +159,13 @@
                         :using (hash-value id)
                         :in (yml-groups)
                         :when (equal 'group (type-of (gethash key (storage *global-storage*))))
-                        :collect (list :id id
+                        :collect (list :id (yml-id (gethash key (storage *global-storage*)))
                                        :name (name (gethash key (storage *global-storage*)))
                                        :parent (if (null (new-classes.parent (gethash key (storage *global-storage*))))
                                                    0 ;; если это вершина дерева
                                                    (let* ((parent (new-classes.parent (gethash key (storage *global-storage*))))
                                                           (parent-key (key parent))
-                                                          (num-key (gethash parent-key *yml-group-ids*)))
+                                                          (num-key (yml-id parent)))
                                                      num-key))))
                      :offers (format nil "~{~a~}"
                                      (loop
@@ -193,9 +193,7 @@
                                                                       :available (servo.available-for-order-p product)
                                                                       :deliveryprice (yml.get-product-delivery-price1 product)
                                                                       :price (siteprice product)
-                                                                      :category (gethash
-                                                                                 (key (new-classes.parent product))
-                                                                                 *yml-group-ids*)
+                                                                      :category (yml-id (new-classes.parent product))
                                                                       :picture  (let ((pics (get-pics
                                                                                              (articul product))))
                                                                                   (if (null pics)
@@ -392,3 +390,18 @@
                   (yml.test-groups v)
                   (format t "~& (equal key \"~a\")" (key v))))
           (groups group)))
+
+
+(defun yml.get-next-yml-id ()
+  "Generate uniq group id for yanedx market. Max current id +1."
+  (when (groups *global-storage*)
+    (1+ (loop :for g :in (groups *global-storage*) :when (yml-id g) :maximize (yml-id g)))))
+
+;;temp func only for first id setting
+(defun yml.set-groups-id ()
+  (maphash #'(lambda (k v)
+                     (let ((grp (gethash k (storage *global-storage*))))
+                       (when grp
+                         (setf (yml-id grp) v))))
+           *yml-group-ids*))
+

@@ -140,7 +140,9 @@ Usually it transform string keys to pointers to other objects, such as parents o
   (when (every #'(lambda (child)
                    (string/= (key product) (key child)))
                (products group))
-    (pushnew product (products group))))
+    (pushnew product (products group)))
+  ;;TODO: check all groups for nil in yml-id
+  )
 
 
 ;;вызывается после десереализации продукта
@@ -421,10 +423,10 @@ Usually it transform string keys to pointers to other objects, such as parents o
 (defmethod price ((object product))
   (+ (siteprice object) (delta-price object)))
 
-
 (new-classes.make-class-and-methods
  'group
  '((:name key                 :initform nil                             :disabled t     :type string                    :serialize t)
+   (:name yml-id              :initform (yml.get-next-yml-id)           :disabled t     :type int                       :serialize t)
    (:name parents             :initform nil                             :disabled nil   :type group-list                :serialize t)
    (:name name                :initform nil                             :disabled nil   :type string                    :serialize t)
    (:name active              :initform nil                             :disabled nil   :type bool                      :serialize t)
@@ -443,8 +445,8 @@ Usually it transform string keys to pointers to other objects, such as parents o
    ;; TODO: remove vandors-seo when vendors become full working
    (:name vendors-seo         :initform (make-hash-table :test #'equal) :disabled t     :type textedit-hashtable        :serialize t)
    (:name seo-text            :initform nil                             :disabled nil   :type textedit                  :serialize t)
-	 (:name upsale-links        :initform nil                             :disabled nil   :type group-list                :serialize t)
-	 (:name keyoptions          :initform nil                             :disabled nil   :type keyoptions                :serialize t)
+   (:name upsale-links        :initform nil                             :disabled nil   :type group-list                :serialize t)
+   (:name keyoptions          :initform nil                             :disabled nil   :type keyoptions                :serialize t)
    (:name catalog-keyoptions  :initform nil                             :disabled nil   :type catalog-keyoptions        :serialize t)
    (:name life-time           :initform 100                             :disabled nil   :type int                       :serialize t)))
 
