@@ -14,6 +14,9 @@
 
 (defvar *global-storage* (make-instance 'global-storage))
 
+(defvar *vendor-storage* (make-hash-table :test #'equal)
+  "Storage for vendors (with aliases and seo-texts)")
+
 (defun storage.is-offspring (group item)
   (when (and group item)
     (not (every
@@ -106,9 +109,8 @@
 
 
 (defun storage.get-root-groups-list (&optional (compare #'(lambda (a b)
-                                                            (if (or (null (order a)) (null (order b)))
-                                                                nil
-                                                                (< (order a) (order b))))))
+                                                            (when (and (order a) (order b))
+                                                              (< (order a) (order b))))))
   (storage.round-collect-storage #'(lambda (obj)
                                      (and (equal (type-of obj) 'group)
                                           (null (parents obj))))
@@ -116,10 +118,18 @@
 
 
 (defun storage.add-new-object (object &optional (key nil key-supplied-p))
-  "Adding exactly new object to storage but not pushing it in any list"
-  (when (not key-supplied-p)
-    (setf key (key object)))
-  (setf (gethash key (storage *global-storage*)) object))
+  "Adding exactly new object to appropriate storage but not pushing it in any list"
+  ;;; TODO: push all types (not only vendors to own storage)
+  (let ((key (if key-supplied-p
+                 key
+                 (key object))))
+    (setf (gethash key
+                   (typecase object
+                     (vendor
+                      *vendor-storage*)
+                     (t
+                      (storage *global-storage*))))
+          object)))
 
 (defun storage.edit-in-list (list object &optional (key nil key-supplied-p))
   "Editing or adding (if not exist) object in given list"

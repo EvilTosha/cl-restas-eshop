@@ -214,7 +214,7 @@
     (articles-page request-get-plist)))
 
 ;;конкретная статья
-(restas:define-route article/-key-route ("/articles/:key" :requirement #'test-route-article-object)
+(restas:define-route article-key-route ("/articles/:key" :requirement #'test-route-article-object)
   (gethash (caddr (request-list)) *storage-articles*))
 
 

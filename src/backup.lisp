@@ -35,18 +35,16 @@
                             :external-format :utf-8)
         (format file "~a" (backup.serialize-entity object))))))
 
-(defun backup.serialize-list-to-file (object-list filepath)
-  (let ((total 0))
-    (with-open-file (file filepath
-                          :direction :output
-                          :if-exists :supersede
-                          :if-does-not-exist :create
-                          :external-format :utf-8)
-      (mapcar #'(lambda (object)
-                  (format file "~a~%" (backup.serialize-entity object))
-                  (incf total))
-              object-list))
-    (log5:log-for info "Total serialized: ~a" total)))
+(defun backup.serialize-collection-to-file (object-collection filepath)
+  (with-open-file (file filepath
+                        :direction :output
+                        :if-exists :supersede
+                        :if-does-not-exist :create
+                        :external-format :utf-8)
+    (servo.iterate #'(lambda (obj)
+                       (format file "~A~%" (backup.serialize-entity obj)))
+                   object-collection))
+    (log5:log-for info "Total serialized: ~a" (servo.collection-count object-collection)))
 
 
 
@@ -67,9 +65,9 @@
     (ensure-directories-exist product-path)
     (ensure-directories-exist group-path)
     (log5:log-for info "Start products serializing to ~a" product-path)
-    (backup.serialize-list-to-file (storage.get-products-list) product-path)
+    (backup.serialize-collection-to-file (storage.get-products-list) product-path)
     (log5:log-for info "Start groups serializing to ~a" group-path)
-    (backup.serialize-list-to-file (storage.get-groups-list) group-path)
+    (backup.serialize-collection-to-file (storage.get-groups-list) group-path)
     ;; copying to Dropbox
     (when push-to-dropbox
       (let ((dropbox-backup-path (config.get-option "CRITICAL" "path-to-dropbox-backup")))

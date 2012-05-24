@@ -112,9 +112,9 @@
                                                         (not (equal "" name)))
                                                    name
                                                    (name-provider product))
-            (name-seo product)        (if (servo.is-valid-string (name-seo product))
+            (name-seo product)        (if (servo.valid-string-p (name-seo product))
                                           (name-seo product)
-                                          (if (servo.is-valid-string realname)
+                                          (if (servo.valid-string-p realname)
                                               realname
                                               name))
             (delta-price product)     (if (= 0 siteprice)

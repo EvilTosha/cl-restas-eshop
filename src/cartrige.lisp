@@ -116,13 +116,13 @@
                                 :for num
                                 :from 5
                                 :for elt = (nth num content-list)
-                                :while (servo.is-valid-string elt)
+                                :while (servo.valid-string-p elt)
                                 :collect elt))
                 (other-list (loop
                                :for num
                                :from 18
                                :for elt = (nth num content-list)
-                               :while (servo.is-valid-string elt)
+                               :while (servo.valid-string-p elt)
                                :collect elt)))
            (cartrige.add-printer t-storage articul origin-list other-list vendor name
                                  (format nil "~a ~(~a~)" type tech))))

@@ -38,7 +38,7 @@
              (mapcar #'(lambda (y) (regex-replace-all "\\s+" y " "))
                      (mapcar #'(lambda (y) (string-trim '(#\Space #\Tab #\") y))
                              (let ((inp) (sv) (ac) (rs))
-                               (loop :for cr :across isg do
+                               (loop :for cr :across isg :do
                                   (if (null inp)
                                       (cond ((equal #\" cr) (setf inp t))
                                             ((equal #\, cr) (push "" rs)))

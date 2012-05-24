@@ -2,6 +2,10 @@
 
 (in-package #:eshop)
 
+(defgeneric new-classes.post-unserialize (item)
+  (:documentation "Method that called after unserializing all the items from files.
+Usually it transform string keys to pointers to other objects, such as parents or childs."))
+
 ;;макрос для создания класса по списку параметров
 (defmacro new-classes.make-class (name class-fields)
   `(defclass ,name ()
@@ -108,7 +112,8 @@
     num))
 
 
-(defmethod new-classes.get-transform-optgroups ((item product))
+(defun new-classes.get-transform-optgroups (item)
+  (declare (product item))
   (let ((optgroups))
     ;;преобразуем optgroups (1 уровень)
     (setf optgroups
@@ -268,6 +273,20 @@
                           parent))))
                 (parents item))))
 
+(defmethod new-classes.post-unserialize ((item vendor))
+  ;; convert seo-texts from list to hash-table
+  (when (listp (seo-texts item))
+    (setf (seo-texts item) (servo.list-to-hashtasble
+                            (copy-list (seo-texts item)))))
+  ;; make pointers to vendor in group's hashtable of vendors
+  (let ((vendor-key (key item)))
+    (maphash #'(lambda (k v)
+                 (declare (ignore v))
+                 (let ((group (gethash k (storage *global-storage*))))
+                   (setf (gethash vendor-key (vendors group)) item)))
+             (seo-texts item))))
+
+
 
 (defmethod new-classes.post-unserialize ((item article)))
 
@@ -319,12 +338,9 @@
 
 (defun new-classes.menu-sort (a b)
   "Function for sorting groups by order field"
-  (if (or (null (order a))
-          (null (order b)))
-      nil
-      ;; else
-      (< (order a)
-         (order b))))
+  (when (and (order a) (order b))
+    (< (order a)
+       (order b))))
 
 
 ;;TODO временно убрана проверка на пустые группы, тк это поле невалидно
@@ -423,6 +439,8 @@
    (:name filters             :initform nil                             :disabled t     :type string                    :serialize nil)
    (:name fullfilter          :initform nil                             :disabled t     :type string                    :serialize nil)
    (:name raw-fullfilter      :initform nil                             :disabled nil   :type textedit-raw              :serialize t)
+   (:name vendors             :initform (make-hash-table :test #'equal) :disabled t     :type textedit-hashtable        :serialize nil)
+   ;; TODO: remove vandors-seo when vendors become full working
    (:name vendors-seo         :initform (make-hash-table :test #'equal) :disabled t     :type textedit-hashtable        :serialize t)
    (:name seo-text            :initform nil                             :disabled nil   :type textedit                  :serialize t)
 	 (:name upsale-links        :initform nil                             :disabled nil   :type group-list                :serialize t)
@@ -439,16 +457,26 @@
    (:name func              :initform ""       :disabled t    :type string)
    (:name func-string       :initform ""       :disabled t    :type textedit)))
 
+(new-classes.make-class-and-methods
+ 'vendor
+ '((:name key       :initform ""                              :disabled t   :type string             :serialize t)
+   (:name name      :initform ""                              :disabled nil :type string             :serialize t)
+   (:name alias     :initform ""                              :disabled nil :type string             :serialize t)
+   (:name seo-texts :initform (make-hash-table :test #'equal) :disabled t   :type textedit-hashtable :serialize t)))
+
 (let ((product-instance (make-instance 'product))
       (group-instance (make-instance 'group))
-      (filter-instance (make-instance 'filter)))
+      (filter-instance (make-instance 'filter))
+      (vendor-instance (make-instance 'vendor)))
   (defun new-classes.get-instance (type)
     (let ((type-string (format nil "~(~a~)" type)))
       (cond
-        ((or (equal "product" type-string))
+        ((equal "product" type-string)
          product-instance)
         ((equal "group" type-string)
          group-instance)
         ((equal "filter" type-string)
-         filter-instance)))))
+         filter-instance)
+        ((equal "vendor" type-string)
+         vendor-instance)))))
 

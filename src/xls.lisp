@@ -111,44 +111,6 @@
                                                                               (SB-INT:SIMPLE-PARSE-ERROR () nil))))))))))))
     rs))
 
-
-(defmethod ƒ ((jct nko) (obn nko))
-  (log5:log-for info "Processing DTD...")
-  (let ((cnt 0)
-        (items nil)
-        (num-all 0))
-    (loop :for file :in (directory (format nil "~a/*.xls" (folder obn))) :do
-          (setf items (reverse (ƒ file px)))
-          (setf num-all (+ num-all (length items)))
-          (log5:log-for info-console "~a. Processing file: ~a | ~a" (incf cnt) file (length items))
-          (loop :for item :in items :do
-                (let* ((articul (getf item :articul))
-                       (realname (getf item :realname))
-                       (optgroups (loop :for optgroup :in (getf item :result-options) :collect
-                                        (make-instance 'optgroup
-                                                       :name (getf optgroup :optgroup_name)
-                                                       :options (loop :for option :in (getf optgroup :options) :collect
-                                                                      (make-instance 'option
-                                                                                     :name (getf option :name)
-                                                                                     :value (getf option :value))))))
-                       (product (gethash (format nil "~a" articul) *storage*)))
-                  (let ((pr (gethash articul *xls.product-table*)))
-                    (if pr
-                        (log5:log-for warning "WARN: ~a | ~a | ~a" articul pr file)
-                      (setf (gethash articul *xls.product-table*) file)))
-                  (if (null product)
-                      (format nil "warn: product ~a (articul ~a) not found, ignore (file: ~a)" realname articul file)
-                    (progn
-                      (setf (optgroups product) optgroups)
-                      ;; Если есть значимое realname - перезаписать в продукте
-                      (if (not (string= "" (string-trim '(#\Space #\Tab #\Newline)
-                                                        (format nil "~@[~a~]" realname))))
-                          (setf (realname product) realname)))))))
-    (log5:log-for info "Successfully processed ~a files | ~a products" cnt num-all)
-    ;;создаем новый yml файл
-    (create-yml-file)))
-
-
 (defmethod xls.process-all-dtd ((jct nko) (obn nko))
   (log5:log-for info "Processing DTD...")
   (let ((cnt 0)
@@ -214,6 +176,6 @@
                         (read-line stream nil)
                         (loop
                          :for line = (read-line stream nil)
-                         :while (servo.is-valid-string line :unwanted-chars (list #\,) :del-method :trim)
+                         :while (servo.valid-string-p line :unwanted-chars (list #\,) :del-method :trim)
                          :do (funcall line-processor line))))
     (log5:log-for info "DONE ~a" restore-name)))

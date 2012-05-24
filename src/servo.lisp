@@ -30,227 +30,225 @@
      (remf url-parameters :sort)
      (loop :for sort-field :in variants :by #'cddr :collect
         (let ((key (string-downcase (format nil "~a" sort-field))))
-            (setf (getf url-parameters :sort) key)
-            (if (string= (string-downcase (format nil "~a" sort-field))
-                         (getf ,request-get-plist :sort))
-                (list :key key
-                      :name (getf variants sort-field)
-                      :url (make-get-str url-parameters)
-                      :active t)
-                (list :key key
-                      :url (make-get-str url-parameters)
-                      :name (getf variants sort-field)))))))
+          (setf (getf url-parameters :sort) key)
+          (if (string= (string-downcase (format nil "~a" sort-field))
+                       (getf ,request-get-plist :sort))
+              (list :key key
+                    :name (getf variants sort-field)
+                    :url (make-get-str url-parameters)
+                    :active t)
+              (list :key key
+                    :url (make-get-str url-parameters)
+                    :name (getf variants sort-field)))))))
 
 
-  (defmethod rightblocks ((object group) (parameters list))
-    (list (soy.catalog:rightblock1)
-          (soy.catalog:rightblock2)
-          (if (not (equal 'group (type-of object)))
-              ""
-              (progn
-                (let ((vndr (getf parameters :vendor)))
-                  (if (null vndr)
-                      ;; show group descr
-                      (let ((descr (seo-text object)))
-                        (if (null descr)
-                            ""
-                            (soy.catalog:seotext (list :text descr))))
-                      ;; show vendor descr
-                      (let ((descr (gethash (string-downcase vndr) (vendors-seo object))))
-                        (if (null descr)
-                            ""
-                            (soy.catalog:seotext (list :text descr))))))))))
-
-
-  (defmacro with-option (product optgroup-name option-name body)
-    `(mapcar #'(lambda (optgroup)
-                 (if (string= (name optgroup) ,optgroup-name)
-                     (let ((options (options optgroup)))
-                       (mapcar #'(lambda (option)
-                                   (if (string= (name option) ,option-name)
-                                       ,body))
-                               options))))
-             (optgroups ,product)))
-
-
-  (defmacro with-option1 (product optgroup-name option-name body)
-    `(mapcar #'(lambda (optgroup)
-                 (if (string= (getf optgroup :name) ,optgroup-name)
-                     (let ((options (getf optgroup :options)))
-                       (mapcar #'(lambda (option)
-                                   (if (string= (getf option :name) ,option-name)
-                                       ,body))
-                               options))))
-             (optgroups ,product)))
-
-  (defmacro f-price ()
-    `(lambda (product request-plist filter-options)
-       (let ((value-f (getf request-plist :price-f))
-             (value-t (getf request-plist :price-t))
-             (value-x (siteprice product)))
-         (when (null value-f)
-           (setf value-f "0"))
-         (when (or (null value-t)
-                   (string= value-t ""))
-           (setf value-t "99999999"))
-         (setf value-f (arnesi:parse-float (format nil "~as" value-f)))
-         (setf value-t (arnesi:parse-float (format nil "~as" value-t)))
-         (and (<= value-f value-x)
-              (>= value-t value-x)))))
-
-
-  (defmacro with-range (key optgroup-name option-name)
-    `(lambda (product request-plist filter-options)
-       (let ((value-f (getf request-plist (intern (string-upcase (format nil "~a-f" (symbol-name ,key))) :keyword)))
-             (value-t (getf request-plist (intern (string-upcase (format nil "~a-t" (symbol-name ,key))) :keyword)))
-             (value-x 0))
-         (with-option1 product
-           ,optgroup-name ,option-name
-           (setf value-x (getf option :value)))
-         (when (null value-x)
-           (setf value-x "0"))
-         (when (null value-f)
-           (setf value-f "0"))
-         (when (or (null value-t)
-                   (string= value-t ""))
-           (setf value-t "99999999"))
-         (setf value-f (arnesi:parse-float (format nil "~as" value-f)))
-         (setf value-t (arnesi:parse-float (format nil "~as" value-t)))
-         (setf value-x (arnesi:parse-float (format nil "~as" value-x)))
-         (and (<= value-f value-x)
-              (>= value-t value-x)))))
-
-  ;;Фильтруем по наличию опции
-  (defun filter-with-check-options (key-name option-group-name product request-plist filter-options)
-    (let ((number 0)
-          (result-flag t))
-      (mapcar #'(lambda (option-name)
-                  (let ((value-p (getf request-plist
-                                       (intern (string-upcase
-                                                (format nil "~a-~a"
-                                                        key-name
-                                                        number))
-                                               :keyword))))
-                    (incf number)
-                    (when (equal value-p "1")
-                      (let ((value-x))
-                        (mapcar #'(lambda (optgroup)
-                                    (if (string= (getf optgroup :name) option-group-name)
-                                        (progn
-                                          (let ((options (getf optgroup :options)))
-                                            (mapcar #'(lambda (option)
-                                                        (if (string= (getf option :name) option-name)
-                                                            (setf value-x (getf option :value))))
-                                                    options)))))
-                                (optgroups product))
-                        (if (not (string= value-x "Есть"))
-                            (setf result-flag nil))))))
-              filter-options)
-      result-flag))
-
-  ;;фильтрация по значениям опции
-  (defun filter-with-check-values (key-name option-group-name option-name product request-plist filter-options)
-    (let ((number 0)
-          (result-flag nil)
-          (request-flag t)
-          (value-x nil))
-      (with-option1 product
-        option-group-name option-name
-        (setf value-x (getf option :value)))
-      (mapcar #'(lambda (option-value)
-                  (let ((value-p (getf request-plist
-                                       (intern (string-upcase
-                                                (format nil "~a-~a"
-                                                        key-name
-                                                        number))
-                                               :keyword))))
-                    (incf number)
-                    (when (equal value-p "1")
-                      (setf request-flag nil)
-                      (if (string= value-x option-value)
-                          (setf result-flag t)))))
-              filter-options)
-      (or result-flag
-          request-flag)))
-
-  (defmacro with-check (key optgroup-name dummy-var)
-    `(lambda (product request-plist filter-options)
-       (let ((option-group-name ,optgroup-name)
-             (key-name (symbol-name ,key)))
-         (if (string= ,dummy-var "")
-             (filter-with-check-options key-name option-group-name product request-plist filter-options)
-             (filter-with-check-values key-name option-group-name ,dummy-var product request-plist filter-options)))))
-
-
-  (defmacro with-radio (key optgroup-name option-name)
-    `(lambda (product request-plist filter-options)
-       (let ((value-p (getf request-plist (intern (string-upcase (format nil "~a" (symbol-name ,key))) :keyword)))
-             (value-x ""))
-         (with-option1 product
-           ,optgroup-name ,option-name
-           (setf value-x (getf option :value)))
-         (cond
-           ((null value-p)
-            t)
-           ((null value-x)
-            nil)
-           (t
+(defmethod rightblocks ((object group) (parameters list))
+  (list (soy.catalog:rightblock1)
+        (soy.catalog:rightblock2)
+        (if (not (equal 'group (type-of object)))
+            ""
             (progn
-              (setf value-p (parse-integer value-p))
-              (let ((opt-val (nth value-p filter-options)))
-                (if (string= opt-val "Любой")
-                    t
-                    (string= value-x opt-val)))))))))
+              (let ((vndr (getf parameters :vendor)))
+                (if (null vndr)
+                    ;; show group descr
+                    (let ((descr (seo-text object)))
+                      (if (null descr)
+                          ""
+                          (soy.catalog:seotext (list :text descr))))
+                    ;; show vendor descr
+                    (let ((descr (gethash (string-downcase vndr) (vendors-seo object))))
+                      (if (null descr)
+                          ""
+                          (soy.catalog:seotext (list :text descr))))))))))
 
-  (defun paginator-page-line (request-get-plist start stop current)
-    (loop :for i from start :to stop :collect
-       (let ((plist request-get-plist)
-             (is-current-page nil))
-         (setf (getf plist :page) (format nil "~a" i))
-         (setf is-current-page (= current i))
-         (format nil "<a href=\"?~a\">~:[~;<big><b>~]~a~:[~;</b></big>~]</a>"
-                 (make-get-str plist)
-                 is-current-page
-                 i
-                 is-current-page))))
 
-  (defun paginator (request-get-plist sequence &optional (pagesize 15))
-    (let ((page (getf request-get-plist :page))
-          (page-count (ceiling (length sequence) pagesize)))
-      (when (null page)
-        (setf page "1"))
-      (setf page (parse-integer page :junk-allowed t))
-      (unless (and (numberp page)
-                   (plusp page))
-        (setf page 1))
-      (if (> page page-count)
-          (setf page page-count))
-      (let* ((result (let ((tmp (ignore-errors (subseq sequence (* pagesize (- page 1))))))
-                       (when (> (length tmp) pagesize)
-                         (setf tmp (subseq tmp 0 pagesize)))
-                       tmp))
-             (start-page-line nil)
-             (cur-page-line nil)
-             (stop-page-line nil)
-             (start-number 1)
-             (stop-number page-count)
-             (page-line-string ""))
-        (if (> page 5)
-            (progn
-              (setf start-number (- page 2))
-              (setf start-page-line (paginator-page-line request-get-plist 1 2 0))))
-        (if (> (- page-count page) 5)
-            (progn
-              (setf stop-number (+ page 2))
-              (setf stop-page-line (paginator-page-line request-get-plist (- page-count 1) page-count 0))))
-        (setf cur-page-line (paginator-page-line request-get-plist start-number stop-number page))
-        (if (> page-count 1)
-            (setf page-line-string
-                  (format nil "~@[~{~a~}...~] ~{~a ~} ~@[...~{~a~}~]"
-                          start-page-line
-                          cur-page-line
-                          stop-page-line)))
-        (values result page-line-string))))
+(defmacro with-option (product optgroup-name option-name body)
+  `(mapcar #'(lambda (optgroup)
+               (if (string= (name optgroup) ,optgroup-name)
+                   (let ((options (options optgroup)))
+                     (mapcar #'(lambda (option)
+                                 (if (string= (name option) ,option-name)
+                                     ,body))
+                             options))))
+           (optgroups ,product)))
+
+
+(defmacro with-option1 (product optgroup-name option-name body)
+  `(mapcar #'(lambda (optgroup)
+               (when (string= (getf optgroup :name) ,optgroup-name)
+                 (let ((options (getf optgroup :options)))
+                   (mapcar #'(lambda (option)
+                               (if (string= (getf option :name) ,option-name)
+                                   ,body))
+                           options))))
+           (optgroups ,product)))
+
+(defmacro f-price ()
+  `(lambda (product request-plist filter-options)
+     (let ((value-f (getf request-plist :price-f))
+           (value-t (getf request-plist :price-t))
+           (value-x (siteprice product)))
+       (unless value-f
+         (setf value-f "0"))
+       (unless (servo.valid-string-p value-t)
+         (setf value-t "99999999"))
+       (setf value-f (arnesi:parse-float (format nil "~as" value-f)))
+       (setf value-t (arnesi:parse-float (format nil "~as" value-t)))
+       (<= value-f value-x value-t))))
+
+
+(defmacro with-range (key optgroup-name option-name)
+  `(lambda (product request-plist filter-options)
+     (let ((value-f (getf request-plist (intern (string-upcase (format nil "~a-f" (symbol-name ,key))) :keyword)))
+           (value-t (getf request-plist (intern (string-upcase (format nil "~a-t" (symbol-name ,key))) :keyword)))
+           (value-x 0))
+       (with-option1 product
+         ,optgroup-name ,option-name
+         (setf value-x (getf option :value)))
+       (when (null value-x)
+         (setf value-x "0"))
+       (when (null value-f)
+         (setf value-f "0"))
+       (when (or (null value-t)
+                 (string= value-t ""))
+         (setf value-t "99999999"))
+       (setf value-f (arnesi:parse-float (format nil "~as" value-f)))
+       (setf value-t (arnesi:parse-float (format nil "~as" value-t)))
+       (setf value-x (arnesi:parse-float (format nil "~as" value-x)))
+       (and (<= value-f value-x)
+            (>= value-t value-x)))))
+
+;;Фильтруем по наличию опции
+(defun filter-with-check-options (key-name option-group-name product request-plist filter-options)
+  (let ((number 0)
+        (result-flag t))
+    (mapcar #'(lambda (option-name)
+                (let ((value-p (getf request-plist
+                                     (intern (string-upcase
+                                              (format nil "~a-~a"
+                                                      key-name
+                                                      number))
+                                             :keyword))))
+                  (incf number)
+                  (when (equal value-p "1")
+                    (let ((value-x))
+                      (mapcar #'(lambda (optgroup)
+                                  (if (string= (getf optgroup :name) option-group-name)
+                                      (progn
+                                        (let ((options (getf optgroup :options)))
+                                          (mapcar #'(lambda (option)
+                                                      (if (string= (getf option :name) option-name)
+                                                          (setf value-x (getf option :value))))
+                                                  options)))))
+                              (optgroups product))
+                      (unless (string= value-x "Есть")
+                        (setf result-flag nil))))))
+            filter-options)
+    result-flag))
+
+;;фильтрация по значениям опции
+(defun filter-with-check-values (key-name option-group-name option-name product request-plist filter-options)
+  (let ((number 0)
+        (result-flag nil)
+        (request-flag t)
+        (value-x nil))
+    (with-option1 product
+      option-group-name option-name
+      (setf value-x (getf option :value)))
+    (mapcar #'(lambda (option-value)
+                (let ((value-p (getf request-plist
+                                     (intern (string-upcase
+                                              (format nil "~a-~a"
+                                                      key-name
+                                                      number))
+                                             :keyword))))
+                  (incf number)
+                  (when (equal value-p "1")
+                    (setf request-flag nil)
+                    (when (string= value-x option-value)
+                        (setf result-flag t)))))
+            filter-options)
+    (or result-flag
+        request-flag)))
+
+(defmacro with-check (key optgroup-name dummy-var)
+  `(lambda (product request-plist filter-options)
+     (let ((option-group-name ,optgroup-name)
+           (key-name (symbol-name ,key)))
+       (if (string= ,dummy-var "")
+           (filter-with-check-options key-name option-group-name product request-plist filter-options)
+           (filter-with-check-values key-name option-group-name ,dummy-var product request-plist filter-options)))))
+
+
+(defmacro with-radio (key optgroup-name option-name)
+  `(lambda (product request-plist filter-options)
+     (let ((value-p (getf request-plist (intern (string-upcase (format nil "~a" (symbol-name ,key))) :keyword)))
+           (value-x ""))
+       (with-option1 product
+         ,optgroup-name ,option-name
+         (setf value-x (getf option :value)))
+       (cond
+         ((null value-p)
+          t)
+         ((null value-x)
+          nil)
+         (t
+          (progn
+            (setf value-p (parse-integer value-p))
+            (let ((opt-val (nth value-p filter-options)))
+              (if (string= opt-val "Любой")
+                  t
+                  (string= value-x opt-val)))))))))
+
+(defun paginator-page-line (request-get-plist start stop current)
+  (loop :for i from start :to stop :collect
+     (let ((plist request-get-plist)
+           (is-current-page nil))
+       (setf (getf plist :page) (format nil "~a" i))
+       (setf is-current-page (= current i))
+       (format nil "<a href=\"?~a\">~:[~;<big><b>~]~a~:[~;</b></big>~]</a>"
+               (make-get-str plist)
+               is-current-page
+               i
+               is-current-page))))
+
+(defun paginator (request-get-plist sequence &optional (pagesize 15))
+  (let ((page (getf request-get-plist :page))
+        (page-count (ceiling (length sequence) pagesize)))
+    (when (null page)
+      (setf page "1"))
+    (setf page (parse-integer page :junk-allowed t))
+    (unless (and (numberp page)
+                 (plusp page))
+      (setf page 1))
+    (if (> page page-count)
+        (setf page page-count))
+    (let* ((result (let ((tmp (ignore-errors (subseq sequence (* pagesize (- page 1))))))
+                     (when (> (length tmp) pagesize)
+                       (setf tmp (subseq tmp 0 pagesize)))
+                     tmp))
+           (start-page-line nil)
+           (cur-page-line nil)
+           (stop-page-line nil)
+           (start-number 1)
+           (stop-number page-count)
+           (page-line-string ""))
+      (if (> page 5)
+          (progn
+            (setf start-number (- page 2))
+            (setf start-page-line (paginator-page-line request-get-plist 1 2 0))))
+      (if (> (- page-count page) 5)
+          (progn
+            (setf stop-number (+ page 2))
+            (setf stop-page-line (paginator-page-line request-get-plist (- page-count 1) page-count 0))))
+      (setf cur-page-line (paginator-page-line request-get-plist start-number stop-number page))
+      (if (> page-count 1)
+          (setf page-line-string
+                (format nil "~@[~{~a~}...~] ~{~a ~} ~@[...~{~a~}~]"
+                        start-page-line
+                        cur-page-line
+                        stop-page-line)))
+      (values result page-line-string))))
 
 
 (defun menu-sort (a b)
@@ -841,7 +839,7 @@
                    string))
    'string))
 
-(defun servo.is-valid-string (s &key (whitespace-check t)
+(defun servo.valid-string-p (s &key (whitespace-check t)
                               (unwanted-chars (list #\Space #\Tab #\Newline))
                               (del-method :replace-all))
   (and s (string/= s "") (if whitespace-check
@@ -869,3 +867,31 @@
     (if successful
         (format stream "~&~a Finish ~a~%" (time.get-full-human-time) function)
         (format stream "~&~a ~a finished with error~%" (time.get-full-human-time) function))))
+
+(defgeneric servo.iterate (func collection &key key)
+  (:documentation "Iterate over collection using function func"))
+
+(defmethod servo.iterate (func (collection list) &key key)
+  (if key
+      (mapcar func (mapcar key collection))
+      (mapcar func collection)))
+
+(defmethod servo.iterate (func (collection hash-table) &key key)
+  (maphash (if key
+               #'(lambda (k v)
+                   (declare (ignore k))
+                   (funcall func (funcall key v)))
+               ;; else
+               #'(lambda (k v)
+                   (declare (ignore k))
+                   (funcall func v)))
+           collection))
+
+(defgeneric servo.collection-count (collection)
+  (:documentation "Returns number of objects in collection"))
+
+(defmethod servo.collection-count ((collection list))
+  (length collection))
+
+(defmethod servo.collection-count ((collection hash-table))
+  (hash-table-count collection))

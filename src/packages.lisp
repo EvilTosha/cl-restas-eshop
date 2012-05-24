@@ -26,6 +26,7 @@
            :main-page.restore
            :cartrige.restore))
 
+(in-package #:eshop)
 ;;; registering classes for proper compilation of methods
 ;; articles.lisp
 (defclass article () ())
@@ -39,6 +40,7 @@
 (defclass group () ())
 (defclass product () ())
 (defclass filter () ())
+(defclass vendor () ())
 (defclass group-filter () ())
 ;; oneclickcart.lisp
 (defclass oneclickcart.answer () ())
