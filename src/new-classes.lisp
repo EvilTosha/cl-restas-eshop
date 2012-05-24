@@ -136,7 +136,7 @@
                    (string/= (key product) (key child)))
                (products group))
     (pushnew product (products group)))
-  ;;check all groups for nil in yml-id
+  ;;TODO: check all groups for nil in yml-id
   )
 
 
