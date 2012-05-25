@@ -14,8 +14,7 @@
                (let ((id "нет") (name "нет") (name-real "нет") (name-yml "нет")
                      (desc "нет") (img "нет") (options "нет") (active "нет")
                      (group-name "нет") (parent-group-name "нет") (secret "нет"))
-                 (when (equal (type-of v)
-                              'product)
+                 (when (typep v 'product)
                    (setf id (articul v))
                    (setf name (stripper (name-provider v)))
                    (setf name-real (stripper (name-seo v)))
@@ -32,17 +31,17 @@
                    (setf active (if (active v)
                                     "да"
                                     "нет"))
-                   (setf group-name (if (not (null (new-classes.parent v)))
-                                        (stripper (name (new-classes.parent v)))))
-                   (setf parent-group-name (if (and (not (null (new-classes.parent v)))
-                                                    (not (null (new-classes.parent (new-classes.parent v)))))
-                                               (stripper (name (new-classes.parent (new-classes.parent v))))))
+                   (setf group-name (when (new-classes.parent v)
+                                      (stripper (name (new-classes.parent v)))))
+                   (setf parent-group-name (when (and (new-classes.parent v)
+                                                      (new-classes.parent (new-classes.parent v)))
+                                             (stripper (name (new-classes.parent (new-classes.parent v))))))
                    (setf secret "Нет")
                    (with-option1 v "Secret" "Checked"
                                  (setf secret (getf option :value)))
                    (format stream "~a;~a;~a;\"~a\";\"~a\";\"~a\";~a;~a;~a;~a;~a;\"~a\";\"~a\";~a;~a;~a;~a~%"
                            id (price v) (siteprice v) name name-real
-                           name-yml (yml.is-yml-show v) desc img options active group-name
+                           name-yml (yml.yml-show-p v) desc img options active group-name
                            parent-group-name secret
                            (gethash (articul v) *xls.product-table*)
                            (vendor v)
@@ -75,15 +74,14 @@
           "активных")
   (maphash #'(lambda (k v)
                (declare (ignore k))
-               (when (equal (type-of v)
-                            'group)
+               (when (typep v 'group)
                  (format stream "\"~a\";http://www.320-8080.ru/~a;~a;~a;~a;~a;~%"
                          (stripper (name v))
                          (key v)
                          (if (active v)
                              "yes"
                              "no")
-                         (if (and (not (null (seo-text v)))
+                         (if (and (seo-text v)
                                   (not (string= "" (stripper (seo-text v)))))
                              "yes"
                              "no")
@@ -99,8 +97,7 @@
           "кол-во товаров")
   (maphash #'(lambda (k v)
                (declare (ignore k))
-               (when (equal (type-of v)
-                            'group)
+               (when (typep v 'group)
                  (format stream "\"~a\";http://www.320-8080.ru/~a;~a;~a;~%"
                          (stripper (name v))
                          (key v)
@@ -124,16 +121,15 @@
             "seo-text")
     (maphash #'(lambda (k v)
                  (declare (ignore k))
-                 (when (equal (type-of v)
-                              'product)
+                 (when (typep v 'product)
                    (setf vendor-name "Нет")
                    (setf vendor-name (vendor v))
-                   (setf desc (if (and (not (null (seo-text v)))
+                   (setf desc (if (and (seo-text v)
                                        (not (string= "" (stripper (seo-text v)))))
                                   "yes"
                                   "no"))
                    (format stream "\"~a\";\"~a\";\"~a\";http://www.320-8080.ru/~a;~a;~a;~%"
-                           (if (not (null (new-classes.parent v)))
+                           (if (new-classes.parent v)
                                (stripper (name (new-classes.parent v)))
                                "Нет категории")
                            (stripper vendor-name)
@@ -157,10 +153,8 @@
           "активных")
   (maphash #'(lambda (k v)
                (declare (ignore k))
-               (when (and (equal (type-of v)
-                                 'group)
+               (when (and (typep v 'group)
                           (null (groups v)))
-
                  (maphash #'(lambda (vendor num)
                               (declare (ignore num))
                               (let ((products
@@ -174,8 +168,7 @@
                                         (hunchentoot:url-encode (stripper vendor))
                                         "yes"
                                         (let ((desc (gethash (string-downcase vendor) (vendors-seo v))))
-                                          (if (and (not (null desc))
-                                                   (not (string= "" desc)))
+                                          (if (servo.valid-string-p desc)
                                               "yes"
                                               "no"))
                                         (length products)
@@ -200,8 +193,7 @@
           "Цена 3208080")
   (maphash #'(lambda(k v)
                (declare (ignore k))
-               (when (equal (type-of v)
-                            'product)
+               (when (typep v 'product)
                  (if (< (price v)
                         (siteprice v))
                      (format t "~&~a;\"~a\";~a;~a;~a;"
@@ -217,7 +209,7 @@
 (defun post-proccess-gateway ()
   (mapcar #'(lambda (v)
               (let ((p (gethash v (storage *global-storage*))))
-                (when (not (null p))
+                (when p
                   (setf (preorder p) t)
                   (setf (active p) t)
                   (setf (gethash v (storage *global-storage*)) p)
@@ -234,9 +226,9 @@
   (let ((rs))
     (maphash #'(lambda (k v)
                  (declare (ignore k))
-                 (when (and (equal (type-of v) 'product)
+                 (when (and (typep v 'product)
                             (active v)
-                            (= (siteprice v) 0))
+                            (zerop (siteprice v)))
                    (push v rs)
                    (setf (active v) nil)))
              (storage *global-storage*))
@@ -249,8 +241,7 @@
         0
         (aif (delivery-price p)
              it
-             (if (and (not (null g))
-                      (delivery-price g))
+             (if (and g (delivery-price g))
                  (delivery-price g)
                  300)))))
 
@@ -281,7 +272,7 @@
   (let ((rs))
     (maphash #'(lambda (k v)
                  (declare (ignore k))
-                 (when (equal (type-of v) 'product)
+                 (when (typep v 'product)
                    (push v rs)))
              (storage *global-storage*))
     rs))
@@ -492,12 +483,8 @@
               (if (null (catalog-keyoptions gr))
                   (format stream "~&~a; нет;" (name gr))
                   (mapcar #'(lambda (alias)
-                              (let ((alias-temp (remove-if #'null
-                                                           (mapcar #'(lambda (v)
-                                                                       (if (not (equal (type-of v)
-                                                                                       'keyword))
-                                                                           (stripper v)))
-                                                                   alias))))
+                              (let ((alias-temp (mapcar #'stripper
+                                                        (remove-if #'keywordp alias))))
                                 (format stream "~&\"~a\";~a;~{\" ~a \";~}"
                                         (stripper (name gr))
                                         (if alias-temp "есть" "нет")
@@ -511,12 +498,8 @@
               (if (null (keyoptions gr))
                   (format stream "~&~a; нет;" (name gr))
                   (mapcar #'(lambda (alias)
-                              (let ((alias-temp (remove-if #'null
-                                                           (mapcar #'(lambda (v)
-                                                                       (if (not (equal (type-of v)
-                                                                                       'keyword))
-                                                                           (stripper v)))
-                                                                   alias))))
+                              (let ((alias-temp (mapcar #'stripper
+                                                        (remove-if #'keywordp alias))))
                                 (format stream "~&\"~a\";~a;~{\" ~a \";~}"
                                         (stripper (name gr))
                                         (if alias-temp "есть" "нет")

@@ -63,8 +63,8 @@
          (fltr (gethash filter (storage *global-storage*))))
     (and grp
          fltr
-         (equal (type-of grp) 'group)
-         (equal (type-of fltr) 'filter)
+         (typep grp 'group)
+         (typep fltr 'filter)
          (equal (key (new-classes.parent fltr)) key))))
 
 (defun route-filter (filter)
@@ -82,8 +82,7 @@
 (defun test-route-storage-object ()
   (let ((obj (gethash (cadr (request-list)) (storage *global-storage*))))
     (when obj
-      (if (and (equal (type-of obj)
-                      'group)
+      (if (and (typep obj 'group)
                (getf (request-get-plist) :vendor))
           (let ((vendor (getf (request-get-plist) :vendor)))
             (some #'(lambda (p)

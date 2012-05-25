@@ -45,7 +45,7 @@
 (defmethod rightblocks ((object group) (parameters list))
   (list (soy.catalog:rightblock1)
         (soy.catalog:rightblock2)
-        (if (not (equal 'group (type-of object)))
+        (if (not (typep object 'group))
             ""
             (progn
               (let ((vndr (getf parameters :vendor)))
@@ -718,7 +718,7 @@
   (intern (string-upcase (format nil "~a" item)) :keyword))
 
 (defun servo.alist-to-plist (alist)
-  (if (not (equal (type-of alist) 'cons))
+  (if (not (consp alist))
       alist
       ;;else
       (loop
@@ -737,7 +737,7 @@
              (setf (getf result key)
                    (if (getf result key)
                        (append
-                        (if (eq (type-of (getf result key)) 'cons)
+                        (if (consp (getf result key))
                             (getf result key)
                             (list (getf result key)))
                         (list value))
@@ -877,15 +877,11 @@
       (mapcar func collection)))
 
 (defmethod servo.iterate (func (collection hash-table) &key key)
-  (maphash (if key
-               #'(lambda (k v)
-                   (declare (ignore k))
-                   (funcall func (funcall key v)))
-               ;; else
-               #'(lambda (k v)
-                   (declare (ignore k))
-                   (funcall func v)))
-           collection))
+  (let ((key (sequence:canonize-key key)))
+    (maphash #'(lambda (k v)
+               (declare (ignore k))
+               (funcall func (funcall key v)))
+             collection)))
 
 (defgeneric servo.collection-count (collection)
   (:documentation "Returns number of objects in collection"))

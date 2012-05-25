@@ -92,19 +92,19 @@
 
 
 (defun storage.get-products-list ()
-  (storage.round-collect-storage #'(lambda (obj) (equal (type-of obj) 'product))))
+  (storage.round-collect-storage #'(lambda (obj) (typep obj 'product))))
 
 (defun storage.get-active-products-list ()
-  (storage.round-collect-storage #'(lambda (obj) (and (equal (type-of obj) 'product) (active obj)))))
+  (storage.round-collect-storage #'(lambda (obj) (and (typep obj 'product) (active obj)))))
 
 (defun storage.get-groups-list ()
-  (storage.round-collect-storage #'(lambda (obj) (equal (type-of obj) 'group))))
+  (storage.round-collect-storage #'(lambda (obj) (typep obj 'group))))
 
 (defun storage.get-filters-list ()
-  (storage.round-collect-storage #'(lambda (obj) (equal (type-of obj) 'filter))))
+  (storage.round-collect-storage #'(lambda (obj) (typep obj 'filter))))
 
 (defun storage.get-actual-groups-list ()
-  (storage.round-collect-storage #'(lambda (obj) (and (equal (type-of obj) 'group) (not (empty obj)) (active obj)))))
+  (storage.round-collect-storage #'(lambda (obj) (and (typep obj 'group) (not (empty obj)) (active obj)))))
 
 
 
@@ -112,7 +112,7 @@
                                                             (when (and (order a) (order b))
                                                               (< (order a) (order b))))))
   (storage.round-collect-storage #'(lambda (obj)
-                                     (and (equal (type-of obj) 'group)
+                                     (and (typep obj 'group)
                                           (null (parents obj))))
                                  compare))
 
@@ -153,17 +153,17 @@
   (when (not key-supplied-p)
     (setf key (key object)))
   (setf (gethash key (storage *global-storage*)) object)
-  (when (equal (type-of object) 'product)
+  (when (typep object 'product)
     (setf (products *global-storage*) (storage.edit-in-list (products *global-storage*) object key))
     (when (active object)
       (setf (active-products *global-storage*) (storage.edit-in-list (active-products *global-storage*) object key))))
-  (when (equal (type-of object) 'group)
+  (when (typep object 'group)
     (setf (groups *global-storage*) (storage.edit-in-list (groups *global-storage*) object key))
     (when (and (active object) (not (empty object)))
       (setf (actual-groups *global-storage*) (storage.edit-in-list (actual-groups *global-storage*) object key)))
     (when (null (new-classes.parent object))
       (setf (root-groups *global-storage*) (storage.edit-in-list (root-groups *global-storage*) object key))))
-  (when (equal (type-of object) 'filter)
+  (when (typep object 'filter)
     (setf (filters *global-storage*) (storage.edit-in-list (filters *global-storage*) object key))))
 
 

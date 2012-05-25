@@ -446,7 +446,7 @@
                                                           " Акция: только в апреле доставим со скидкой 70%.")))
                              :others (soy.product:others
                                       (list :others (mapcar #'(lambda (x)
-                                                                (if (equal 'product (type-of x))
+                                                                (if (typep x 'product)
                                                                     (render.view x)
                                                                     (list :aricul "0"
                                                                           :name ""

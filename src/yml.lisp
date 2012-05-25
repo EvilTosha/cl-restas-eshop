@@ -14,33 +14,28 @@
   (let ((current-id 1))
     (clrhash *yml-group-ids*)
     (maphash #'(lambda(k g)
-                 (when (equal (type-of g) 'group)
+                 (when (typep g 'group)
                    ;; Если группа имеет дочерние группы ИЛИ yml-show == true
-                   (when (or
-                          (not (null (groups g)))
-                          (ymlshow g))
+                   (when (or (groups g) (ymlshow g))
                      ;; Кладем ее в *yml-group-ids* и увеличиваем current-id
                      (setf (gethash k *yml-group-ids*) current-id )
                      (incf current-id))))
              (storage *global-storage*))
     *yml-group-ids*))
 
-(defun yml.is-yml-show (product)
-  (and (equal 'product (type-of product))
-       (not (null (new-classes.parent product)))
+(defun yml.yml-show-p (product)
+  (and (typep product 'product)
+       (new-classes.parent product)
        (ymlshow (new-classes.parent product))
        (active product)
-       (not (null (price product)))
-       (> (price product) 0)
+       (price product)
+       (plusp (price product))
        ;;для селективного исключения товаров по значению специальной опции
        (let ((yml-show))
          (with-option1 product "Secret" "YML"
                        (setf yml-show (getf option :value)))
-         (if (and (not (null yml-show))
-                  (string= "No"
-                           (stripper yml-show)))
-             nil
-             t))))
+         (not (and yml-show
+                   (string= "No" (stripper yml-show)))))))
 
 (defun yml.get-product-delivery-price (product)
   (let ((parent (new-classes.parent product)))
@@ -158,11 +153,11 @@
                         :being :the hash-key
                         :using (hash-value id)
                         :in (yml-groups)
-                        :when (equal 'group (type-of (gethash key (storage *global-storage*))))
+                        :when (typep (gethash key (storage *global-storage*)) 'group)
                         :collect (list :id (yml-id (gethash key (storage *global-storage*)))
                                        :name (name (gethash key (storage *global-storage*)))
                                        :parent (if (null (new-classes.parent (gethash key (storage *global-storage*))))
-                                                   0 ;; если это вершина дерева
+                                                   0 ; если это вершина дерева
                                                    (let* ((parent (new-classes.parent (gethash key (storage *global-storage*))))
                                                           (parent-key (key parent))
                                                           (num-key (yml-id parent)))
@@ -174,41 +169,26 @@
                                         :in (storage *global-storage*)
                                         ;;продукт должен находиться в группе маркированной как ymlshow
                                         ;;быть активным и иметь не нулевую цену
-                                        :when (and (equal 'product (type-of product))
-                                                   (not (null (new-classes.parent product)))
-                                                   (ymlshow (new-classes.parent product))
-                                                   (active product)
-                                                   (not (null (price product)))
-                                                   (> (price product) 0)
-                                                   ;;для селективного исключения товаров по значению специальной опции
-                                                   (let ((yml-show))
-                                                     (with-option1 product "Secret" "YML"
-                                                                   (setf yml-show (getf option :value)))
-                                                     (if (and yml-show
-                                                              (string= "No"
-                                                                       (stripper yml-show)))
-                                                         nil
-                                                         t)))
+                                        :when (yml.yml-show-p product)
                                         :collect (soy.yml:offer (list :articul (articul product)
                                                                       :available (servo.available-for-order-p product)
                                                                       :deliveryprice (yml.get-product-delivery-price1 product)
                                                                       :price (siteprice product)
                                                                       :category (yml-id (new-classes.parent product))
-                                                                      :picture  (let ((pics (get-pics
-                                                                                             (articul product))))
-                                                                                  (if (null pics)
-                                                                                      nil
-                                                                                      (encode-uri (car pics))))
-                                                                      :name   (let ((yml-name))
-                                                                                (with-option1 product "Secret" "Yandex"
-                                                                                              (setf yml-name (getf option :value)))
-                                                                                (if (or (null yml-name)
-                                                                                        (string= ""
-                                                                                                 (stripper yml-name))
-                                                                                        (string= "No"
-                                                                                                 (stripper yml-name)))
-                                                                                    (name-seo product)
-                                                                                    yml-name))
+                                                                      :picture (let ((pics (get-pics
+                                                                                            (articul product))))
+                                                                                 (when pics
+                                                                                   (encode-uri (car pics))))
+                                                                      :name (let ((yml-name))
+                                                                              (with-option1 product "Secret" "Yandex"
+                                                                                            (setf yml-name (getf option :value)))
+                                                                              (if (or (null yml-name)
+                                                                                      (string= ""
+                                                                                               (stripper yml-name))
+                                                                                      (string= "No"
+                                                                                               (stripper yml-name)))
+                                                                                  (name-seo product)
+                                                                                  yml-name))
                                                                       :description nil)))))))
 
 
@@ -224,7 +204,7 @@
                         :being :the hash-key
                         :using (hash-value id)
                         :in (yml-groups)
-                        :when (equal 'group (type-of (gethash key (storage *global-storage*))))
+                        :when (typep (gethash key (storage *global-storage*)) 'group)
                         :collect (list :id id
                                        :name (name (gethash key (storage *global-storage*)))
                                        :parent (if (null (new-classes.parent (gethash key (storage *global-storage*))))
@@ -240,71 +220,34 @@
                                         :in (storage *global-storage*)
                                         ;;продукт должен находиться в группе маркированной как ymlshow
                                         ;;быть активным и иметь не нулевую цену
-                                        :when (and (equal 'product (type-of product))
-                                                   (not (null (new-classes.parent product)))
-                                                   (ymlshow (new-classes.parent product))
-                                                   (active product)
-                                                   (not (null (price product)))
-                                                   (> (price product) 0)
-                                                   ;;для селективного исключения товаров по значению специальной опции
-                                                   (let ((yml-show))
-                                                     (with-option1 product "Secret" "YML"
-                                                                   (setf yml-show (getf option :value)))
-                                                     (if (and yml-show
-                                                              (string= "No"
-                                                                       (stripper yml-show)))
-                                                         nil
-                                                         t)))
+                                        :when (yml.yml-show-p product)
                                         :collect (soy.yml:offer (list :articul (articul product)
                                                                       :price (siteprice product)
                                                                       :category (gethash
                                                                                  (key (new-classes.parent product))
                                                                                  *yml-group-ids*)
-                                                                      :picture  (let ((pics (get-pics
-                                                                                             (articul product))))
-                                                                                  (if (null pics)
-                                                                                      nil
-                                                                                      (encode-uri (car pics))))
-                                                                      :name   (let ((yml-name)
-                                                                                    (parser-name))
-                                                                                (with-option1 product "Secret" "Yandex"
-                                                                                              (setf yml-name (getf option :value)))
-                                                                                (with-option1 product "Secret" "Parser"
-                                                                                              (setf parser-name (getf option :value)))
-                                                                                (if (or (null parser-name)
-                                                                                        (string= "" parser-name))
-                                                                                    (if (or (null yml-name)
-                                                                                            (string= ""
-                                                                                                     (stripper yml-name))
-                                                                                            (string= "No"
-                                                                                                     (stripper yml-name)))
-                                                                                        (name product)
-                                                                                        yml-name)
-                                                                                    parser-name))
+                                                                      :picture (let ((pics (get-pics
+                                                                                            (articul product))))
+                                                                                 (when pics
+                                                                                   (encode-uri (car pics))))
+                                                                      :name (let ((yml-name)
+                                                                                  (parser-name))
+                                                                              (with-option1 product "Secret" "Yandex"
+                                                                                            (setf yml-name (getf option :value)))
+                                                                              (with-option1 product "Secret" "Parser"
+                                                                                            (setf parser-name (getf option :value)))
+                                                                              (if (or (null parser-name)
+                                                                                      (string= "" parser-name))
+                                                                                  (if (or (null yml-name)
+                                                                                          (string= ""
+                                                                                                   (stripper yml-name))
+                                                                                          (string= "No"
+                                                                                                   (stripper yml-name)))
+                                                                                      (name product)
+                                                                                      yml-name)
+                                                                                  parser-name))
                                                                       :description nil)))))))
 
-
-(defun yml-name-test (product)
-  (let ((yml-name))
-    (with-option1 product "Secret" "Yandex"
-                  (setf yml-name (getf option :value)))
-    (if (or (null yml-name)
-            (string= ""
-                     (stripper yml-name))
-            (string= "No"
-                     (stripper yml-name)))
-        (name product)
-        yml-name)))
-
-(defun yml-show-test (product)
-  (let ((yml-show))
-    (with-option1 product "Secret" "UML"
-                  (setf yml-show (getf option :value)))
-    (if (and (not (null yml-show))
-             (string= "No"
-                      (stripper yml-show)))
-        nil
-        t)))
 
 (defun make-yml-categoryes()
   (loop
@@ -312,7 +255,7 @@
      :being :the hash-key
      :using (hash-value id)
      :in (yml-groups)
-     :when (equal 'group (type-of (gethash key (storage *global-storage*))))
+     :when (typep (gethash key (storage *global-storage*)) 'group)
      :collect (list :id id
                     :name (name (gethash key (storage *global-storage*)))
                     :parent (if (null (new-classes.parent (gethash key (storage *global-storage*))))
@@ -329,21 +272,7 @@
      :in (storage *global-storage*)
      ;;продукт должен находиться в группе маркированной как ymlshow
      ;;быть активным и иметь не нулевую цену
-     :when (and (equal 'product (type-of product))
-                (not (null (new-classes.parent product)))
-                (ymlshow (new-classes.parent product))
-                (active product)
-                (not (null (price product)))
-                (> (price product) 0)
-                ;;для селективного исключения товаров по значению специальной опции
-                (let ((yml-show))
-                  (with-option1 product "Secret" "UML"
-                                (setf yml-show (getf option :value)))
-                  (if (and (not (null yml-show))
-                           (string= "No"
-                                    (stripper yml-show)))
-                      nil
-                      t)))
+     :when (yml.yml-show-p product)
      :collect
      (soy.yml:offer (list :articul (articul product)
                           :deliveryprice (yml.get-product-delivery-price1 product)

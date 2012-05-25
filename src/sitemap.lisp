@@ -74,7 +74,7 @@
                     :priority "0.5"))
           (let ((statics))
             (maphash #'(lambda (k v)
-                         (if (equal (type-of v) 'article)
+                         (if (typep v 'article)
                              (push k statics)))
                      (storage *global-storage*))
             statics)))

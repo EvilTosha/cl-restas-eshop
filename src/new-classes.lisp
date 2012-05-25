@@ -153,7 +153,7 @@ Usually it transform string keys to pointers to other objects, such as parents o
                     (when (not (null parent-key))
                       (let ((parent (gethash parent-key (storage *global-storage*))))
                         ;;Если родитель продукта — группа, связать группу с этим продуктом
-                        (when (equal 'group (type-of parent))
+                        (when (typep parent 'group)
                           (push item (products parent))
                           parent))))
                 (parents item)))
@@ -178,7 +178,7 @@ Usually it transform string keys to pointers to other objects, such as parents o
   ;;adding newlines instead of #Newline
   (when (seo-text item)
     (setf (seo-text item) (object-fields.string-add-newlines (seo-text item))))
-  (when (equal (type-of (vendors-seo item)) 'cons)
+  (when (consp (vendors-seo item))
     (setf (vendors-seo item) (mapcar #'object-fields.string-add-newlines
                                      (copy-list (vendors-seo item))))
     ;;convert vendors key to downcase
@@ -197,20 +197,20 @@ Usually it transform string keys to pointers to other objects, such as parents o
   (setf (upsale-links item)
         (mapcar #'(lambda (group-key)
                     ;;в случае если на месте ключей уже лежат группы
-                    (if (equal (type-of group-key) 'group)
+                    (if (typep group-key 'group)
                         group-key
-                        (if group-key
-                            (gethash group-key (storage *global-storage*)))))
+                        (when group-key
+                          (gethash group-key (storage *global-storage*)))))
                 (upsale-links item)))
   ;; после десериализации в parent лежит список key родительских групп
   (let ((parents (copy-list (parents item))))
     (setf (parents item)
           (mapcar #'(lambda (parent-key)
                       ;;в случае если на месте ключей уже лежат группы
-                      (if (equal (type-of parent-key) 'group)
+                      (if (typep parent-key 'group)
                           parent-key
-                          (if parent-key
-                              (gethash parent-key (storage *global-storage*)))))
+                          (when parent-key
+                            (gethash parent-key (storage *global-storage*)))))
                   parents))
     ;; удаляем nil для битых ключей
     ;; TODO обрабатывать исключение если ключи не были найдены
@@ -250,7 +250,7 @@ Usually it transform string keys to pointers to other objects, such as parents o
   ;;TODO эта проверка нужна для постобработки групп дессериализованных их старых быкапов, когда фулфильтры хранились прямо в fullfilter
   (when (and (null (raw-fullfilter item))
              (fullfilter item)
-             (not (equal (type-of (fullfilter item)) 'group-filter)))
+             (not (typep (fullfilter item) 'group-filter)))
     (setf (raw-fullfilter item) (concatenate 'string "" (fullfilter item)))
     (setf (fullfilter item) nil))
   (when (and (raw-fullfilter item)
@@ -267,10 +267,10 @@ Usually it transform string keys to pointers to other objects, such as parents o
   ;; после десериализации в parent лежит список key родительских групп
   (setf (parents item)
         (mapcar #'(lambda (parent-key)
-                    (when (not (null parent-key))
+                    (when parent-key
                       (let ((parent (gethash parent-key (storage *global-storage*))))
                         ;;Если родитель — группа, связать группу с фильтром
-                        (when (equal 'group (type-of parent))
+                        (when (typep parent 'group)
                           (push item (filters parent))
                           parent))))
                 (parents item))))
@@ -320,9 +320,9 @@ Usually it transform string keys to pointers to other objects, such as parents o
 
 (defun new-classes.breadcrumbs (in &optional out)
   "Processing parents until nil, creating breadcrumbs"
-  (if (not (null in))
+  (if in
       (progn
-        (if (equal (type-of in) 'product)
+        (if (typep in 'product)
             (push (list :key (articul in) :val (name-seo in)) out)
             (push (list :key (key in) :val (name in)) out))
         (setf in (new-classes.parent in))

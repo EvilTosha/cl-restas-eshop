@@ -102,7 +102,6 @@
 (defun time.decode-date-time (uni-time)
   (multiple-value-bind (second minute hour date month year)
       (decode-universal-time uni-time)
-
     (format nil
             "~a:~a:~a ~a.~a.~a"
             hour minute second date month year)))
@@ -196,3 +195,10 @@
   (- 31 (multiple-value-bind (second minute hour date month year) (time.get-decode-timestamp)
           (declare (ignore second minute hour month year))
           date)))
+
+(defun time.msecs-to-hms (msecs)
+  (multiple-value-bind (hours msecs) (floor msecs 3600000)
+    (multiple-value-bind (minutes msecs) (floor msecs 60000)
+      (multiple-value-bind (secs msecs) (floor msecs 1000)
+        (format nil "~[~:;~:*~D hours, ~]~[~:;~:*~D minutes, ~]~[~:;~:*~D.~D seconds~]"
+                hours minutes secs msecs)))))

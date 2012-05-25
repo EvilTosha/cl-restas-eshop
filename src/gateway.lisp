@@ -87,10 +87,10 @@
                                  price-old price))
           (if *serialize-check-flag*
               (progn
-                (setf (delta-price product) (if (= 0 siteprice)
+                (setf (delta-price product) (if (zerop siteprice)
                                                 0
                                                 (- price siteprice)))
-                (setf (siteprice product) (if (= 0 siteprice)
+                (setf (siteprice product) (if (zerop siteprice)
                                               price
                                               siteprice))
                 (mapcar #'(lambda (email)
@@ -104,12 +104,11 @@
                        it
                        (make-instance 'product :articul articul)))
          (price (ceiling (arnesi:parse-float price1))))
-    (when (and (equal (type-of product) 'product)
+    (when (and (typep product 'product)
                (gateway.check-price product price siteprice))
       (setf (key product)             (format nil "~a" articul)
             (articul product)         articul
-            (name-provider product)            (if (and (not (null name))
-                                                        (not (equal "" name)))
+            (name-provider product)            (if (servo.valid-string-p name)
                                                    name
                                                    (name-provider product))
             (name-seo product)        (if (servo.valid-string-p (name-seo product))
@@ -117,10 +116,10 @@
                                           (if (servo.valid-string-p realname)
                                               realname
                                               name))
-            (delta-price product)     (if (= 0 siteprice)
+            (delta-price product)     (if (zerop siteprice)
                                           0
                                           (- price siteprice))
-            (siteprice product)       (if (= 0 siteprice)
+            (siteprice product)       (if (zerop siteprice)
                                           price
                                           siteprice)
             (bonuscount product)      bonuscount
@@ -159,7 +158,7 @@
          (count-total (ceiling (arnesi:parse-float raw-count-total)))
          (count-transit (ceiling (arnesi:parse-float raw-count-transit)))
          (bonuscount (ceiling (arnesi:parse-float raw-bonuscount))))
-    (when (and (equal (type-of product) 'product))
+    (when (typep product 'product)
       ;; ключ строка
       (setf (key product) (format nil "~a" articul))
       ;; артикул число

@@ -68,19 +68,18 @@
     (pathname (concatenate 'string *path-to-dropbox* "/htimgs/resources/"
                            (subseq full-uri (search "/ux/" full-uri) (search "?" full-uri))))))
 
-;;шаблоны
 (defun admin-compile-templates ()
   (servo.compile-soy "admin.soy"
                      "class_forms.soy"
                      "admin-table.soy"))
 
-;;обновление главной страницы
 (defun admin-update ()
+  "Updates templates"
   (admin-compile-templates))
 
 
 (defun admin.test-get-post-parse ()
-  "parsing get & post parameters for testing"
+  "Parsing get & post parameters for testing"
   (soy.admin:main
    (list :content
          (let* ((get-params (servo.alist-to-plist (hunchentoot:get-parameters hunchentoot:*request*)))
@@ -104,7 +103,7 @@
       (setf post-data (admin.post-data-preprocessing (servo.plist-to-unique post-data)))
       (new-classes.edit-fields item post-data)
       ;; need to fix
-      (when (and (equal (type-of item) 'group) (getf post-data :fullfilter))
+      (when (and (typep item 'group) (getf post-data :fullfilter))
         (setf (fullfilter item) (getf post-data :fullfilter)))
       (object-fields.product-groups-fix item)
       (setf item-fields (new-classes.make-fields item)))
@@ -149,7 +148,7 @@
             ;;else (post-data is nil)
             (let ((empty-item (new-classes.get-instance type)))
               (setf (key empty-item) key)
-              (if (equal (type-of empty-item) 'product)
+              (if (typep empty-item 'product)
                   (setf (articul empty-item) (parse-integer key)))
               (soy.class_forms:formwindow
                (list :key key
@@ -225,8 +224,6 @@
                (let ((name (format nil "reports/write-groups-active-product-num-~a.csv" (time.encode.backup-filename))))
                  (create-report name #'write-groups-active-product-num)
                  "DO REPORT")))
-            ((string= "compile" action)
-             "DO COMPILE")
             ((string= "articles-restore" action)
              (articles.restore)
              "RESTORE ARTICLES")
@@ -255,10 +252,10 @@
   (let ((post-data new-post-data))
     (when post-data
       (setf post-data (servo.plist-to-unique post-data))
-      (let ((products (if (equal (type-of (getf post-data :products)) 'cons)
+      (let ((products (if (consp (getf post-data :products))
                           (getf post-data :products)
                           (list (getf post-data :products))))
-            (groups (if (equal (type-of (getf post-data :groups)) 'cons)
+            (groups (if (consp (getf post-data :groups))
                         (getf post-data :groups)
                         (list (getf post-data :groups)))))
         (mapcar #'(lambda (product)

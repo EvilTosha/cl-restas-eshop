@@ -1,3 +1,5 @@
+(defparameter *start-time* (get-universal-time))
+
 ;; загрузка модулей и файлов
 (defparameter *path-to-libs* (sb-unix::posix-getenv "LIBS_PATH"))
 (defparameter *path-to-eshop* (sb-unix::posix-getenv "ESHOP_PATH"))
@@ -70,4 +72,4 @@
     (eshop::report.create-marketing-filters)
     (eshop::report.set-salefilter)))
 
-(print "ESHOP load finished")
+(print (format nil "ESHOP load finished. Time : ~a" (eshop::time.msecs-to-hms (get-internal-real-time))))
