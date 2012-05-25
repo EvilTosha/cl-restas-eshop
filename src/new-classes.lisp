@@ -122,12 +122,12 @@ Usually it transform string keys to pointers to other objects, such as parents o
                   (optgroups item)))
     ;;преобразуем значение :options в plist (2 уровень)
     (setf optgroups (mapcar #'(lambda (optgroup)
-																(let ((optgroup-plist
-																			 (mapcar #'(lambda (option)
-																									 (servo.alist-to-plist option))
-																							 (getf optgroup :options))))
-																	(list :name (getf optgroup :name) :options optgroup-plist)))
-														optgroups))
+                                (let ((optgroup-plist
+                                       (mapcar #'(lambda (option)
+                                                   (servo.alist-to-plist option))
+                                               (getf optgroup :options))))
+                                  (list :name (getf optgroup :name) :options optgroup-plist)))
+                            optgroups))
     optgroups))
 
 
@@ -193,15 +193,15 @@ Usually it transform string keys to pointers to other objects, such as parents o
     ;;convert vendors-seo from list to hashtable
     (setf (vendors-seo item) (servo.list-to-hashtasble
                               (copy-list (vendors-seo item)))))
-	;; upsale
-	(setf (upsale-links item)
-				(mapcar #'(lambda (group-key)
-										;;в случае если на месте ключей уже лежат группы
-										(if (equal (type-of group-key) 'group)
-												group-key
+  ;; upsale
+  (setf (upsale-links item)
+        (mapcar #'(lambda (group-key)
+                    ;;в случае если на месте ключей уже лежат группы
+                    (if (equal (type-of group-key) 'group)
+                        group-key
                         (if group-key
                             (gethash group-key (storage *global-storage*)))))
-								(upsale-links item)))
+                (upsale-links item)))
   ;; после десериализации в parent лежит список key родительских групп
   (let ((parents (copy-list (parents item))))
     (setf (parents item)
@@ -242,11 +242,11 @@ Usually it transform string keys to pointers to other objects, such as parents o
              (not (atom (car keys)))
              (not (atom (caar keys))))
         (setf (catalog-keyoptions item) (mapcar #'(lambda (item)
-																										(list :optgroup (cdr (assoc :optgroup item))
-																													:optname (cdr (assoc :optname item))
-																													:showname (cdr (assoc :showname item))
-																													:units (cdr (assoc :units item))))
-																								(catalog-keyoptions item)))))
+                                                    (list :optgroup (cdr (assoc :optgroup item))
+                                                          :optname (cdr (assoc :optname item))
+                                                          :showname (cdr (assoc :showname item))
+                                                          :units (cdr (assoc :units item))))
+                                                (catalog-keyoptions item)))))
   ;;TODO эта проверка нужна для постобработки групп дессериализованных их старых быкапов, когда фулфильтры хранились прямо в fullfilter
   (when (and (null (raw-fullfilter item))
              (fullfilter item)
@@ -296,15 +296,17 @@ Usually it transform string keys to pointers to other objects, such as parents o
   (let ((t-storage))
     (sb-ext:gc :full t)
     (let ((*global-storage* (make-instance 'global-storage)))
-			(log5:log-for info "Unserialize groups...")
+      (log5:log-for info "Unserialize groups...")
       (unserialize-from-file (backup.last-group-backup-pathname) (new-classes.get-instance "group"))
-			(log5:log-for info "Unserialize products...")
-			(unserialize-from-file (backup.last-product-backup-pathname) (new-classes.get-instance "product"))
-			(log5:log-for info "Unserialize filters...")
-			(unserialize-from-file (backup.last-filter-backup-pathname) (new-classes.get-instance "filter"))
-			(log5:log-for info "Making lists")
+      (log5:log-for info "Unserialize products...")
+      (unserialize-from-file (backup.last-product-backup-pathname) (new-classes.get-instance "product"))
+      (log5:log-for info "Unserialize filters...")
+      (unserialize-from-file (backup.last-filter-backup-pathname) (new-classes.get-instance "filter"))
+      (log5:log-for info "Unserialize vendors...")
+      (unserialize-from-file (backup.last-vendor-backup-pathname) (new-classes.get-instance "vendor"))
+      (log5:log-for info "Making lists")
       (storage.make-lists)
-			(log5:log-for info "Post-unserialize")
+      (log5:log-for info "Post-unserialize")
       (maphash #'(lambda (key value)
                    (declare (ignore key))
                    (new-classes.post-unserialize value))

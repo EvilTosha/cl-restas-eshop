@@ -2,17 +2,16 @@
 
 (in-package #:eshop)
 
-(defun object-fields.string-escaping (string)
+(defun object-fields.string-escaping (string &optional (chars-for-escape (list #\\ #\")))
   "Processing string and escapes quotes and backslashes"
-  (let ((chars-for-escape (list #\\ #\")))
-    (format nil "~{~a~}"
-            (map 'list #'(lambda (char)
-                           (if (notevery #'(lambda (char-for-escape)
-                                             (char-not-equal char char-for-escape))
-                                         chars-for-escape)
-                               (format nil "\\~a" char)
-                               (format nil "~a" char)))
-                 string))))
+  (format nil "~{~a~}"
+          (map 'list #'(lambda (char)
+                         (if (notevery #'(lambda (char-for-escape)
+                                           (char-not-equal char char-for-escape))
+                                       chars-for-escape)
+                             (format nil "\\~a" char)
+                             (format nil "~a" char)))
+               string)))
 
 (defun object-fields.string-replace-newlines (string)
   "Processing string and replace newline characters with #Newline"
@@ -236,10 +235,7 @@
 
 
 (defun object-fields.group-list-field-serialize (groups)
-  (format nil "[~{\"~a\"~^,~}]"
-          (mapcar #'(lambda (group)
-                      (key group))
-                  groups)))
+  (format nil "[~{\"~a\"~^,~}]" (mapcar #'key groups)))
 
 ;;optgroups
 (defun object-fields.optgroups-field-view (value name disabled)
@@ -285,10 +281,7 @@
       (list (gethash string-list (storage *global-storage*)))))
 
 (defun object-fields.product-list-field-serialize (products)
-  (format nil "[~{\"~a\"~^,~}]"
-          (mapcar #'(lambda (product)
-                      (key product))
-                  products)))
+  (format nil "[~{\"~a\"~^,~}]" (mapcar #'key products)))
 
 
 ;;keyoptions

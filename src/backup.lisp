@@ -84,3 +84,6 @@
 
 (defun backup.last-filter-backup-pathname ()
   (merge-pathnames #P"filters.bkp" (config.get-option "PATHS" "path-to-last-backup")))
+
+(defun backup.last-vendor-backup-pathname ()
+  (merge-pathnames #P"vendors.bkp" (config.get-option "PATHS" "path-to-last-backup")))

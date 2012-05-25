@@ -53,12 +53,6 @@
 (restas:define-route admin-test-get-request-route ("/administration-super-panel/test-get-post" :method :get)
   (admin.test-get-post-parse))
 
-(restas:define-route admin-content-table-route ("/administration-super-panel/content-table" :method :get)
-  (admin.content-table))
-
-(restas:define-route admin-content-table-post-route ("/administration-super-panel/content-table" :method :post)
-  (admin.content-table))
-
 (restas:define-route admin-get-json ("/administration-super-panel/getjson" :method :get)
   (list-filters.get-json))
 
@@ -95,96 +89,6 @@
                    (print get-params) (servo.plist-to-unique get-params)
                    (print post-params) (servo.plist-to-unique post-params))))))
 
-
-(defun admin.group-content-column (dataindex)
-  (soy.admin-table:table-column
-   (cond
-     ((equal dataindex "checkbox")
-      (list :text "Selected"
-            :width 30
-            :hideable "false"
-            :dataIndex dataindex))
-     ((equal dataindex "name")
-      (list :text "Name"
-            :width 100
-            :hideable "false"
-            :dataIndex dataindex))
-     ((equal dataindex "key")
-      (list :text "Key"
-            :width 150
-            :dataIndex dataindex))
-     ((equal dataindex "numprod")
-      (list :text "Number of products"
-            :flex 1
-            :dataIndex dataindex))
-     ((equal dataindex "order")
-      (list :text "Order"
-            :width 150
-            :dataIndex "order"))
-     ((equal dataindex "active")
-      (list :text "Active"
-            :width 150
-            :sortable "false"
-            :dataIndex "active"))
-     (t nil))))
-
-(defun admin.product-content-column (dataindex)
-  (soy.admin-table:table-column
-   (cond
-     ((equal dataindex "checkbox")
-      (list :text "Selected"
-            :width 30
-            :hideable "false"
-            :dataIndex dataindex))
-     ((equal dataindex "name")
-      (list :text "Name"
-            :width 100
-            :hideable "false"
-            :dataIndex dataindex))
-     ((equal dataindex "key")
-      (list :text "Key"
-            :width 150
-            :dataIndex dataindex))
-     ((equal dataindex "active")
-      (list :text "Active"
-            :width 150
-            :sortable "false"
-            :dataIndex "active"))
-     (t nil))))
-
-(defun admin.content-table ()
-  (let* ((params (servo.alist-to-plist (hunchentoot:get-parameters hunchentoot:*request*)))
-         (type (getf params :type)))
-    (cond
-      ((equal type "groups")
-       (let ((fields (list "checkbox" "name" "key" "numprod" "order" "active")))
-         (soy.admin-table:test-html
-          (list
-           :title "Group table"
-           :script (soy.admin-table:table-js
-                    (list
-                     :name "Groups"
-                     :type "groups"
-                     :pagesize 50
-                     :remotesort "true"
-                     :fields fields
-                     :columns (mapcar #'admin.group-content-column fields)))))))
-      ((equal type "products")
-       (let ((fields (list "checkbox" "name" "key" "active")))
-         (soy.admin-table:test-html
-          (list
-           :title "Product table"
-           :backlink (getf params :parent)
-           :script (soy.admin-table:table-js
-                    (list
-                     :name "Products"
-                     :type "products"
-                     :parent (getf params :parent)
-                     :pagesize 50
-                     :remotesort "false"
-                     :fields fields
-                     :columns (mapcar #'admin.product-content-column fields)))))))
-      (t "Ololo?"))))
 
 (defun admin.get-info ()
   (list (format nil "~{~a<br>~}" (mapcar #'(lambda (v) (sb-thread:thread-name v)) (sb-thread:list-all-threads)))
@@ -448,19 +352,3 @@
           (setf (getf result :fullfilter) new-full)
           (setf (getf result :raw-fullfilter) new-raw)))
     result))
-
-;; (defun admin.server-restart (&optional (port 4006))
-;;  (let* ((string (with-output-to-string (*standard-output*) (sb-ext:run-program "/bin/netstat"
-;;                                                                                (list "-plnt")
-;;                                                                                :output *standard-output*)))
-;;         ;; TODO: use only one regexp
-;;         (pid (ppcre:scan-to-strings "(\\d)+(?=/sbcl)"
-;;                                     (ppcre:scan-to-strings
-;;                                      (format nil "(?=~d)([^\\r\\n])+(\\d+)/sbcl" port) string))))
-;;    (when pid
-;;      (log5:log-for info "KILLING RELEASE SITE PROCESS; PID = ~a" pid)
-;;      (sb-ext:run-program "/bin/kill" (list "-9" (format nil "~d" pid))))
-;;    (let ((sh "/home/eviltosha/cl-restas-eshop/start-4006.sh"))
-;;      (log5:log-for info "RESTART SERVER; sh = ~a" sh)
-;;      (with-output-to-string (*standard-output*) (sb-ext:run-program "/bin/sh" (list sh))))))
-;; ;;(log5:log-for info "server restart...."))))
