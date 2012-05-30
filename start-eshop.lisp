@@ -1,5 +1,3 @@
-(defparameter *start-time* (get-universal-time))
-
 ;; загрузка модулей и файлов
 (defparameter *path-to-libs* (sb-unix::posix-getenv "LIBS_PATH"))
 (defparameter *path-to-eshop* (sb-unix::posix-getenv "ESHOP_PATH"))
