@@ -78,14 +78,14 @@
 
 
 
-(defun storage.round-collect-storage (checker &optional (compare t compare-supplied-p))
+(defun storage.round-collect-storage (checker &optional (storage (storage *global-storage*)) (compare t compare-supplied-p))
   "Processing storage and creating list according to checker function. Sorting with passed comparator"
   (let ((result))
     (maphash #'(lambda (key node)
                  (declare (ignore key))
                  (when (funcall checker node)
                    (push node result)))
-             (storage *global-storage*))
+             storage)
     (if compare-supplied-p
         (stable-sort (copy-list result) compare)
         result)))
@@ -99,6 +99,9 @@
 
 (defun storage.get-groups-list ()
   (storage.round-collect-storage #'(lambda (obj) (typep obj 'group))))
+
+(defun storage.get-vendors-list ()
+  (storage.round-collect-storage #'(lambda (obj) (typep obj 'vendor)) *vendor-storage*))
 
 (defun storage.get-filters-list ()
   (storage.round-collect-storage #'(lambda (obj) (typep obj 'filter))))
@@ -114,7 +117,7 @@
   (storage.round-collect-storage #'(lambda (obj)
                                      (and (typep obj 'group)
                                           (null (parents obj))))
-                                 compare))
+                                 (storage *global-storage*) compare))
 
 
 (defun storage.add-new-object (object &optional (key nil key-supplied-p))
