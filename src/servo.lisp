@@ -891,3 +891,7 @@
 
 (defmethod servo.collection-count ((collection hash-table))
   (hash-table-count collection))
+
+(defmacro case-test (test-func keyform &body cases)
+  "Works like usual case, but accepts function for test"
+  (sb-impl::case-body 'case-body keyform cases t test-func nil nil nil))

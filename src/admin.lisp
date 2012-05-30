@@ -56,18 +56,6 @@
 (restas:define-route admin-get-json ("/administration-super-panel/getjson" :method :get)
   (list-filters.get-json))
 
-;;for correctly working of ExtJS tables
-(restas:define-route admin-resources-route ("/resources/*")
-  (let ((full-uri (format nil "~a" (restas:request-full-uri))))
-    (pathname (concatenate 'string *path-to-dropbox* "/htimgs/"
-                           (subseq full-uri (search "/resources/" full-uri))))))
-
-;;for correctly working of ExtJS tables
-(restas:define-route admin-ux-route ("/ux/*")
-  (let ((full-uri (format nil "~a" (restas:request-full-uri))))
-    (pathname (concatenate 'string *path-to-dropbox* "/htimgs/resources/"
-                           (subseq full-uri (search "/ux/" full-uri) (search "?" full-uri))))))
-
 (defun admin-compile-templates ()
   (servo.compile-soy "admin.soy"
                      "class_forms.soy"
@@ -76,7 +64,6 @@
 (defun admin-update ()
   "Updates templates"
   (admin-compile-templates))
-
 
 (defun admin.test-get-post-parse ()
   "Parsing get & post parameters for testing"

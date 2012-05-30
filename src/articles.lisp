@@ -2,10 +2,8 @@
 
 (in-package #:eshop)
 
-;; хранилище статей
 (defvar *storage-articles* (make-hash-table :test #'equal))
 
-;; описание полей статьи
 (defclass article ()
   ((key         :initarg :key        :initform nil                             :accessor key)
    (name        :initarg :name       :initform nil                             :accessor name)
@@ -63,17 +61,14 @@
 		;; Возвращаем key статьи
 		key))
 
-;; загрузка статей из папки
 (defun process-articles-dir (path &optional (ctype "article"))
-  (let ((files))
-    (mapcar #'(lambda (x)
-                (unless (cl-fad:directory-pathname-p x)
-                  (push x files)))
-            (directory (format nil "~a/*" path)))
-    (mapcar #'(lambda (file)
-                (log5:log-for info-console "Load article: ~a" file)
-                (unserialize (format nil "~a" file) (make-instance 'article :ctype ctype)))
-            files)))
+  "Unserialize articles from directory"
+  (loop
+     :for file :in (directory (merge-pathnames "*" path))
+     :unless (cl-fad:directory-pathname-p file)
+     :do
+     (log5:log-for info-console "Load article: ~a" file)
+     (unserialize file (make-instance 'article :ctype ctype))))
 
 
 (defun articles.restore ()
@@ -101,34 +96,26 @@
 ;;;;;;;;;;;;;;;;;;;;; RENDER ;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun get-articles-list (&optional request-get-plist)
-  (let ((articles)
-        (showall (getf request-get-plist :showall))
+  (let ((showall (getf request-get-plist :showall))
         (date (getf request-get-plist :showall)))
     (declare (ignore date))
-    (maphash #'(lambda (k v)
-                 (declare (ignore k))
-                 (when (or showall
-                           (not (zerop (date v))))
-                   (push v articles)))
-             *storage-articles*)
-    articles))
-
+    (loop
+       :for art :being :the hash-values :in *storage-articles*
+       :when (or showall (plusp (date art)))
+       :collect art)))
 
 (defun get-articles-by-tags (articles-list &optional tags)
-  (let ((articles))
-    (if (not (servo.valid-string-p tags :unwanted-chars (list #\' #\" #\\ #\~ #\Newline)))
-        (mapcar #'(lambda (v) (push v articles))
-                articles-list)
-        ;;else
-        (progn
-          (let ((tags (split-sequence:split-sequence #\, tags)))
-            (mapcar #'(lambda (v)
-                        (when (every #'(lambda (tag)
-                                         (gethash (string-downcase tag) (tags v)))
-                                     tags)
-                          (push v articles)))
-                    articles-list))))
-    articles))
+  (if (not (servo.valid-string-p tags :unwanted-chars (list #\' #\" #\\ #\~ #\Newline)))
+      articles-list
+      ;; else
+      (let ((tags (split-sequence:split-sequence #\, tags)))
+        (loop
+           :for art :in articles-list
+           :when (every #'(lambda (tag)
+                            (gethash (string-downcase tag) (tags art)))
+                        tags)
+           :collect art))))
+
 
 (defun articles-view-articles (articles)
   (mapcar #'(lambda (v)

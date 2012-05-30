@@ -333,8 +333,7 @@ Usually it transform string keys to pointers to other objects, such as parents o
         (if (typep in 'product)
             (push (list :key (articul in) :val (name-seo in)) out)
             (push (list :key (key in) :val (name in)) out))
-        (setf in (new-classes.parent in))
-        (new-classes.breadcrumbs in out))
+        (new-classes.breadcrumbs (new-classes.parent in) out))
       ;; else -  end of recursion
       (list :breadcrumbelts (butlast out)
             :breadcrumbtail (car (last out)))))

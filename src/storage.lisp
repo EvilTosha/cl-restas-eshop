@@ -17,18 +17,6 @@
 (defvar *vendor-storage* (make-hash-table :test #'equal)
   "Storage for vendors (with aliases and seo-texts)")
 
-(defun storage.is-offspring (group item)
-  (when (and group item)
-    (not (every
-          #'null
-          (mapcar #'(lambda (parent)
-                      (if (equal group parent)
-                          t
-                          (if (not (null parent))
-                              (storage.is-offspring group parent)
-                              nil)))
-                  (parents item))))))
-
 (defun storage.alphabet-group-sorter (a b)
   (when (and (name a) (name b))
     (STRING< (name a) (name b))))
@@ -79,17 +67,16 @@
 
 
 (defun storage.round-collect-storage (checker &optional (storage (storage *global-storage*)) (compare t compare-supplied-p))
-  "Processing storage and creating list according to checker function. Sorting with passed comparator"
-  (let ((result))
-    (maphash #'(lambda (key node)
-                 (declare (ignore key))
-                 (when (funcall checker node)
-                   (push node result)))
-             storage)
+  "Processing storage (storage should be hash-table) and creating list according to checker function. Sorting with passed comparator"
+  (declare (hash-table storage))
+  (let ((result
+         (loop
+            :for elt :being :the hash-value :in storage
+            :when (funcall checker elt)
+            :collect elt)))
     (if compare-supplied-p
         (stable-sort (copy-list result) compare)
         result)))
-
 
 (defun storage.get-products-list ()
   (storage.round-collect-storage #'(lambda (obj) (typep obj 'product))))
@@ -107,8 +94,9 @@
   (storage.round-collect-storage #'(lambda (obj) (typep obj 'filter))))
 
 (defun storage.get-actual-groups-list ()
-  (storage.round-collect-storage #'(lambda (obj) (and (typep obj 'group) (not (empty obj)) (active obj)))))
-
+  (storage.round-collect-storage #'(lambda (obj) (and (typep obj 'group)
+                                                      (not (empty obj))
+                                                      (active obj)))))
 
 
 (defun storage.get-root-groups-list (&optional (compare #'(lambda (a b)
@@ -136,24 +124,18 @@
 
 (defun storage.edit-in-list (list object &optional (key nil key-supplied-p))
   "Editing or adding (if not exist) object in given list"
-  (when (not key-supplied-p)
+  (unless key-supplied-p
     (setf key (key object)))
-  (let* ((found nil)
-         (result-list (mapcar #'(lambda (list-obj)
-                                  (if (equal (key list-obj) key)
-                                      (progn
-                                        (setf found t)
-                                        object)
-                                      list-obj))
-                              list)))
-    (if (null found)
-        (push object list)
-        result-list)))
+  (aif (find key list :key #'key)
+       (progn
+         (setf (nth it list) object)
+         list)
+       (push object list)))
 
 
 (defun storage.edit-object (object &optional (key nil key-supplied-p))
   "Editing or adding object to storage and edit it in appropriate lists"
-  (when (not key-supplied-p)
+  (unless key-supplied-p
     (setf key (key object)))
   (setf (gethash key (storage *global-storage*)) object)
   (when (typep object 'product)
@@ -164,7 +146,7 @@
     (setf (groups *global-storage*) (storage.edit-in-list (groups *global-storage*) object key))
     (when (and (active object) (not (empty object)))
       (setf (actual-groups *global-storage*) (storage.edit-in-list (actual-groups *global-storage*) object key)))
-    (when (null (new-classes.parent object))
+    (unless (new-classes.parent object)
       (setf (root-groups *global-storage*) (storage.edit-in-list (root-groups *global-storage*) object key))))
   (when (typep object 'filter)
     (setf (filters *global-storage*) (storage.edit-in-list (filters *global-storage*) object key))))
@@ -177,10 +159,4 @@
   (setf (products *global-storage*) (storage.get-products-list))
   (setf (active-products *global-storage*) (storage.get-active-products-list))
   (setf (filters *global-storage*) (storage.get-filters-list)))
-
-(defun storage.group-unbinding (group)
-  (mapcar #'(lambda (product)
-              (setf (parents product) nil))
-          (products group))
-  (setf (products group) nil))
 

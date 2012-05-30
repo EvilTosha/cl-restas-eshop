@@ -216,7 +216,7 @@
                     :collect (let* ((weight-pos 0)
                                     (pos 0)
                                     (element nil))
-                               (when (> sum-weight 0)
+                               (when (plusp sum-weight)
                                  (setf weight-pos (random sum-weight))
                                  (setf pos (main-page-get-num-in-weight-list current-list weight-pos)))
                                (setf element (nth pos current-list))

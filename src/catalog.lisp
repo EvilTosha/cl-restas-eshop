@@ -56,14 +56,4 @@
    (soy.new-catalog:catalog-item
     (list
      :maingrouplink "Покупателям"
-     :maingroupimg nil
-     :groups (list "<a href=\"/servicecenter\">Наш Сервисный Центр</a>"
-                   "<a href=\"/faq\">F.A.Q.</a>"
-                   "<a href=\"/articles/reviews\">Обзоры</a>"
-                   "<a href=\"/articles/news\">Новости</a>"
-                   "<a href=\"/articles/papers\">Статьи</a>"
-                   "<a href=\"/pricesc\">Услуги</a>"
-                   "<a href=\"/delivery\">Доставка и Самовывоз</a>"
-                   "<a href=\"/warranty\">Гарантия</a>"
-                   "<a href=\"/corporate\">Корпоративным клиентам</a>")))))
-
+     :maingroupimg nil))))
