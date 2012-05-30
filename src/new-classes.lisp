@@ -393,6 +393,25 @@ Usually it transform string keys to pointers to other objects, such as parents o
                   (sort root-groups #'new-classes.menu-sort))))
     (soy.menu:main (list :elts src-lst))))
 
+(defun new-classes.has-vendor-seo-text (group vendor-key)
+  "Chech whether there is vendor's seo-text for given group"
+  (and group (servo.valid-string-p vendor-key)
+       (let ((vendor-obj (gethash (string-downcase vendor-key) (vendors group))))
+         (and vendor-obj (gethash (key group) (seo-texts vendor-obj))))
+       t))
+
+(defun new-classes.get-group-seo-text (group &optional vendor-key)
+  "If vendor passed, try to return corresponding seo-text for group,
+if there is not one, or no vendor passed, return group's seo-text"
+  (declare (group group))
+  (let ((vendor-object (when (servo.valid-string-p vendor-key)
+                         (gethash (string-downcase vendor-key) (vendors group)))))
+    (aif (and vendor-object (gethash (key group) (seo-texts vendor-object)))
+         ;; if condition non-nil, it is required seo-text
+         it
+         ;; else
+         (seo-text group))))
+
 
 ;;создание класса и методов отображения (в админке), изменения (из админки),
 ;;сереализации (в файл) и десеарелизации (из файла)

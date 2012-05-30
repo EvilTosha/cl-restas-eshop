@@ -47,20 +47,11 @@
         (soy.catalog:rightblock2)
         (if (not (typep object 'group))
             ""
-            (progn
-              (let ((vndr (getf parameters :vendor)))
-                (if (null vndr)
-                    ;; show group descr
-                    (let ((descr (seo-text object)))
-                      (if (null descr)
-                          ""
-                          (soy.catalog:seotext (list :text descr))))
-                    ;; show vendor descr
-                    (let ((descr (gethash (string-downcase vndr) (vendors-seo object))))
-                      (if (null descr)
-                          ""
-                          (soy.catalog:seotext (list :text descr))))))))))
-
+            (soy.catalog:seotext
+             (list :text
+                   (new-classes.get-group-seo-text
+                    object
+                    (getf parameters :vendor)))))))
 
 (defmacro with-option (product optgroup-name option-name body)
   `(mapcar #'(lambda (optgroup)
@@ -838,6 +829,7 @@
                                c))
                    string))
    'string))
+
 
 (defun servo.valid-string-p (s &key (whitespace-check t)
                               (unwanted-chars (list #\Space #\Tab #\Newline))

@@ -167,10 +167,9 @@
                                         (hunchentoot:url-encode (key v))
                                         (hunchentoot:url-encode (stripper vendor))
                                         "yes"
-                                        (let ((desc (gethash (string-downcase vendor) (vendors-seo v))))
-                                          (if (servo.valid-string-p desc)
-                                              "yes"
-                                              "no"))
+                                        (if (new-classes.has-vendor-seo-text v vendor)
+                                            "yes"
+                                            "no")
                                         (length products)
                                         (length (remove-if-not #'active products)))))
                           (storage.get-vendors (storage.get-filtered-products v #'atom)))))
