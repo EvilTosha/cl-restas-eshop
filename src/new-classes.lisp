@@ -280,6 +280,9 @@ Usually it transform string keys to pointers to other objects, such as parents o
   (when (listp (seo-texts item))
     (setf (seo-texts item) (servo.list-to-hashtasble
                             (copy-list (seo-texts item)))))
+  (loop :for k :being :the hash-keys :in (seo-texts item)
+     :do (setf (gethash k (seo-texts item))
+               (object-fields.string-add-newlines (gethash k (seo-texts item)))))
   ;; make pointers to vendor in group's hashtable of vendors
   (let ((vendor-key (key item)))
     (maphash #'(lambda (k v)
@@ -287,7 +290,6 @@ Usually it transform string keys to pointers to other objects, such as parents o
                  (let ((group (gethash k (storage *global-storage*))))
                    (setf (gethash vendor-key (vendors group)) item)))
              (seo-texts item))))
-
 
 
 (defmethod new-classes.post-unserialize ((item article)))

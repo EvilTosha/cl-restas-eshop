@@ -87,9 +87,6 @@
 (defun storage.get-groups-list ()
   (storage.round-collect-storage #'(lambda (obj) (typep obj 'group))))
 
-(defun storage.get-vendors-list ()
-  (storage.round-collect-storage #'(lambda (obj) (typep obj 'vendor)) *vendor-storage*))
-
 (defun storage.get-filters-list ()
   (storage.round-collect-storage #'(lambda (obj) (typep obj 'filter))))
 
