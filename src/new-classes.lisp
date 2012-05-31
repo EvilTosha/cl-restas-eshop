@@ -280,6 +280,9 @@ Usually it transform string keys to pointers to other objects, such as parents o
   (when (listp (seo-texts item))
     (setf (seo-texts item) (servo.list-to-hashtasble
                             (copy-list (seo-texts item)))))
+  (loop :for k :being :the hash-keys :in (seo-texts item)
+     :do (setf (gethash k (seo-texts item))
+               (object-fields.string-add-newlines (gethash k (seo-texts item)))))
   ;; make pointers to vendor in group's hashtable of vendors
   (let ((vendor-key (key item)))
     (maphash #'(lambda (k v)
@@ -287,7 +290,6 @@ Usually it transform string keys to pointers to other objects, such as parents o
                  (let ((group (gethash k (storage *global-storage*))))
                    (setf (gethash vendor-key (vendors group)) item)))
              (seo-texts item))))
-
 
 
 (defmethod new-classes.post-unserialize ((item article)))
@@ -333,8 +335,7 @@ Usually it transform string keys to pointers to other objects, such as parents o
         (if (typep in 'product)
             (push (list :key (articul in) :val (name-seo in)) out)
             (push (list :key (key in) :val (name in)) out))
-        (setf in (new-classes.parent in))
-        (new-classes.breadcrumbs in out))
+        (new-classes.breadcrumbs (new-classes.parent in) out))
       ;; else -  end of recursion
       (list :breadcrumbelts (butlast out)
             :breadcrumbtail (car (last out)))))
@@ -393,6 +394,25 @@ Usually it transform string keys to pointers to other objects, such as parents o
                                                   :icon (icon val)))))
                   (sort root-groups #'new-classes.menu-sort))))
     (soy.menu:main (list :elts src-lst))))
+
+(defun new-classes.has-vendor-seo-text (group vendor-key)
+  "Chech whether there is vendor's seo-text for given group"
+  (and group (servo.valid-string-p vendor-key)
+       (let ((vendor-obj (gethash (string-downcase vendor-key) (vendors group))))
+         (and vendor-obj (gethash (key group) (seo-texts vendor-obj))))
+       t))
+
+(defun new-classes.get-group-seo-text (group &optional vendor-key)
+  "If vendor passed, try to return corresponding seo-text for group,
+if there is not one, or no vendor passed, return group's seo-text"
+  (declare (group group))
+  (let ((vendor-object (when (servo.valid-string-p vendor-key)
+                         (gethash (string-downcase vendor-key) (vendors group)))))
+    (aif (and vendor-object (gethash (key group) (seo-texts vendor-object)))
+         ;; if condition non-nil, it is required seo-text
+         it
+         ;; else
+         (seo-text group))))
 
 
 ;;создание класса и методов отображения (в админке), изменения (из админки),

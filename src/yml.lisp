@@ -46,14 +46,10 @@
             300))))
 
 (defun yml.is-daily-product (product)
-  (let ((result nil))
-    (maphash #'(lambda (k v)
-                 (declare (ignore k))
-                 (when (and (equal (key v) (key product))
-                            (< (date-start v) (get-universal-time) (date-finish v)))
-                   (setf result t)))
-             (daily *main-page.storage*))
-    result))
+  (loop
+     :for v :being :the hash-values :in (daily *main-page.storage*)
+     :thereis (and (equal (key v) (key product))
+                (< (date-start v) (get-universal-time) (date-finish v)))))
 
 (defun yml.get-delivery-price (cart)
   (let ((result 300)

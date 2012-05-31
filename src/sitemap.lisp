@@ -119,31 +119,31 @@
   (let ((filepath (config.get-option "CRITICAL" "path-to-sitemap"))
         (routes (sitemap.get-all-routes-list))
         (number 0))
-    (log5:log-for info "Routes number: ~a" (length routes))
+    (log5:log-for info "Routes number: ~A" (length routes))
     (loop
-       while routes
-       do
-         (incf number)
-         (with-open-file
-             (stream (pathname (format nil "~a/sitemap~a.xml" filepath number))
-                     :direction :output :if-exists :supersede)
-           (format stream "~a" (soy.sitemap:head))
-           (loop
-              for i
-              from 0 to (min (- (length routes) 1) 45000)
-              do
-                (format stream "~a~%"
-                        (soy.sitemap:route (nth i routes))))
-           (format stream "~a" (soy.sitemap:tail)))
-         (setf routes (nthcdr 45000 routes)))
+       :while routes
+       :do
+       (incf number)
+       (with-open-file
+           (stream (merge-pathnames (format nil "sitemap~D.xml" number) filepath)
+                   :direction :output :if-exists :supersede)
+         (format stream "~A" (soy.sitemap:head))
+         (loop
+            :for i
+            :from 0 :to (min (- (length routes) 1) 45000)
+            :do
+            (format stream "~A~%"
+                    (soy.sitemap:route (nth i routes))))
+         (format stream "~A" (soy.sitemap:tail)))
+       (setf routes (nthcdr 45000 routes)))
     (with-open-file
-        (stream (pathname (format nil "~a/sitemap-index.xml" filepath))
+        (stream (pathname (merge-pathnames "sitemap-index.xml" filepath))
                 :direction :output :if-exists :supersede)
-      (format stream "~a"
+      (format stream "~A"
               (soy.sitemap:sitemap-index-file
                (list :names (loop
-                               for i from 1 to number
-                               collect (format nil "sitemap~a.xml" i))
+                               :for i :from 1 :to number
+                               :collect (format nil "sitemap~D.xml" i))
                      :lastmod *sitemap-lastmod-time*))))))
 
 

@@ -4,8 +4,8 @@
 
 (defvar *order-id* nil)
 
-;;генерирует псевдоуникальный номер заказа
 (defun get-order-id ()
+  "Generate pseudo-unique order number"
   (let ((current-order-id *order-id*)
         (order-id-pathname (format nil "~a~a" (config.get-option "CRITICAL" "path-to-conf") *path-order-id-file*)))
     (if *order-id*
