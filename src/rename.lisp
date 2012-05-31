@@ -16,7 +16,7 @@
                        "f" "h" "ts" "ch" "sh" "shch"
                        "" "y" "" "e" "yu" "ya"))
         (code (char-code char)))
-    (if (or (< code 1072) (> code 1103))
+    (if (not (<= 1072 code 1103))
         (string char)
         (nth (- code 1072) letters))))
 
@@ -147,7 +147,7 @@
                                    :wait nil :output :stream)))
     (with-open-stream (in (sb-ext:process-output proc))
       (loop
-         :for line = (read-line in nil)
+         :for line := (read-line in nil)
          :while line
          :do (log5:log-for info-console line)))))
 
@@ -218,7 +218,7 @@
                                   :wait nil :output :stream)))
     (with-open-stream (in (sb-ext:process-output proc))
       (loop
-         :for line = (read-line in nil)
+         :for line := (read-line in nil)
          :while line
          :do (log5:log-for info line))))
   (log5:log-for info "Finish removing folder"))

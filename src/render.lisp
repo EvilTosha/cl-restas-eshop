@@ -166,7 +166,7 @@
                                                                                                 :name (name-seo storage-printer)
                                                                                                 :key (key storage-printer)
                                                                                                 :price (if (active storage-printer)
-                                                                                                            (siteprice storage-printer))))))))
+                                                                                                           (siteprice storage-printer))))))))
                                       :products
                                       (loop
                                          :for product :in  paginated :collect (render.view product)))))))))
@@ -252,14 +252,14 @@
                            ""
                            (key group))
             :price (siteprice object)
-            :bonuscount (if (and (bonuscount object)
-                                 (not (equal (bonuscount object) 0)))
-                            (* (bonuscount object) 10))
+            :bonuscount (when (and (bonuscount object)
+                                   (plusp (bonuscount object)))
+                          (* 10 (bonuscount object)))
             :formatprice (get-format-price (siteprice object))
             :formatstoreprice (get-format-price
                                (+ (siteprice object)
                                   (delta-price object)))
-            :bestprice (> (delta-price object) 0)
+            :bestprice (plusp (delta-price object))
             :groupd (groupd.is-groupd object)
             :groupd_man (groupd.man.is-groupd object)
             :groupd_woman (groupd.woman.is-groupd object)
@@ -271,7 +271,7 @@
                                                         (setf value (getf option :value)))
                                           value)
                                         " "
-                                        (if (= 0 (yml.get-product-delivery-price1 object))
+                                        (if (zerop (yml.get-product-delivery-price1 object))
                                             " Акция: доставим бесплатно!"
                                             (if (= 100 (yml.get-product-delivery-price1 object))
                                                 " Акция: только в апреле доставим со скидкой 70%.")))
@@ -411,19 +411,19 @@
                              :name (name-seo object)
                              :siteprice (siteprice object)
                              :storeprice (price object)
-                             :bestprice (> (delta-price object) 0)
+                             :bestprice (plusp (delta-price object))
                              :groupd (groupd.is-groupd object)
                              :groupd_man (groupd.man.is-groupd object)
                              :groupd_woman (groupd.woman.is-groupd object)
                              :groupd_holiday (groupd.holiday.is-groupd object)
                              :bonuscount (when (and (bonuscount object)
-                                                    (not (equal (bonuscount object) 0)))
-                                           (* (bonuscount object) 10))
+                                                    (plusp (bonuscount object)))
+                                           (* 10 (bonuscount object)))
                              :formatsiteprice (get-format-price (siteprice object))
                              :formatstoreprice (get-format-price
                                                 (+ (siteprice object)
                                                    (delta-price object)))
-                             :equalprice (= (delta-price object) 0)
+                             :equalprice (zerop (delta-price object))
                              :diffprice (delta-price object)
                              ;;test
                              :upsaleinfo (when (and group (upsale-links group))
@@ -440,7 +440,7 @@
                                                                   (setf value (getf option :value)))
                                                     value)
                                                   " "
-                                                  (if (= 0 (yml.get-product-delivery-price1 object))
+                                                  (if (zerop (yml.get-product-delivery-price1 object))
                                                       " Акция: доставим бесплатно!"
                                                       (if (= 100 (yml.get-product-delivery-price1 object))
                                                           " Акция: только в апреле доставим со скидкой 70%.")))

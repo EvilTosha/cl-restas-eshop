@@ -106,8 +106,7 @@
        (setf value-f (arnesi:parse-float (format nil "~as" value-f)))
        (setf value-t (arnesi:parse-float (format nil "~as" value-t)))
        (setf value-x (arnesi:parse-float (format nil "~as" value-x)))
-       (and (<= value-f value-x)
-            (>= value-t value-x)))))
+       (and (<= value-f value-x value-t)))))
 
 ;;Фильтруем по наличию опции
 (defun filter-with-check-options (key-name option-group-name product request-plist filter-options)
@@ -371,34 +370,40 @@
   "Returns a new string in which all the occurences of the part
  is replaced with replacement."
   (with-output-to-string (out)
-    (loop with part-length = (length part)
-       for old-pos = 0 then (+ pos part-length)
-       for pos = (search part string
-                         :start2 old-pos
-                         :test test)
-       do (write-string string out
-                        :start old-pos
-                        :end (or pos (length string)))
-       when pos do (write-string replacement out)
-       while pos)))
+    (loop :with part-length := (length part)
+       :for old-pos := 0 :then (+ pos part-length)
+       :for pos := (search part string
+                           :start2 old-pos
+                           :test test)
+       :do (write-string string out
+                         :start old-pos
+                         :end (or pos (length string)))
+       :when pos :do (write-string replacement out)
+       :while pos)))
 
 
 (defun merge-plists (a b)
   (let* ((result (copy-list a)))
-    (loop while (not (null b)) do
-         (setf (getf result (pop b)) (pop b)))
+    (loop
+       :while b
+       :do (setf (getf result (pop b)) (pop b)))
     result))
 
 
 (defun reverse-plist (inlist)
   (let ((result))
-    (loop :for i :in inlist by #'cddr do
-       (setf (getf result i) (getf inlist i)))
+    (loop
+       :for i :in inlist :by #'cddr
+       :do (setf (getf result i) (getf inlist i)))
     result))
 
 
 (defun numerizable (param)
-  (coerce (loop for i across param when (parse-integer (string i) :junk-allowed t) collect i) 'string))
+  (coerce (loop
+             :for i :across param
+             :when (parse-integer (string i) :junk-allowed t)
+             :collect i)
+          'string))
 
 
 (defun slice (cnt lst)
@@ -756,7 +761,7 @@
       (format nil "~1$" (* (- 1 (/ part full)) 100))))
 
 (defun servo.diff-price (product-1 product-2)
-  (if (/= (siteprice product-1) 0)
+  (if (plusp (siteprice product-1))
       (abs (/ (- (siteprice product-1) (siteprice product-2))
               (siteprice product-1)))
       ;;infinity

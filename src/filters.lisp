@@ -9,7 +9,7 @@
                                         (get-recursive-products object)))))
 
 (defun is-empty-filtered-list (object filter)
-  (= 0 (get-filtered-product-list-len object filter)))
+  (zerop (get-filtered-product-list-len object filter)))
 
 
 ;;Составление строки для представления фильтров в 1 клик на странице с fullfilter
@@ -35,9 +35,10 @@
 
 (defmethod filters.get-filters ((filters list) (products list))
   "Возвращает список ненулевых фильтров на списке объектов и количество объесктов в выборке"
-  (remove-if #'null (mapcar #'(lambda (filter)
-                                (let ((num (length
-                                            (remove-if-not #'(lambda (p) (funcall (func filter) p)) products))))
-                                  (if (not (= num 0))
-                                      (cons filter num))))
-                            filters)))
+  (remove-if #'null
+             (mapcar #'(lambda (filter)
+                         (when (some #'(lambda (p)
+                                         (funcall (func filter) p))
+                                     products)
+                           (cons filter num)))
+                     filters)))

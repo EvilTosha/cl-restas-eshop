@@ -108,9 +108,9 @@
                (gateway.check-price product price siteprice))
       (setf (key product)             (format nil "~a" articul)
             (articul product)         articul
-            (name-provider product)            (if (servo.valid-string-p name)
-                                                   name
-                                                   (name-provider product))
+            (name-provider product)   (if (servo.valid-string-p name)
+                                          name
+                                          (name-provider product))
             (name-seo product)        (if (servo.valid-string-p (name-seo product))
                                           (name-seo product)
                                           (if (servo.valid-string-p realname)
@@ -126,16 +126,16 @@
             (count-total product)     (if count-total
                                           (ceiling (arnesi:parse-float count-total))
                                           (if (and count-transit
-                                                   (= (ceiling (arnesi:parse-float count-transit)) 0)
+                                                   (zerop (ceiling (arnesi:parse-float count-transit)))
                                                    (equal (count-total product)
                                                           (count-transit product)))
                                               0
                                               (if (count-total product)
                                                   (count-total product)
                                                   0)))
-            (active product)          (if (= (count-total product) 0) nil t)
-            (newbie product)          (if (string= "0" isnew) nil t)
-            (sale product)            (if (string= "0" isspec) nil t)
+            (active product)          (plusp (count-total product))
+            (newbie product)          (string/= "0" isnew)
+            (sale product)            (string/= "0" isspec)
             (count-transit  product)  (if count-transit
                                           (ceiling (arnesi:parse-float count-transit))
                                           (if (count-transit product)
@@ -192,7 +192,7 @@
       (if raw-count-transit
           (setf (count-transit  product) count-transit))
       ;; проставляем флаг active
-      (setf (active product) (if (= (count-total product) 0) nil t))
+      (setf (active product) (plusp (count-total product)))
       (unless old-product
         (storage.edit-object product)))))
 
@@ -256,7 +256,7 @@
              (count-total    (cdr (assoc :count--total elt)))
              (count-transit  (cdr (assoc :count--transit elt))))
          ;; Нам не нужны продукты с нулевой ценой (вероятно это группы продуктов)
-         (when (equal 0 price)
+         (when (zerop price)
            (log5:log-for warning "Zero-price ~a" elt)
            (return-from iteration))
          (gateway.process-product articul price siteprice isnew isspec name realname count-total count-transit bonuscount)))))
@@ -282,7 +282,7 @@
         (data))
     (with-open-file (file filename)
       (loop
-         :for line = (read-line file nil 'EOF)
+         :for line := (read-line file nil 'EOF)
          :until (or (eq line 'EOF)
                     stop)
          :do (progn

@@ -47,14 +47,13 @@ Usually it transform string keys to pointers to other objects, such as parents o
 
 ;;декодирование fullfilter
 (defmethod new-classes.decode (in-string (dummy group-filter))
-  (if (or (string= in-string "") (null in-string))
-      nil
-      (let ((*package* (find-package :eshop)))
-        (let* ((tmp (read-from-string in-string)))
-          (make-instance 'group-filter
-                         :name (getf tmp :name)
-                         :base (getf tmp :base)
-                         :advanced (getf tmp :advanced))))))
+  (when (servo.valid-string-p in-string)
+    (let ((*package* (find-package :eshop)))
+      (let* ((tmp (read-from-string in-string)))
+        (make-instance 'group-filter
+                       :name (getf tmp :name)
+                       :base (getf tmp :base)
+                       :advanced (getf tmp :advanced))))))
 
 ;;макрос для создания метода десериализации класса из файла, по данным имени класса и списку полей
 (defmacro new-classes.make-unserialize-method (name class-fields)
@@ -83,24 +82,24 @@ Usually it transform string keys to pointers to other objects, such as parents o
       (let ((percent 0))
         (with-open-file (file filepath)
           (let ((file-length (cl:file-length file)))
-            (loop for line = (read-line file nil 'EOF)
-               until (eq line 'EOF)
-               do
+            (loop :for line := (read-line file nil 'EOF)
+               :until (eq line 'EOF)
+               :do
                  (let ((item (unserialize (decode-json-from-string line)
                                           dummy)))
                    (let ((cur-pos (round (* 100 (/ (cl:file-position file) file-length)))))
                      (when (> cur-pos percent)
                        (setf percent cur-pos)
-                       (when (= 0 (mod percent 10))
+                       (when (zerop (mod percent 10))
                          (log5:log-for info-console "Done percent: ~a%" percent))))
                    (storage.add-new-object item (key item))))))))))
 
 (defun new-classes.unserialize-optgroups (filepath)
   (let ((num 0))
     (with-open-file (file filepath)
-      (loop for line = (read-line file nil 'EOF)
-         until (eq line 'EOF)
-         do
+      (loop :for line := (read-line file nil 'EOF)
+         :until (eq line 'EOF)
+         :do
            (let* ((item (servo.alist-to-plist (decode-json-from-string line)))
                   (key (format nil "~a" (getf item :key)))
                   (optgroups (getf item :optgroups))
@@ -117,15 +116,11 @@ Usually it transform string keys to pointers to other objects, such as parents o
   (let ((optgroups))
     ;;преобразуем optgroups (1 уровень)
     (setf optgroups
-          (mapcar #'(lambda (optgroup)
-                      (servo.alist-to-plist optgroup))
-                  (optgroups item)))
+          (mapcar #'servo.alist-to-plist (optgroups item)))
     ;;преобразуем значение :options в plist (2 уровень)
     (setf optgroups (mapcar #'(lambda (optgroup)
                                 (let ((optgroup-plist
-                                       (mapcar #'(lambda (option)
-                                                   (servo.alist-to-plist option))
-                                               (getf optgroup :options))))
+                                       (mapcar #'servo.alist-to-plist (getf optgroup :options))))
                                   (list :name (getf optgroup :name) :options optgroup-plist)))
                             optgroups))
     optgroups))
@@ -150,7 +145,7 @@ Usually it transform string keys to pointers to other objects, such as parents o
   ;; после десериализации в parent лежит список key родительских групп
   (setf (parents item)
         (mapcar #'(lambda (parent-key)
-                    (when (not (null parent-key))
+                    (when parent-key
                       (let ((parent (gethash parent-key (storage *global-storage*))))
                         ;;Если родитель продукта — группа, связать группу с этим продуктом
                         (when (typep parent 'group)
@@ -158,12 +153,12 @@ Usually it transform string keys to pointers to other objects, such as parents o
                           parent))))
                 (parents item)))
   ;; проверка цены, если цена в ИМ ноль, а дельта положительная нужно изменить цену
-  (when  (and (= (siteprice item) 0)
-              (> (delta-price item) 0))
+  (when (and (zerop (siteprice item))
+             (plusp (delta-price item)))
     (setf (siteprice item) (delta-price item))
     (setf (delta-price item) 0))
   ;;active - если имеется в наличии и цена > 0
-  (setf (active item) (and (> (count-total item) 0) (> (siteprice item) 0)))
+  (setf (active item) (and (plusp (count-total item)) (plusp (siteprice item))))
   ;;adding newlines instead of #Newline
   (setf (seo-text item) (object-fields.string-add-newlines (seo-text item)))
   ;;преобразуем optgroups из списка alist в список plist
@@ -218,7 +213,7 @@ Usually it transform string keys to pointers to other objects, such as parents o
     ;; проставление ссылок у родителей на данную группу
     (let ((is-parent-link (remove-if-not #'(lambda (v) (equal item v))
                                          (parents item))))
-      (when (not is-parent-link)
+      (unless is-parent-link
         (mapcar #'(lambda (parent)
                     (when parent
                       (push item (groups parent))))
@@ -341,12 +336,11 @@ Usually it transform string keys to pointers to other objects, such as parents o
             :breadcrumbtail (car (last out)))))
 
 (defun new-classes.get-root-parent (item)
-  (if (and item
-           (not (equal "" item)))
-      (let ((parent (new-classes.parent item)))
-        (if (or (null item) (null parent))
-            item
-            (new-classes.get-root-parent parent)))))
+  (when item
+    (let ((parent (new-classes.parent item)))
+      (if (null parent)
+          item
+          (new-classes.get-root-parent parent)))))
 
 
 (defun new-classes.menu-sort (a b)
@@ -409,8 +403,7 @@ if there is not one, or no vendor passed, return group's seo-text"
   (let ((vendor-object (when (servo.valid-string-p vendor-key)
                          (gethash (string-downcase vendor-key) (vendors group)))))
     (aif (and vendor-object (gethash (key group) (seo-texts vendor-object)))
-         ;; if condition non-nil, it is required seo-text
-         it
+         it             ; if condition non-nil, it is required seo-text
          ;; else
          (seo-text group))))
 

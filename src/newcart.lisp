@@ -27,10 +27,10 @@
                                             (not (null cnt)))
                                    (setf cnt (parse-integer (format nil "~a" cnt) :junk-allowed t))
                                    (setf product (gethash articul (storage *global-storage*)))
-                                   (when (and (not (null product))
-                                              (not (= 0 cnt)))
+                                   (when (and product
+                                              (plusp cnt))
                                      (incf counter)
-                                     (setf price (if (= 0 (siteprice product))
+                                     (setf price (if (zerop (siteprice product))
                                                      (price product)
                                                      (siteprice product)))
                                      (setf sum (+ sum (* cnt price)))
@@ -56,7 +56,7 @@
   (let ((k n))
     (if (< 20 n)
         (setf k (mod n 10)))
-    (if (= 0 k)
+    (if (zerop k)
         "товаров"
         (if (= 1 k)
             "товар"
@@ -328,8 +328,8 @@
                         (send-mail (list email) client-mail filename tks-mail order-id))
                     *conf.emails.cart*)
             ;; сделать валидацию пользовательского email
-            (if (not (string= email ""))
-                (send-client-mail (list email) client-mail order-id))
+            (unless (string= email "")
+              (send-client-mail (list email) client-mail order-id))
             (soy.newcart:fullpage
              (list :head (soy.newcart:newcart-head)
                    :header (soy.newcart:header-linked)

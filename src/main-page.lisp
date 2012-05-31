@@ -61,7 +61,7 @@
   (let ((banners (main-page-get-active-banners storage type))
         (banner (make-instance 'main-page-product)))
 		;;должен быть хотябы один баннер
-		(if (> (length banners) 0)
+		(if (plusp (length banners))
 				(progn
 					;; выбираем случайный товаров баннер с учетом их веса
 					(setf banner (gethash (caar (main-page-get-randoms-from-weight-list banners 1))
@@ -81,7 +81,7 @@
   (let ((items (main-page-get-active-views storage))
         (item (make-instance 'main-page-product)))
     ;;должен быть хотябы один баннер
-    (if (> (length items) 0)
+    (if (plusp (length items))
         ;; выбираем случайный товаров баннер с учетом их веса
         (setf item (gethash (caar (main-page-get-randoms-from-weight-list items 1))
                             storage))

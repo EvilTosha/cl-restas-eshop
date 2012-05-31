@@ -528,7 +528,7 @@
                                (config.get-option "PATHS" "path-to-pics") "big" path-art pic)))
                   (with-open-file
                       (stream-file src-pic-path)
-                    (when (= (file-length stream-file) 0)
+                    (when (zerop (file-length stream-file))
                       (setf is-need-reconvert t)
                       (format stream "~&~a;~a" articul (file-length stream-file))))))
             (get-pics articul))
@@ -549,7 +549,7 @@
                                             (with-open-file
                                                 (stream-file src-pic-path)
 
-                                              (when (= (file-length stream-file) 0)
+                                              (when (zerop (file-length stream-file))
                                                 (incf num)
                                                 (format stream "~&~a;~a" articul (file-length stream-file))))))
                                       (get-pics articul))))

@@ -9,7 +9,7 @@
         (result 0))
     (if (>= cnt 20)
         (setf cnt (mod cnt 20)))
-    (if (= cnt 0)
+    (if (zerop cnt)
         (setf result 2)
         (if (= cnt 1)
             (setf result 0)
