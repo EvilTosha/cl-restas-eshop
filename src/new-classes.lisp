@@ -57,42 +57,38 @@ Usually it transform string keys to pointers to other objects, such as parents o
 
 ;;макрос для создания метода десериализации класса из файла, по данным имени класса и списку полей
 (defmacro new-classes.make-unserialize-method (name class-fields)
-  `(list
+  `(values
     (defmethod unserialize (raw (dummy ,name))
-      ;;читаем из файла и декодируем json
-      (let
-          ;;создаем объект с прочитанными из файла полями
-          ((item
-            ,(let ((res (append (list `make-instance) (list `(quote ,name)))))
-                  (mapcar
-                   #'(lambda (field)
-                       (setf res
-                             (append res
-                                     (let ((name (intern (string-upcase (format nil "~a" (getf field :name))) :keyword))
-                                           (initform (getf field :initform)))
-                                       `(,name
-                                         (let ((val (cdr (assoc ,name raw))))
-                                           (if val
-                                               val
-                                               ,initform)))))))
-                   class-fields)
-                  res)))
-        item))
+      "Make an object with read from file fields"
+      (make-instance
+       ',name
+       ,@(mapcan
+          #'(lambda (field)
+              (let ((name (intern (format nil "~:@(~A~)" (getf field :name)) :keyword))
+                    (initform (getf field :initform)))
+                `(,name
+                  (let ((val (cdr (assoc ,name raw))))
+                    (if val
+                        val
+                        ,initform)))))
+          class-fields)))
     (defmethod unserialize-from-file (filepath (dummy ,name))
-      (let ((percent 0))
-        (with-open-file (file filepath)
-          (let ((file-length (cl:file-length file)))
-            (loop :for line := (read-line file nil 'EOF)
-               :until (eq line 'EOF)
-               :do
-                 (let ((item (unserialize (decode-json-from-string line)
-                                          dummy)))
-                   (let ((cur-pos (round (* 100 (/ (cl:file-position file) file-length)))))
-                     (when (> cur-pos percent)
-                       (setf percent cur-pos)
-                       (when (zerop (mod percent 10))
-                         (log5:log-for info-console "Done percent: ~a%" percent))))
-                   (storage.add-new-object item (key item))))))))))
+      "Read from file and decode json"
+      (with-open-file (file filepath)
+        (let ((file-length (cl:file-length file))
+              (percent 0))
+          (loop
+             :for line := (read-line file nil 'EOF)
+             :until (eq line 'EOF)
+             :do
+             (let ((item (unserialize (decode-json-from-string line)
+                                      dummy))
+                   (cur-pos (round (* 100 (/ (cl:file-position file) file-length)))))
+               (when (> cur-pos percent)
+                 (setf percent cur-pos)
+                 (when (zerop (mod percent 10))
+                   (log5:log-for info-console "Done percent: ~a%" percent)))
+               (storage.add-new-object item (key item)))))))))
 
 (defun new-classes.unserialize-optgroups (filepath)
   (let ((num 0))
@@ -135,9 +131,7 @@ Usually it transform string keys to pointers to other objects, such as parents o
   (when (every #'(lambda (child)
                    (string/= (key product) (key child)))
                (products group))
-    (pushnew product (products group)))
-  ;;TODO: check all groups for nil in yml-id
-  )
+    (pushnew product (products group))))
 
 
 ;;вызывается после десереализации продукта
