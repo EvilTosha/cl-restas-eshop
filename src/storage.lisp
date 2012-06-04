@@ -105,19 +105,13 @@
                                  (storage *global-storage*) compare))
 
 
-(defun storage.add-new-object (object &optional (key nil key-supplied-p))
+(defun storage.add-new-object (object storage &optional (key nil key-supplied-p))
   "Adding exactly new object to appropriate storage but not pushing it in any list"
   ;;; TODO: push all types (not only vendors to own storage)
   (let ((key (if key-supplied-p
                  key
                  (key object))))
-    (setf (gethash key
-                   (typecase object
-                     (vendor
-                      *vendor-storage*)
-                     (t
-                      (storage *global-storage*))))
-          object)))
+    (setf (gethash key storage) object)))
 
 (defun storage.edit-in-list (list object &optional (key nil key-supplied-p))
   "Editing or adding (if not exist) object in given list"
@@ -143,7 +137,7 @@
     (setf (groups *global-storage*) (storage.edit-in-list (groups *global-storage*) object key))
     (when (and (active object) (not (empty object)))
       (setf (actual-groups *global-storage*) (storage.edit-in-list (actual-groups *global-storage*) object key)))
-    (unless (new-classes.parent object)
+    (unless (class-core.parent object)
       (setf (root-groups *global-storage*) (storage.edit-in-list (root-groups *global-storage*) object key))))
   (when (typep object 'filter)
     (setf (filters *global-storage*) (storage.edit-in-list (filters *global-storage*) object key))))

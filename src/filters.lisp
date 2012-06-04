@@ -19,7 +19,7 @@
               (name filter)
               num)
       (format nil "<a class=\"rightfilter\" href=\"/~a/~a\">~a</a> (~a)<br/>"
-              (key (new-classes.parent filter))
+              (key (class-core.parent filter))
               (key filter)
               (name filter)
               num)))
@@ -35,10 +35,9 @@
 
 (defmethod filters.get-filters ((filters list) (products list))
   "Возвращает список ненулевых фильтров на списке объектов и количество объесктов в выборке"
-  (remove-if #'null
-             (mapcar #'(lambda (filter)
-                         (when (some #'(lambda (p)
-                                         (funcall (func filter) p))
-                                     products)
-                           (cons filter num)))
-                     filters)))
+  (remove-if #'null (mapcar #'(lambda (filter)
+                                (let ((num (length
+                                            (remove-if-not #'(lambda (p) (funcall (func filter) p)) products))))
+                                  (if (not (= num 0))
+                                      (cons filter num))))
+                            filters)))

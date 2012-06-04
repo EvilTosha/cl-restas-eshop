@@ -50,7 +50,7 @@
 	;;; content
   (when (eshop:config.get-option "START_OPTIONS" "load-storage")
     (eshop:sklonenie.restore)
-		(eshop:new-classes.unserialize-all)
+		(eshop:class-core.unserialize-all)
 		(eshop:gateway.restore-history))
 	(when (eshop:config.get-option "START_OPTIONS" "load-xls")
 		(eshop:dtd)

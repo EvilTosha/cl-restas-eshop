@@ -173,13 +173,13 @@
         (products)
         (count)
         (pricesum))
-    (when (not (null cart-cookie))
+    (when cart-cookie
       (setf cart (json:decode-json-from-string cart-cookie))
       (multiple-value-bind (lst cnt sm) (newcart-cart-products cart)
         (setf products (remove-if #'null lst))
         (setf count cnt)
         (setf pricesum sm)))
-    (if (not (null products))
+    (if products
         (default-page
             (soy.newcart:cart-content (list :products (format nil "~{~a~}"
                                                               (mapcar #'soy.newcart:cart-product

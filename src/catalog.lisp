@@ -11,7 +11,7 @@
    (list
     :error404 error404
     :numproducts (length (active-products *global-storage*))
-    :menu (new-classes.menu)
+    :menu (class-core.menu)
     :items (let ((res)
                  (roots (root-groups *global-storage*))
                  (exception "bytovaya-technika"))
@@ -20,7 +20,7 @@
                                     roots))
              (setf roots (append roots
                                  (copy-list (groups (gethash exception (storage *global-storage*))))))
-             (setf roots (sort roots #'new-classes.menu-sort))
+             (setf roots (sort roots #'class-core.menu-sort))
              (setf res
                    (mapcar #'(lambda (node)
                                (format nil "~a"
@@ -33,6 +33,7 @@
                                                              (format nil "~a/htimgs~a" *path-to-dropbox* (pic node)))
                                                           (images-style-for-resize width height 70)))))
                                           (list
+                                           :other nil
                                            :maingrouplink (format nil "<a href=\"/~a\">~a</a>~%" (key node) (name node))
                                            :maingroupimg pic
                                            :imgstyle style
@@ -56,4 +57,5 @@
    (soy.new-catalog:catalog-item
     (list
      :maingrouplink "Покупателям"
-     :maingroupimg nil))))
+     :maingroupimg nil
+     :other t))))

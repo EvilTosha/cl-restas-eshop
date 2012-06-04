@@ -25,8 +25,8 @@
 
 (defun yml.yml-show-p (product)
   (and (typep product 'product)
-       (new-classes.parent product)
-       (ymlshow (new-classes.parent product))
+       (class-core.parent product)
+       (ymlshow (class-core.parent product))
        (active product)
        (price product)
        (plusp (price product))
@@ -38,7 +38,7 @@
                    (string= "No" (stripper yml-show)))))))
 
 (defun yml.get-product-delivery-price (product)
-  (let ((parent (new-classes.parent product)))
+  (let ((parent (class-core.parent product)))
     (if (delivery-price product)
         (delivery-price product)
         (if (and parent (delivery-price parent))
@@ -70,7 +70,7 @@
 
 
 (defun yml.get-product-delivery-price1 (product)
-  (let ((parent (if product (new-classes.parent product)))
+  (let ((parent (if product (class-core.parent product)))
         (key)
         (result 300))
     (when parent
@@ -152,9 +152,9 @@
                         :when (typep (gethash key (storage *global-storage*)) 'group)
                         :collect (list :id (yml-id (gethash key (storage *global-storage*)))
                                        :name (name (gethash key (storage *global-storage*)))
-                                       :parent (if (null (new-classes.parent (gethash key (storage *global-storage*))))
+                                       :parent (if (null (class-core.parent (gethash key (storage *global-storage*))))
                                                    0 ; если это вершина дерева
-                                                   (let* ((parent (new-classes.parent (gethash key (storage *global-storage*))))
+                                                   (let* ((parent (class-core.parent (gethash key (storage *global-storage*))))
                                                           (parent-key (key parent))
                                                           (num-key (yml-id parent)))
                                                      num-key))))
@@ -170,7 +170,7 @@
                                                                       :available (servo.available-for-order-p product)
                                                                       :deliveryprice (yml.get-product-delivery-price1 product)
                                                                       :price (siteprice product)
-                                                                      :category (yml-id (new-classes.parent product))
+                                                                      :category (yml-id (class-core.parent product))
                                                                       :picture (let ((pics (get-pics
                                                                                             (articul product))))
                                                                                  (when pics
@@ -203,9 +203,9 @@
                         :when (typep (gethash key (storage *global-storage*)) 'group)
                         :collect (list :id id
                                        :name (name (gethash key (storage *global-storage*)))
-                                       :parent (if (null (new-classes.parent (gethash key (storage *global-storage*))))
+                                       :parent (if (null (class-core.parent (gethash key (storage *global-storage*))))
                                                    0 ;; если это вершина дерева
-                                                   (let* ((parent (new-classes.parent (gethash key (storage *global-storage*))))
+                                                   (let* ((parent (class-core.parent (gethash key (storage *global-storage*))))
                                                           (parent-key (key parent))
                                                           (num-key (gethash parent-key *yml-group-ids*)))
                                                      num-key))))
@@ -220,7 +220,7 @@
                                         :collect (soy.yml:offer (list :articul (articul product)
                                                                       :price (siteprice product)
                                                                       :category (gethash
-                                                                                 (key (new-classes.parent product))
+                                                                                 (key (class-core.parent product))
                                                                                  *yml-group-ids*)
                                                                       :picture (let ((pics (get-pics
                                                                                             (articul product))))
@@ -254,9 +254,9 @@
      :when (typep (gethash key (storage *global-storage*)) 'group)
      :collect (list :id id
                     :name (name (gethash key (storage *global-storage*)))
-                    :parent (if (null (new-classes.parent (gethash key (storage *global-storage*))))
+                    :parent (if (null (class-core.parent (gethash key (storage *global-storage*))))
                                 0 ;; если это вершина дерева
-                                (let* ((parent (new-classes.parent (gethash key (storage *global-storage*))))
+                                (let* ((parent (class-core.parent (gethash key (storage *global-storage*))))
                                        (parent-key (key parent))
                                        (num-key (gethash parent-key *yml-group-ids*)))
                                   num-key)))))
@@ -274,7 +274,7 @@
                           :deliveryprice (yml.get-product-delivery-price1 product)
                           :price (siteprice product)
                           :category (gethash
-                                     (key (new-classes.parent product))
+                                     (key (class-core.parent product))
                                      *yml-group-ids*)
                           :picture  (let ((pics (get-pics
                                                  (articul product))))

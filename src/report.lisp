@@ -31,11 +31,11 @@
                    (setf active (if (active v)
                                     "да"
                                     "нет"))
-                   (setf group-name (when (new-classes.parent v)
-                                      (stripper (name (new-classes.parent v)))))
-                   (setf parent-group-name (when (and (new-classes.parent v)
-                                                      (new-classes.parent (new-classes.parent v)))
-                                             (stripper (name (new-classes.parent (new-classes.parent v))))))
+                   (setf group-name (when (class-core.parent v)
+                                      (stripper (name (class-core.parent v)))))
+                   (setf parent-group-name (when (and (class-core.parent v)
+                                                      (class-core.parent (class-core.parent v)))
+                                             (stripper (name (class-core.parent (class-core.parent v))))))
                    (setf secret "Нет")
                    (with-option1 v "Secret" "Checked"
                                  (setf secret (getf option :value)))
@@ -129,8 +129,8 @@
                                   "yes"
                                   "no"))
                    (format stream "\"~a\";\"~a\";\"~a\";http://www.320-8080.ru/~a;~a;~a;~%"
-                           (if (new-classes.parent v)
-                               (stripper (name (new-classes.parent v)))
+                           (if (class-core.parent v)
+                               (stripper (name (class-core.parent v)))
                                "Нет категории")
                            (stripper vendor-name)
                            (stripper (name-seo v))
@@ -167,7 +167,7 @@
                                         (hunchentoot:url-encode (key v))
                                         (hunchentoot:url-encode (stripper vendor))
                                         "yes"
-                                        (if (new-classes.has-vendor-seo-text v vendor)
+                                        (if (class-core.has-vendor-seo-text v vendor)
                                             "yes"
                                             "no")
                                         (length products)
@@ -250,7 +250,7 @@
                 (setf (products group)
                       (remove-if-not #'(lambda (v) (let ((pr (gethash (key v) (storage *global-storage*))))
                                                      (and pr
-                                                          (equal group (new-classes.parent pr)))))
+                                                          (equal group (class-core.parent pr)))))
                                      (products group))))
             groups)
     "done"))

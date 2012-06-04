@@ -22,7 +22,7 @@
   (let* ((dp (gethash key storage))
          (p (gethash (key dp) (storage *global-storage*)))
          (price (+ (siteprice p) (delta-price p)))
-         (parent (new-classes.parent p))
+         (parent (class-core.parent p))
          (p-list (list :articul (articul p)
                        :name (name dp)
                        :siteprice (siteprice p)
@@ -93,10 +93,10 @@
 
 
 ;;отображение главной страницы
-(defun main-page-show (&optional (request-str ""))
+(defun main-page-show ()
   (default-page
       (soy.index:content
-       (list :menu (new-classes.menu request-str)
+       (list :menu (class-core.menu)
              :dayly  (soy.main-page:daily (list :items (main-page-products-show (daily *main-page.storage*) 6)))
              :banner (soy.main-page:banner (main-page-show-banner "center" (banner *main-page.storage*)))
              :olist (soy.main-page:olist)

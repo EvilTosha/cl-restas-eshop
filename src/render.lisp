@@ -76,14 +76,14 @@
     (default-page
         (soy.catalog:content
          (list :name name
-               :breadcrumbs (soy.catalog:breadcrumbs (breadcrumbs-add-vendor1 (new-classes.breadcrumbs object) parameters))
-               :menu (new-classes.menu object)
+               :breadcrumbs (soy.catalog:breadcrumbs (breadcrumbs-add-vendor1 (class-core.breadcrumbs object) parameters))
+               :menu (class-core.menu object)
                :rightblocks (append
                              (render.get-oneclick-filters object
                                                           (getf parameters :showall))
                              ;;fullfilter
                              (let ((ret (rightblocks object parameters)))
-                               (if (and (not (null (fullfilter object)))
+                               (if (and (fullfilter object)
                                         (not (equal "" (fullfilter object))))
                                    (push (render.render (fullfilter object) parameters) ret))
                                ret))
@@ -93,9 +93,8 @@
                                 ;; Отображаем группы
                                 (soy.catalog:centergroup
                                  (list
-                                  :producers (if (getf parameters :showall)
-                                                 (render.show-producers (storage.get-filtered-products object #'atom))
-                                                 nil)
+                                  :producers (when (getf parameters :showall)
+                                               (render.show-producers (storage.get-filtered-products object #'atom)))
                                   :accessories (soy.catalog:accessories)
                                   :groups (let ((sort-groups (sort (remove-if-not #'active (groups object)) #'menu-sort)))
                                             (mapcar #'(lambda (child)
@@ -203,7 +202,7 @@
   (when prod
     (let* ((articul (articul prod))
            (name (name-seo prod))
-           (group (new-classes.parent prod))
+           (group (class-core.parent prod))
            (pic (car (get-pics articul)))
            (siteprice (siteprice prod)))
       (list
@@ -242,7 +241,7 @@
 
 (defmethod render.view ((object product))
   (let ((pics (get-pics (articul object))))
-    (let ((group (new-classes.parent object)))
+    (let ((group (class-core.parent object)))
       (list :articul (articul object)
             :name (name-seo object)
             :groupname (if (null group)
@@ -314,7 +313,7 @@
       (soy.product:optlist (list :optgroups optlist)))))
 
 (defmethod render.get-catalog-keyoptions ((object product))
-  (let ((parent (new-classes.parent object)))
+  (let ((parent (class-core.parent object)))
     (when parent
       (remove-if #'null
                  (mapcar #'(lambda (pair)
@@ -343,7 +342,7 @@
 
 
 (defmethod render.get-keyoptions ((object product))
-  (let ((parent (new-classes.parent object)))
+  (let ((parent (class-core.parent object)))
     (when parent
       (mapcar #'(lambda (pair)
                   (let ((key-optgroup (getf pair :optgroup))
@@ -380,7 +379,7 @@
                                   (with-option1 x "Общие характеристики" "Производитель"
                                                 (setf vendor (getf option :value)))
                                   (equal vendor base-vendor))))
-                       (storage.get-filtered-products (new-classes.parent object))))
+                       (storage.get-filtered-products (class-core.parent object))))
                     2))
     ;;4 случайных товара из списка
     (setf temp-rs2 (get-randoms-from-list
@@ -404,9 +403,9 @@
          (is-vintage (null (active object)))
          (is-available t ) ;;(servo.available-for-order-p object))
          (product-view)
-         (group (new-classes.parent object)))
-    (setf product-view (list :menu (new-classes.menu object)
-                             :breadcrumbs (soy.product:breadcrumbs (new-classes.breadcrumbs object))
+         (group (class-core.parent object)))
+    (setf product-view (list :menu (class-core.menu object)
+                             :breadcrumbs (soy.product:breadcrumbs (class-core.breadcrumbs object))
                              :articul (articul object)
                              :name (name-seo object)
                              :siteprice (siteprice object)
@@ -536,12 +535,12 @@
 (defmethod restas:render-object ((designer eshop-render) (object filter))
   (let ((request-get-plist (request-get-plist))
         (fltr-name  (name object))
-        (grname (name (new-classes.parent object)))
+        (grname (name (class-core.parent object)))
         (products-list)
         (all-products-list))
     (setf all-products-list (if (getf request-get-plist :showall)
-                                (storage.get-filtered-products (new-classes.parent object) #'atom)
-                                (storage.get-filtered-products (new-classes.parent object) #'active)))
+                                (storage.get-filtered-products (class-core.parent object) #'atom)
+                                (storage.get-filtered-products (class-core.parent object) #'active)))
     (setf products-list (remove-if-not (func object) all-products-list))
     (if (null (getf request-get-plist :sort))
         (setf (getf request-get-plist :sort) "pt"))
@@ -556,12 +555,12 @@
       (default-page
           (soy.catalog:content
            (list :name (name object)
-                 :breadcrumbs (soy.catalog:breadcrumbs (new-classes.breadcrumbs object))
-                 :menu (new-classes.menu object)
+                 :breadcrumbs (soy.catalog:breadcrumbs (class-core.breadcrumbs object))
+                 :menu (class-core.menu object)
                  :rightblocks (append
-                               (render.get-oneclick-filters (new-classes.parent object)
+                               (render.get-oneclick-filters (class-core.parent object)
                                                             (getf request-get-plist :showall))
-                               (rightblocks (new-classes.parent object) request-get-plist))
+                               (rightblocks (class-core.parent object) request-get-plist))
                  :subcontent (soy.catalog:centerproduct
                               (list
                                :sorts (sorts request-get-plist)

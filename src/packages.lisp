@@ -19,7 +19,7 @@
            :servo.compile-soy
            :dtd
            :sklonenie.restore
-           :new-classes.unserialize-all
+           :class-core.unserialize-all
            :gateway.restore-history
            :static-pages.restore
            :articles.restore
@@ -35,7 +35,7 @@
 (defclass main-page-product () ())
 ;; xls.lisp
 (defclass nko () ())
-;; classes.lisp / new-classes.lisp
+;; classes.lisp / class-core.lisp
 ;; TODO: get rid of classes.lisp
 (defclass group () ())
 (defclass product () ())

@@ -49,7 +49,7 @@
             ""
             (soy.catalog:seotext
              (list :text
-                   (new-classes.get-group-seo-text
+                   (class-core.get-group-seo-text
                     object
                     (getf parameters :vendor)))))))
 
@@ -282,17 +282,15 @@
          (request-parted-list (split-sequence:split-sequence #\? request-full-str))
          (request-str (string-right-trim "\/" (car request-parted-list)))
          (request-list (split-sequence:split-sequence #\/ request-str))
-         (request-get-plist (if (null (cadr request-parted-list))
-                                nil
-                                ;; else
-                                (let ((result))
-                                  (loop :for param :in (split-sequence:split-sequence #\& (cadr request-parted-list)) :do
-                                     (let ((split (split-sequence:split-sequence #\= param)))
-                                       (setf (getf result (intern (string-upcase (car split)) :keyword))
-                                             (if (null (cadr split))
-                                                 ""
-                                                 (cadr split)))))
-                                  result))))
+         (request-get-plist (when (cadr request-parted-list)
+                              (let ((result))
+                                (loop :for param :in (split-sequence:split-sequence #\& (cadr request-parted-list)) :do
+                                   (let ((split (split-sequence:split-sequence #\= param)))
+                                     (setf (getf result (intern (string-upcase (car split)) :keyword))
+                                           (if (null (cadr split))
+                                               ""
+                                               (cadr split)))))
+                                result))))
     (values request-str request-list request-get-plist)))
 
 
@@ -694,11 +692,10 @@
                                                             vendor)))))
     result))
 
-
-;; Сделать строку начинающейся с заглавной буквы.
 (defun string-convertion-for-title (title)
+  "Make string starting with capital letter"
   (if title
-      (format nil "~@(~a~)" title)
+      (format nil "~@(~A~)" title)
       ""))
 
 
@@ -744,14 +741,15 @@
 
 (defun servo.list-to-hashtasble (list)
   "Converting list (hash1 val1 hash2 val2...) to hashtable"
+  ;; (sb-pcl::doplist
   (let ((res (make-hash-table :test #'equal)))
     (loop
-       for x from 0 to (- (length list) 1)
-       when (not (oddp x))
-       do
-         (let ((key (nth x list))
-               (value (nth (+ 1 x) list)))
-           (setf (gethash key res) value)))
+       :for x :from 0 :to (- (length list) 1)
+       :when (evenp x)
+       :do
+       (let ((key (nth x list))
+             (value (nth (+ 1 x) list)))
+         (setf (gethash key res) value)))
     res))
 
 (defun servo.diff-percentage (full part)
@@ -781,7 +779,7 @@
 
 (defun servo.find-relative-product-list (product &optional (coef 2))
   "Returns list of products from same group with similar vendor"
-  (when (new-classes.parent product)
+  (when (class-core.parent product)
     (let* ((vendor (servo.get-product-vendor product))
            (diff-list
             (remove-if #'(lambda (v) (or (equal 0 (siteprice (cdr v)))
@@ -793,7 +791,7 @@
                                               coef)))
                                      (cons (* diff (servo.diff-price product a))
                                            a)))
-                               (copy-list (products (new-classes.parent product)))))))
+                               (copy-list (products (class-core.parent product)))))))
       (mapcar #'cdr
               (sort diff-list
                     #'(lambda (a b)
@@ -821,7 +819,7 @@
 
 (defmethod servo.available-for-order-p ((object product))
   ;; life-time is given in days
-  (< (get-universal-time) (+ (date-modified object) (* 60 60 24 (life-time (new-classes.parent object))))))
+  (< (get-universal-time) (+ (date-modified object) (* 60 60 24 (life-time (class-core.parent object))))))
 
 (defun servo.string-replace-chars (string char-list &key (replacement nil))
   "Replacing all chars in char-list from string"

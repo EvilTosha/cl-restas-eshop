@@ -51,8 +51,6 @@
   (merge-pathnames "sitemap2.xml" (config.get-option "CRITICAL" "path-to-conf")))
 
 ;; end static content
-
-
 ;; FILTER
 
 (defun test-route-filter ()
@@ -65,7 +63,7 @@
          fltr
          (typep grp 'group)
          (typep fltr 'filter)
-         (equal (key (new-classes.parent fltr)) key))))
+         (equal (key (class-core.parent fltr)) key))))
 
 (defun route-filter (filter)
   (gethash filter (storage *global-storage*)))
@@ -84,10 +82,9 @@
     (when obj
       (if (and (typep obj 'group)
                (getf (request-get-plist) :vendor))
-          (let ((vendor (getf (request-get-plist) :vendor)))
-            (some #'(lambda (p)
-                          (vendor-filter-controller p (request-get-plist)))
-                      (get-recursive-products obj)))
+          (some #'(lambda (p)
+                    (vendor-filter-controller p (request-get-plist)))
+                (get-recursive-products obj))
           t))))
 
 (defun route-storage-object (key)
@@ -106,7 +103,7 @@
   t) ;;(null (request-get-plist)))
 
 (restas:define-route main-route ("/" :requirement #'test-get-parameters)
-  (main-page-show (request-str)))
+  (main-page-show))
 
 
 ;; CATALOG

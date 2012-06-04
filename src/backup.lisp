@@ -6,28 +6,27 @@
 
 (defmacro backup.make-serialize-method (name class-fields)
   "Macros for creating serialize methods"
-  `(list
+  `(values
     (defmethod backup.serialize-entity ((object ,name))
       (format nil "{~{~a~^,~}}"
               (remove-if #'null
-                         ,(cons
-                           `list
-                           (mapcar #'(lambda (field)
-                                       `(let* ((field-value (,(getf field :name) object))
-                                               (encoded-value (when field-value
-                                                                (,(intern (string-upcase
-                                                                           (format nil "object-fields.~a-field-serialize" (getf field :type))))
-                                                                  field-value))))
-                                          (when (and field-value
-                                                     (string/= (format nil "~a" field-value) "")
-                                                     (not (equal field-value ,(getf field :initform)))
-                                                     encoded-value)
-                                            (format nil "~a:~a"
-                                                    (encode-json-to-string (quote ,(getf field :name)))
-                                                    encoded-value))))
-                                   (remove-if-not #'(lambda (field)
-                                                      (getf field :serialize))
-                                                  class-fields))))))
+                         (list
+                           ,@(mapcar #'(lambda (field)
+                                        `(let* ((field-value (,(getf field :name) object))
+                                                (encoded-value (when field-value
+                                                                 (,(intern (string-upcase
+                                                                            (format nil "object-fields.~a-field-serialize" (getf field :type))))
+                                                                   field-value))))
+                                           (when (and field-value
+                                                      (string/= (format nil "~a" field-value) "")
+                                                      (not (equal field-value ,(getf field :initform)))
+                                                      encoded-value)
+                                             (format nil "~a:~a"
+                                                     (encode-json-to-string (quote ,(getf field :name)))
+                                                     encoded-value))))
+                                    (remove-if-not #'(lambda (field)
+                                                       (getf field :serialize))
+                                                   class-fields))))))
     (defmethod backup.serialize-to-file ((object ,name) pathname)
       (with-open-file (file pathname
                             :direction :output

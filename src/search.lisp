@@ -10,7 +10,7 @@
     (maphash #'(lambda (key val)
                  (when (and (typep val 'product)
                             (active val)
-                            (new-classes.parent val))
+                            (class-core.parent val))
                    (let ((name (string-downcase (format nil "~a" (name-seo val)))))
                      (mapcar #'(lambda (word)
                                  (let* ((search-result (search word name))
@@ -81,7 +81,7 @@
       (soy.catalog:content
        (list :name "Поиск мысли..."
              :breadcrumbs "<a href=\"/catalog\">Каталог</a> / Поиск"
-             :menu (new-classes.menu)
+             :menu (class-core.menu)
              :rightblocks (list (soy.catalog:rightblock1)
                                 (soy.catalog:rightblock2))
              :subcontent (if (null centercontent)

@@ -84,16 +84,16 @@
 (defun admin.edit-content (&optional new-post-data)
   (let* ((key (getf (request-get-plist) :key))
          (item (gethash key (storage *global-storage*)))
-         (item-fields (when item (new-classes.make-fields item)))
+         (item-fields (when item (class-core.make-fields item)))
          (post-data new-post-data))
     (when (and item post-data)
       (setf post-data (admin.post-data-preprocessing (servo.plist-to-unique post-data)))
-      (new-classes.edit-fields item post-data)
+      (class-core.edit-fields item post-data)
       ;; need to fix
       (when (and (typep item 'group) (getf post-data :fullfilter))
         (setf (fullfilter item) (getf post-data :fullfilter)))
       (object-fields.product-groups-fix item)
-      (setf item-fields (new-classes.make-fields item)))
+      (setf item-fields (class-core.make-fields item)))
     (if item
         (soy.class_forms:formwindow
          (list :output (format nil "~a" post-data)
@@ -127,20 +127,20 @@
                   (setf (date-created item) (get-universal-time)
                         (date-modified item) (get-universal-time)))
               (setf post-data (admin.post-data-preprocessing (servo.plist-to-unique post-data)))
-              (new-classes.edit-fields item post-data)
+              (class-core.edit-fields item post-data)
               ;;don't work with filters
               (object-fields.product-groups-fix item)
               (storage.edit-object item) ;;adding item into storage
               (admin.edit-content))
             ;;else (post-data is nil)
-            (let ((empty-item (new-classes.get-instance type)))
+            (let ((empty-item (class-core.get-instance type)))
               (setf (key empty-item) key)
               (if (typep empty-item 'product)
                   (setf (articul empty-item) (parse-integer key)))
               (soy.class_forms:formwindow
                (list :key key
                      :type type
-                     :fields (new-classes.make-fields empty-item)
+                     :fields (class-core.make-fields empty-item)
                      :target "make")))))))
 
 (defun admin.pics-deleting (new-post-data)
@@ -247,7 +247,7 @@
                         (list (getf post-data :groups)))))
         (mapcar #'(lambda (product)
                     (mapcar #'(lambda (group)
-                                (new-classes.bind-product-to-group
+                                (class-core.bind-product-to-group
                                  (gethash product (storage *global-storage*))
                                  (gethash group (storage *global-storage*))))
                             groups))
@@ -255,7 +255,7 @@
     (let ((unparented-products (storage.get-filtered-products
                                 (storage.get-products-list)
                                 #'(lambda (item)
-                                    (null (new-classes.parent item))))))
+                                    (null (class-core.parent item))))))
       (soy.class_forms:parenting-page
        (list :products (mapcar #'(lambda (product)
                                    (soy.class_forms:unparented-product-checkbox
@@ -332,7 +332,7 @@
     (if raw-fullfilter
         (let ((new-raw (getf result :raw-fullfilter))
               (new-full))
-          (setf new-full (new-classes.decode new-raw (make-instance 'group-filter)))
+          (setf new-full (class-core.decode new-raw (make-instance 'group-filter)))
           (setf (getf result :fullfilter) new-full)
           (setf (getf result :raw-fullfilter) new-raw)))
     result))
