@@ -132,13 +132,12 @@
                                                            (gethash printer-articul *printer-storage*))))
                                   (if (null (getf parameters :sort))
                                       (setf (getf parameters :sort) "pt"))
-                                  (let ((vendor-get (getf parameters :vendor)))
-                                    (when vendor-get
-                                      (setf products-list
-                                            (remove-if-not
-                                             #'(lambda (p)
-                                                 (vendor-filter-controller p (vendor-transform-from-alias vendor-get)))
-                                             products-list))))
+                                  (awhen (getf parameters :vendor)
+                                    (setf products-list
+                                          (remove-if-not
+                                           #'(lambda (p)
+                                               (vendor-filter-controller p (vendor-transform-from-alias it)))
+                                           products-list)))
                                   (if (getf parameters :fullfilter)
                                       (setf products-list (fullfilter-controller products-list object parameters)))
                                   (when (and printer-articul cartrige-printer)
