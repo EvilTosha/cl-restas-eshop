@@ -321,7 +321,7 @@ Usually it transform string keys to pointers to other objects, such as parents o
                *vendor-storage*)
       (maphash #'(lambda (k v)
                    (declare (ignore k))
-                   (awhen (alias v)
+                   (awhen (name v)
                      (setf (gethash (string-downcase it) *vendor-storage*) v)))
                (copy-structure *vendor-storage*))
       (setf t-storage *global-storage*)
