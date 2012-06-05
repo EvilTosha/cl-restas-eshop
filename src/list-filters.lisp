@@ -62,13 +62,6 @@
   ;; numbering from 1
   (subseq items (* page-size (- page-number 1)) page-size))
 
-
-;; (defun list-filters.get-sort-func (elt sorter)
-;;   (cond
-;;     ((stringp elt)
-;;      (if (equal (getf sorter :direction) "desc")
-
-
 (defun list-filters.sort-list (list json-sorters)
   (if json-sorters
       (let ((sorters (mapcar #'servo.alist-to-plist (decode-json-from-string json-sorters))))
@@ -77,8 +70,6 @@
       list))
 
 (defun list-filters.get-json ()
-  (print (hunchentoot:request-uri hunchentoot:*request*))
-  (print (hunchentoot:post-parameters hunchentoot:*request*))
   (let* ((params (servo.alist-to-plist (hunchentoot:get-parameters hunchentoot:*request*)))
          (type (getf params :type))
          (parent (getf params :parent))
