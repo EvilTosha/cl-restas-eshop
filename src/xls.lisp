@@ -97,7 +97,7 @@
                                (when esf
                                  (format log-output "~&~a|~a:~a" ifl line esf)
                                  (error "DTD"))
-                               (unless (null line)
+                               (when line
                                  (cond ((null optgroups) (setf optgroups line))
                                        ((null fields) (setf fields line))
                                        (t (handler-case
@@ -105,7 +105,6 @@
                                                                   :optgroups optgroups
                                                                   :fields fields)
                                                             px)))
-                                                (print "")
                                                 (print val)
                                                 (push val rs))
                                             (SB-INT:SIMPLE-PARSE-ERROR () nil))))))))))))

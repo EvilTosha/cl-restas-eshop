@@ -6,7 +6,7 @@
 (defun get-filtered-product-list-len (object filter)
   (length (remove-if-not (func filter)
                          (remove-if-not #'active
-                                        (get-recursive-products object)))))
+                                        (storage.get-recursive-products object)))))
 
 (defun is-empty-filtered-list (object filter)
   (zerop (get-filtered-product-list-len object filter)))
