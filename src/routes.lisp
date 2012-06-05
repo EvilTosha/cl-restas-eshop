@@ -87,7 +87,7 @@
 (defun test-route-storage-object ()
   (let ((obj (gethash (cadr (request-list)) (storage *global-storage*))))
     (when obj
-      (awhen (and (typep obj 'group)
+      (aif (and (typep obj 'group)
                   (getf (request-get-plist) :vendor))
         (let ((vendor (vendor-transform-from-alias it)))
           (some #'(lambda (p)
