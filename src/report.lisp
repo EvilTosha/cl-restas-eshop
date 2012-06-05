@@ -151,7 +151,7 @@
           "seo-text"
           "продуктов"
           "активных")
-  (maphash #'(lambda (k v)
+(maphash #'(lambda (k v)
                (declare (ignore k))
                (when (and (typep v 'group)
                           (null (groups v)))

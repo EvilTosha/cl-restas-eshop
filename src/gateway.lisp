@@ -240,6 +240,7 @@
              (realname  (cdr (assoc :realname elt)))
              (count-total    (cdr (assoc :count--total elt)))
              (count-transit  (cdr (assoc :count--transit elt))))
+         ;; (log5:log-for info-console "~a" elt)
          (gateway.process-product1 articul price siteprice isnew isspec name realname count-total count-transit bonuscount)))))
 
 (defun gateway.process-products (items)
@@ -309,6 +310,8 @@
                  (setf data (json:decode-json-from-string (subseq line 21)))
                  (gateway.process-products1 data)))))))
 
+
+
 (defun gateway.update-actives (data)
   (let ((articuls (make-hash-table :test #'equal)))
     (mapcar #'(lambda (v)
@@ -317,14 +320,16 @@
                   (setf articul (format nil "~a" articul))
                   (setf (gethash articul articuls) t)))
             data)
+    ;; (log5:log-for info "gateway.update-actives (data)")
     (mapcar #'(lambda (v)
                 (when (and (not (gethash (format nil "~a" (articul v)) articuls))
                            (active v))
                   (setf (active v) nil)
                   (setf (count-total v) 0)
                   (setf (count-transit v) 0)
+                  (log5:log-for info "~a" (articul v))
                   (storage.edit-object v)))
-            (products *global-storage*))))
+            (storage.get-products-list))))
 
 
 (defun gateway.restore-history (&optional (timestamp (get-universal-time)))

@@ -123,7 +123,7 @@
   "Editing or adding (if not exist) object in given list"
   (unless key-supplied-p
     (setf key (key object)))
-  (aif (find key list :key #'key)
+  (aif (position key list :key #'key :test #'equal)
        (progn
          (setf (nth it list) object)
          list)

@@ -33,6 +33,7 @@
                                                              (format nil "~a/htimgs~a" *path-to-dropbox* (pic node)))
                                                           (images-style-for-resize width height 70)))))
                                           (list
+                                           :other nil
                                            :maingrouplink (format nil "<a href=\"/~a\">~a</a>~%" (key node) (name node))
                                            :maingroupimg pic
                                            :imgstyle style
@@ -55,5 +56,6 @@
    error404
    (soy.new-catalog:catalog-item
     (list
+     :other t
      :maingrouplink "Покупателям"
      :maingroupimg nil))))
