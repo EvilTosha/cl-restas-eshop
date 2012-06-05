@@ -80,20 +80,21 @@
 ;; STORAGE OBJECT
 
 (defun vendor-transform-from-alias (alias)
-  (aif (gethash alias *vendor-storage*)
-       (key it)
-       alias))
+  (let ((alias (string-downcase alias)))
+    (aif (gethash alias *vendor-storage*)
+         (name it)
+         alias)))
 
 (defun test-route-storage-object ()
   (let ((obj (gethash (cadr (request-list)) (storage *global-storage*))))
     (when obj
       (aif (and (typep obj 'group)
-                  (getf (request-get-plist) :vendor))
-        (let ((vendor (vendor-transform-from-alias it)))
-          (some #'(lambda (p)
-                    (vendor-filter-controller p vendor))
-                (storage.get-recursive-products obj)))
-        t))))
+                (getf (request-get-plist) :vendor))
+           (let ((vendor (vendor-transform-from-alias it)))
+             (some #'(lambda (p)
+                       (vendor-filter-controller p vendor))
+                   (storage.get-recursive-products obj)))
+           t))))
 
 (defun route-storage-object (key)
   (gethash key (storage *global-storage*)))
