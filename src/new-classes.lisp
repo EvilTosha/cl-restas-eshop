@@ -361,7 +361,7 @@ Usually it transform string keys to pointers to other objects, such as parents o
   "Creating left menu"
   (let* ((root-groups (storage.get-root-groups-list) );;(root-groups *global-storage*))
          (current-root (new-classes.get-root-parent current-object))
-         (divider-list (list "setevoe-oborudovanie" "foto-and-video" "rashodnye-materialy"))
+         (divider-list (list "setevoe-oborudovanie" "foto-and-video" "rashodnye-materialy" "bytovaya-technika"))
          (src-lst
           (mapcar #'(lambda (val)
                       (if (and current-root
