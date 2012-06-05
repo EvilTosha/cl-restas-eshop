@@ -80,10 +80,9 @@
 ;; STORAGE OBJECT
 
 (defun vendor-transform-from-alias (alias)
-  (let ((alias (string-downcase alias)))
-    (aif (gethash alias *vendor-storage*)
-         (name it)
-         alias)))
+  (aif (gethash (string-downcase alias) *vendor-storage*)
+       (name it)
+       alias))
 
 (defun test-route-storage-object ()
   (let ((obj (gethash (cadr (request-list)) (storage *global-storage*))))

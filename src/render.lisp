@@ -41,7 +41,7 @@
 
 (defmethod render.get-title ((object group) &optional (parameters (request-get-plist)))
   (let ((name (name object))
-        (vendor (getf parameters :vendor)))
+        (vendor (vendor-transform-from-alias (getf parameters :vendor))))
     (string-convertion-for-title
      (if vendor
          (format nil "~a ~a - купить ~a ~a по низкой цене, продажа ~a ~a с доставкой и гарантией в ЦиFры 320-8080"
