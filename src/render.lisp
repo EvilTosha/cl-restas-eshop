@@ -93,9 +93,8 @@
                                 ;; Отображаем группы
                                 (soy.catalog:centergroup
                                  (list
-                                  :producers (if (getf parameters :showall)
-                                                 (render.show-producers (storage.get-filtered-products object #'atom))
-                                                 nil)
+                                  :producers (when (getf parameters :showall)
+                                               (render.show-producers (storage.get-filtered-products object #'atom)))
                                   :accessories (soy.catalog:accessories)
                                   :groups (let ((sort-groups (sort (remove-if-not #'active (groups object)) #'menu-sort)))
                                             (mapcar #'(lambda (child)
@@ -133,11 +132,13 @@
                                                            (gethash printer-articul *printer-storage*))))
                                   (if (null (getf parameters :sort))
                                       (setf (getf parameters :sort) "pt"))
-                                  (if (getf parameters :vendor)
+                                  (let ((vendor-get (getf parameters :vendor)))
+                                    (when vendor-get
                                       (setf products-list
-                                            (remove-if-not #'(lambda (p)
-                                                               (vendor-filter-controller p parameters))
-                                                           products-list)))
+                                            (remove-if-not
+                                             #'(lambda (p)
+                                                 (vendor-filter-controller p (vendor-transform-from-alias vendor-get)))
+                                             products-list))))
                                   (if (getf parameters :fullfilter)
                                       (setf products-list (fullfilter-controller products-list object parameters)))
                                   (when (and printer-articul cartrige-printer)
@@ -545,11 +546,11 @@
     (setf products-list (remove-if-not (func object) all-products-list))
     (if (null (getf request-get-plist :sort))
         (setf (getf request-get-plist :sort) "pt"))
-    (if (getf (request-get-plist) :vendor)
-        (setf products-list
-              (remove-if-not #'(lambda (p)
-                                 (vendor-filter-controller p (request-get-plist)))
-                             products-list)))
+    (awhen (getf (request-get-plist) :vendor)
+      (setf products-list
+            (remove-if-not #'(lambda (p)
+                               (vendor-filter-controller p it))
+                           products-list)))
     (with-sorted-paginator
         products-list
       request-get-plist
@@ -609,11 +610,16 @@
          (veiws nil))
     (remf url-parameters :page)
     (maphash #'(lambda (k x)
-                 (setf (getf url-parameters :vendor) (hunchentoot:url-encode k))
-                 (push (list :vendor k
-                             :cnt x
-                             :link (format nil "?~a" (servo.make-get-str url-parameters)))
-                       veiws))
+                 (let* ((vendor-alias (awhen (gethash (string-downcase k) *vendor-storage*)
+                                        (alias it)))
+                        (vendor-url (if (servo.valid-string-p vendor-alias)
+                                        vendor-alias
+                                        k)))
+                   (setf (getf url-parameters :vendor) (hunchentoot:url-encode vendor-url))
+                   (push (list :vendor k
+                               :cnt x
+                               :link (format nil "?~a" (servo.make-get-str url-parameters)))
+                         veiws)))
              vendors)
     (setf veiws (sort veiws #'string<= :key #'(lambda (v) (string-upcase (getf v :vendor)))))
     (soy.catalog:producers

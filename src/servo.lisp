@@ -35,10 +35,10 @@
                        (getf ,request-get-plist :sort))
               (list :key key
                     :name (getf variants sort-field)
-                    :url (make-get-str url-parameters)
+                    :url (servo.make-get-str url-parameters)
                     :active t)
               (list :key key
-                    :url (make-get-str url-parameters)
+                    :url (servo.make-get-str url-parameters)
                     :name (getf variants sort-field)))))))
 
 
@@ -198,7 +198,7 @@
        (setf (getf plist :page) (format nil "~a" i))
        (setf is-current-page (= current i))
        (format nil "<a href=\"?~a\">~:[~;<big><b>~]~a~:[~;</b></big>~]</a>"
-               (make-get-str plist)
+               (servo.make-get-str plist)
                is-current-page
                i
                is-current-page))))
@@ -512,7 +512,7 @@
                     (push product result-products)))
               (remove-if-not #'(lambda (product)
                                  (active product))
-                             (get-recursive-products object)))
+                             (storage.get-recursive-products object)))
       result-products)))
 
 
@@ -652,39 +652,39 @@
         contents)))
 
 
-(defmethod vendor-controller ((object group) request-get-plist)
+(defmethod vendor-controller ((object group) vendor)
   (let* ((result-products))
     (mapcar #'(lambda (product)
                 (let ((vendor (vendor product)))
                   (if (string=
                        (string-downcase (string-trim '(#\Space #\Tab #\Newline) vendor))
                        (string-downcase (string-trim '(#\Space #\Tab #\Newline)
-                                                     (ppcre:regex-replace-all "%20" (getf request-get-plist :vendor) " "))))
+                                                     (ppcre:regex-replace-all "%20" vendor " "))))
                       (push product result-products))))
-            (get-recursive-products object))
+            (storage.get-recursive-products object))
     result-products))
 
-(defmethod vendor-filter-controller (product request-get-plist)
-  (let ((vendor (vendor product)))
+(defmethod vendor-filter-controller (product vendor)
+  (let ((product-vendor (vendor product)))
     (string=
-     (string-downcase (string-trim '(#\Space #\Tab #\Newline) vendor))
+     (string-downcase (string-trim '(#\Space #\Tab #\Newline) product-vendor))
      (string-downcase (string-trim '(#\Space #\Tab #\Newline)
-                                   (ppcre:regex-replace-all "%20" (getf request-get-plist :vendor) " "))))))
+                                   (ppcre:regex-replace-all "%20" vendor " "))))))
 
 ;;; Функция, добавляющая в хлебные крошки вендора, если он присутствует
 ;;; в get запросе.
 (defun breadcrumbs-add-vendor1 (breadcrumbs parameters)
   (let ((belts (getf breadcrumbs :breadcrumbelts))
         (tail (getf breadcrumbs :breadcrumbtail))
-        (vendor (getf parameters :vendor))
-        (result breadcrumbs))
-    (when (not (null vendor))
-      (setf result (list :breadcrumbelts (append belts (list tail))
-                         :breadcrumbtail (list :key vendor
-                                               :val (format nil "~a ~a"
-                                                            (getf tail :val)
-                                                            vendor)))))
-    result))
+        (vendor (getf parameters :vendor)))
+    (if vendor
+        (list :breadcrumbelts (append belts (list tail))
+              :breadcrumbtail (list :key vendor
+                                    :val (format nil "~a ~a"
+                                                 (getf tail :val)
+                                                 vendor)))
+        ;; else
+        breadcrumbs)))
 
 
 ;; Сделать строку начинающейся с заглавной буквы.

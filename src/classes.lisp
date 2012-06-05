@@ -176,7 +176,7 @@
 
 (defmethod get-list-of-producers ((object group) &optional (filter #'(lambda (product) (active product))))
   (let ((producers (make-hash-table :test #'equal)))
-    (loop :for product :in (remove-if-not filter (get-recursive-products object)) :do
+    (loop :for product :in (remove-if-not filter (storage.get-recursive-products object)) :do
        (mapcar #'(lambda (optgroup)
                    (if (string= (name optgroup) "Общие характеристики")
                        (let ((options (options optgroup)))

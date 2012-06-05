@@ -104,7 +104,7 @@
                          (if (active v)
                              "yes"
                              "no")
-                         (length (remove-if-not #'active (get-recursive-products v))))))
+                         (length (remove-if-not #'active (storage.get-recursive-products v))))))
            (storage *global-storage*)))
 
 
@@ -159,7 +159,7 @@
                               (declare (ignore num))
                               (let ((products
                                      (remove-if-not #'(lambda (p)
-                                                        (vendor-filter-controller p (list :vendor vendor)))
+                                                        (vendor-filter-controller p vendor))
                                                     (products v))))
                                 (format stream "\"~a\";\"~a\";http://www.320-8080.ru/~a?vendor=~a;~a;~a;~a;~a;~%"
                                         (stripper (name v))
