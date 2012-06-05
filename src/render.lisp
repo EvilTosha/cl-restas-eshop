@@ -612,7 +612,7 @@
                  (setf (getf url-parameters :vendor) (hunchentoot:url-encode k))
                  (push (list :vendor k
                              :cnt x
-                             :link (format nil "?~a" (make-get-str url-parameters)))
+                             :link (format nil "?~a" (servo.make-get-str url-parameters)))
                        veiws))
              vendors)
     (setf veiws (sort veiws #'string<= :key #'(lambda (v) (string-upcase (getf v :vendor)))))

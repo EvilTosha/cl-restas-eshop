@@ -283,17 +283,16 @@
          (request-parted-list (split-sequence:split-sequence #\? request-full-str))
          (request-str (string-right-trim "\/" (car request-parted-list)))
          (request-list (split-sequence:split-sequence #\/ request-str))
-         (request-get-plist (if (null (cadr request-parted-list))
-                                nil
-                                ;; else
-                                (let ((result))
-                                  (loop :for param :in (split-sequence:split-sequence #\& (cadr request-parted-list)) :do
-                                     (let ((split (split-sequence:split-sequence #\= param)))
-                                       (setf (getf result (intern (string-upcase (car split)) :keyword))
-                                             (if (null (cadr split))
-                                                 ""
-                                                 (cadr split)))))
-                                  result))))
+         (request-get-plist (when (cadr request-parted-list)
+                              (let (result)
+                                (loop
+                                   :for param :in (split-sequence:split-sequence #\& (cadr request-parted-list))
+                                   :do (let ((split (split-sequence:split-sequence #\= param)))
+                                         (setf (getf result (intern (string-upcase (car split)) :keyword))
+                                               (if (null (cadr split))
+                                                   ""
+                                                   (cadr split)))))
+                                result))))
     (values request-str request-list request-get-plist)))
 
 
@@ -309,11 +308,9 @@
     request-list))
 
 
-(defun make-get-str (request-get-plist)
-  (format nil "~{~a~^&~}"
-          (loop :for cursor :in request-get-plist by #'cddr collect
-             (format nil "~a=~a" (string-downcase cursor) (getf request-get-plist cursor)))))
-
+(defun servo.make-get-str (request-get-plist)
+  "Convert plist of get params to url (without encoding)"
+  (format nil "~{~(~A~)=~A~^&~}" request-get-plist))
 
 (defun parse-id (id-string)
   (let ((group_id (handler-bind ((SB-INT:SIMPLE-PARSE-ERROR
