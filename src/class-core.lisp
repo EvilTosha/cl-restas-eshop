@@ -446,7 +446,7 @@ Note: returned object is setfable"
                                                                ;; (empty g)
                                                                (not (active g))))
                                                           (groups val))
-                                               #'menu-sort)
+                                               #'class-core.menu-sort)
                                           :collect
                                           (list :key  (key child) :name (name child)))))
                           ;; else - this is ordinal

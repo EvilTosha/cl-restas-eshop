@@ -241,15 +241,6 @@
       (values result page-line-string))))
 
 
-(defun menu-sort (a b)
-  (if (or (null (order a))
-          (null (order b)))
-      nil
-      ;; else
-      (< (order a)
-         (order b))))
-
-
 (defun default-page (&optional (content nil) &key keywords description title no-need-cart)
   (soy.index:main (list :keywords keywords
                         :description description

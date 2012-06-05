@@ -96,7 +96,7 @@
                                   :producers (when (getf parameters :showall)
                                                (render.show-producers (storage.get-filtered-products object #'atom)))
                                   :accessories (soy.catalog:accessories)
-                                  :groups (let ((sort-groups (sort (remove-if-not #'active (groups object)) #'menu-sort)))
+                                  :groups (let ((sort-groups (sort (remove-if-not #'active (groups object)) #'class-core.menu-sort)))
                                             (mapcar #'(lambda (child)
                                                         (let* ((show-func (if (getf parameters :showall)
                                                                               #'atom
