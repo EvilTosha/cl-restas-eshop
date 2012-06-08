@@ -31,7 +31,7 @@
       (setf sorted-list (subseq sorted-list 0 size)))
     ;; Возвращаем список продуктов
     (mapcar #'(lambda (x)
-                (gethash (getf x :id) (storage *global-storage*)))
+                (getobj (getf x :id) 'product))
             sorted-list)))
 
 
@@ -41,7 +41,7 @@
       (if (null articul)
           (search-engine q 50)
           ;; else
-          (let ((result (gethash (format nil "~a" articul) (storage *global-storage*))))
+          (let ((result (getobj (format nil "~a" articul) 'product)))
             (if (null result)
                 (search-engine q 50)
                 (list result)))))))

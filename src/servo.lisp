@@ -718,14 +718,12 @@
        :do (let ((key (car plist))
                  (value (cadr plist)))
              (setf (getf result key)
-                   (if (getf result key)
-                       (append
-                        (if (consp (getf result key))
-                            (getf result key)
-                            (list (getf result key)))
-                        (list value))
+                   (aif (getf result key)
+                        (append
+                         (ensure-list it)
+                         (list value))
                        ;;else
-                       value)))
+                        value)))
        (setf plist (cddr plist)))
     result))
 
@@ -877,6 +875,43 @@
 (defmethod servo.collection-count ((collection hash-table))
   (hash-table-count collection))
 
+(defun class-equal-p (&rest objects)
+  "Check whether all objects are of same type"
+  (unless
+      (remove (class-of (first objects)) objects :test #'equal :key #'class-of)
+    t))
+
+
+(defmacro make-curry-lambda (func const-arg)
+  "Makes lambda that calls func with one lambda's argument another const-arg
+Note: func must be symbol, not function object;
+Note: const-arg evaluates only once at beginning, so beware of using changing param"
+  (once-only (const-arg)
+    (let ((x (gensym)))
+      `#'(lambda (,x) (,func ,x ,const-arg)))))
+
+(defmacro make-curry-lambda* (func const-arg)
+  "Similar to make-curry-lambda, but const arg first in calling func
+Note: func must be symbol, not function object;
+Note: const-arg evaluates only once at beginning, so beware of using changing param"
+  (once-only (const-arg)
+    (let ((x (gensym)))
+      `#'(lambda (,x) (,func ,const-arg ,x)))))
+
+(defmacro once-only ((&rest names) &body body)
+  "Macro for evaluate each argument in names only once at beginning of macro"
+  (let ((gensyms (loop for n in names collect (gensym))))
+    `(let (,@(loop for g in gensyms collect `(,g (gensym))))
+       `(let (,,@(loop for g in gensyms for n in names collect ``(,,g ,,n)))
+          ,(let (,@(loop for n in names for g in gensyms collect `(,n ,g)))
+                ,@body)))))
+
+(defun ensure-list (obj)
+  "When obj is list return obj, otherwise return list with only element - obj"
+  (if (consp obj) obj (list obj)))
+
+;; !! make properly working
 (defmacro case-test (test-func keyform &body cases)
   "Works like usual case, but accepts function for test"
   (sb-impl::case-body 'case-body keyform cases t test-func nil nil nil))
+

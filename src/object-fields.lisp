@@ -226,13 +226,7 @@
 
 (defun object-fields.group-list-field-get-data (string-list)
   (when string-list
-    (if (consp string-list)
-        (mapcar #'(lambda (parent)
-                    (log5:log-for debug-console "~a~%" parent)
-                    (gethash parent (storage *global-storage*)))
-                string-list)
-        (list (gethash string-list (storage *global-storage*))))))
-
+    (keys-to-objects (ensure-list string-list) :type 'group)))
 
 (defun object-fields.group-list-field-serialize (groups)
   (format nil "[~{\"~a\"~^,~}]" (mapcar #'key groups)))
@@ -273,12 +267,8 @@
 
 
 (defun object-fields.product-list-field-get-data (string-list)
-  (if (consp string-list)
-      (mapcar #'(lambda (parent)
-                  (log5:log-for debug-console "~a~%" parent)
-                  (gethash parent (storage *global-storage*)))
-              string-list)
-      (list (gethash string-list (storage *global-storage*)))))
+  (when string-list
+    (keys-to-objects (ensure-list string-list) :type 'product)))
 
 (defun object-fields.product-list-field-serialize (products)
   (format nil "[~{\"~a\"~^,~}]" (mapcar #'key products)))

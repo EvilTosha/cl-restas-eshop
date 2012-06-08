@@ -83,7 +83,7 @@
 
 (defun admin.edit-content (&optional new-post-data)
   (let* ((key (getf (request-get-plist) :key))
-         (item (gethash key (storage *global-storage*)))
+         (item (getobj key))
          (item-fields (when item (class-core.make-fields item)))
          (post-data new-post-data))
     (when (and item post-data)
@@ -105,7 +105,7 @@
 (defun admin.make-content (new-post-data)
   (let* ((key (getf (request-get-plist) :key))
          (type (getf (request-get-plist) :type))
-         (item (gethash key (storage *global-storage*)))
+         (item (getobj key))
          (post-data new-post-data))
     (if item
         ;;if item exist in storage, redirect to edit page (but url will be .../make?...)
@@ -145,7 +145,7 @@
 
 (defun admin.pics-deleting (new-post-data)
   (let* ((key (getf new-post-data :key))
-         (p (gethash key (storage *global-storage*)))
+         (p (getobj key 'product))
          (output (format nil "Product with key ~a not found" key)))
     (when p
       (rename-remove-product-pics p)
@@ -239,17 +239,13 @@
   (let ((post-data new-post-data))
     (when post-data
       (setf post-data (servo.plist-to-unique post-data))
-      (let ((products (if (consp (getf post-data :products))
-                          (getf post-data :products)
-                          (list (getf post-data :products))))
-            (groups (if (consp (getf post-data :groups))
-                        (getf post-data :groups)
-                        (list (getf post-data :groups)))))
+      (let ((products (ensure-list (getf post-data :products)))
+            (groups (ensure-list (getf post-data :groups))))
         (mapcar #'(lambda (product)
                     (mapcar #'(lambda (group)
                                 (class-core.bind-product-to-group
-                                 (gethash product (storage *global-storage*))
-                                 (gethash group (storage *global-storage*))))
+                                 (getobj product 'product)
+                                 (getobj group 'group)))
                             groups))
                 products)))
     (let ((unparented-products (storage.get-filtered-products

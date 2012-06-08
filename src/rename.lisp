@@ -202,7 +202,7 @@
            :do (let* ((path (format nil "~a" folder)))
                  (if (directory-exists-p path)
                      (let* ((articul (car (last (split "/" path))))
-                            (product (gethash articul (storage *global-storage*))))
+                            (product (getobj articul 'product)))
                        (when product
                          (rename-convert-from-folder product path)
                          (rename-copy-folder path (format nil "~a~a/" backup articul))
@@ -234,7 +234,7 @@
 
 
 (defmethod rename-remove-product-pics ((product string))
-  (let ((product-object (gethash product (storage *global-storage*))))
+  (let ((product-object (getobj product 'product)))
     (if product-object
         (rename-remove-product-pics product-object)
         (log5:log-for warning
@@ -259,7 +259,7 @@
     ((product string)
      &optional (path-to-backup
                 (config.get-option "PATHS" "path-to-big-images-backup")))
-  (let ((product-object (gethash product (storage *global-storage*))))
+  (let ((product-object (getobj product 'product)))
     (if product-object
         (rename.restore-pics-from-backup product-object path-to-backup)
         (log5:log-for warning

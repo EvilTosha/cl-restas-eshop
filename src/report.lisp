@@ -207,11 +207,11 @@
 
 (defun post-proccess-gateway ()
   (mapcar #'(lambda (v)
-              (let ((p (gethash v (storage *global-storage*))))
+              (let ((p (getobj v 'product)))
                 (when p
                   (setf (preorder p) t)
                   (setf (active p) t)
-                  (setf (gethash v (storage *global-storage*)) p)
+                  (setobj v p)
                   (setf (gethash v *special-products*) p))))
           (list
            "999888"
@@ -248,24 +248,17 @@
   (let ((groups (storage.get-groups-list)))
     (mapcar #'(lambda (group)
                 (setf (products group)
-                      (remove-if-not #'(lambda (v) (let ((pr (gethash (key v) (storage *global-storage*))))
+                      (remove-if-not #'(lambda (v) (let ((pr (getobj (key v) 'product)))
                                                      (and pr
                                                           (equal group (class-core.parent pr)))))
                                      (products group))))
             groups)
     "done"))
 
-
-
-
 (defun report.delete-doubles (products)
   (mapcar #'(lambda (v)
-              (let ((pr (gethash (format nil "~a" v) (storage *global-storage*))))
-                (when pr
-                  (remhash (format nil "~a" v) (storage *global-storage*)))))
+              (remobj (format nil "~A" v) 'product))
           products))
-
-
 
 (defun serials.all-prs ()
   (let ((rs))
@@ -276,26 +269,9 @@
              (storage *global-storage*))
     rs))
 
-(defun create-sale-filter (group)
-  (let* ((key (format nil "~a-~a" (key group) "sale"))
-         (filter)
-         (tmp-filter (car (remove-if-not #'(lambda (v) (equal (key v) key))
-                                         (filters group)))))
-    (if (not tmp-filter)
-        (setf filter (make-instance 'filter))
-        (setf filter tmp-filter))
-    (setf (name filter) "Распродажа")
-    (setf (func filter) #'groupd.is-groupd)
-    (setf (key filter) key)
-    (setf (parents filter) (list group))
-    (when (not tmp-filter)
-      (setf (gethash key (storage *global-storage*)) filter)
-      (push filter (filters group)))
-    filter))
-
 (defun report.add-products-to-group (product-list gr)
   (mapcar #'(lambda (v)
-              (let ((pr (gethash (format nil "~a" v) (storage *global-storage*))))
+              (let ((pr (getobj (format nil "~a" v) 'product)))
                 (when pr
                   (setf (parents pr) (list gr))
                   (push pr (products gr))
@@ -303,121 +279,62 @@
           product-list)
   "done")
 
+(defun edit-marketing-filter (group key-suffix name func)
+  (let* ((key (format nil "~A-~A" (key group) key-suffix))
+         new-filter
+         (filter (aif (find key (filters group) :test #'equal :key #'key)
+                      it
+                      (progn
+                        (setf new-filter t)
+                        (setobj key (make-instance 'filter))))))
+    (setf (name filter) name)
+    (setf (func filter) func)
+    (setf (key filter) key)
+    (setf (parents filter) (list group))
+    (when new-filter
+      (push filter (filters group)))
+    filter))
+
+(defun create-sale-filter (group)
+  (edit-marketing-filter
+   group "sale" "Распродажа" #'groupd.is-groupd))
 
 (defun create-bestprice-filter (group)
-  (let* ((key (format nil "~a-~a" (key group) "bestprice"))
-         (filter)
-         (tmp-filter (car (remove-if-not #'(lambda (v) (equal (key v) key))
-                                         (filters group)))))
-    (if (not tmp-filter)
-        (setf filter (make-instance 'filter))
-        (setf filter tmp-filter))
-    (setf (name filter) "Горячий уик-энд скидок")
-    (setf (func filter) #'(lambda (object) (> (delta-price object) 0)))
-    (setf (key filter) key)
-    (setf (parents filter) (list group))
-    (when (not tmp-filter)
-      (setf (gethash key (storage *global-storage*)) filter)
-      (push filter (filters group)))
-    filter))
+  (edit-marketing-filter
+   group "bestprice" "Горячий уик-энд скидок"
+   #'(lambda (object) (plusp (delta-price object)))))
 
 (defun create-ipad3-filter (group)
-  (let* ((key (format nil "~a-~a" (key group) "ipad3"))
-         (filter)
-         (tmp-filter (car (remove-if-not #'(lambda (v) (equal (key v) key))
-                                         (filters group)))))
-    (if (not tmp-filter)
-        (setf filter (make-instance 'filter))
-        (setf filter tmp-filter))
-    (setf (name filter) "IPad 3")
-    (setf (func filter)
-          #'(lambda (p)
-              (let ((value))
-                (with-option1 p "Общие характеристики" "Модель"
-                              (setf value (getf option :value)))
-                (if (null value)
-                    nil
-                    (string= (string-downcase (format nil "~a" value)) "ipad new")))))
-    (setf (key filter) key)
-    (setf (parents filter) (list group))
-    (when (not tmp-filter)
-      (setf (gethash key (storage *global-storage*)) filter)
-      (push filter (filters group)))
-    filter))
-
-
+  (edit-marketing-filter
+   group "ipad3" "IPad 3"
+   #'(lambda (p)
+       (with-option1 p "Общие характеристики" "Модель"
+                     (awhen (getf option :value)
+                       (string= (format nil "~(~A~)" it) "ipad new"))))))
 
 (defun create-man-sale-filter (group)
-  (let* ((key (format nil "~a-~a" (key group) "23feb"))
-         (filter)
-         (tmp-filter (car (remove-if-not #'(lambda (v) (equal (key v) key))
-                                         (filters group)))))
-    (if (not tmp-filter)
-        (setf filter (make-instance 'filter))
-        (setf filter tmp-filter))
-    (setf (name filter) "Подарки к 23 февраля")
-    (setf (func filter) #'groupd.man.is-groupd)
-    (setf (key filter) key)
-    (setf (parents filter) (list group))
-    (when (not tmp-filter)
-      (setf (gethash key (storage *global-storage*)) filter)
-      (push filter (filters group)))
-    filter))
-
+  (edit-marketing-filter
+   group "23feb" "Подарки к 23 февраля" #'groupd.man.is-groupd))
 
 (defun create-woman-sale-filter (group)
-  (let* ((key (format nil "~a-~a" (key group) "8mart"))
-         (filter)
-         (tmp-filter (car (remove-if-not #'(lambda (v) (equal (key v) key))
-                                         (filters group)))))
-    (if (not tmp-filter)
-        (setf filter (make-instance 'filter))
-        (setf filter tmp-filter))
-    (setf (name filter) "Подарки к 8 марта")
-    (setf (func filter) #'groupd.woman.is-groupd)
-    (setf (key filter) key)
-    (setf (parents filter) (list group))
-    (when (not tmp-filter)
-      (setf (gethash key (storage *global-storage*)) filter)
-      (push filter (filters group)))
-    filter))
+  (edit-marketing-filter
+   group "8mart" "Подарки к 8 марта" #'groupd.woman.is-groupd))
 
 (defun report.set-man-salefilter ()
-  (mapcar #'(lambda (gr)
-              (create-man-sale-filter gr))
-          (storage.get-groups-list)))
+  (mapcar #'create-man-sale-filter (storage.get-groups-list)))
 
 (defun report.set-woman-salefilter ()
-  (mapcar #'(lambda (gr)
-              (create-woman-sale-filter gr))
-          (storage.get-groups-list)))
+  (mapcar #'create-woman-sale-filter (storage.get-groups-list)))
 
-
-(defun report.edit-filter (group filter-func name filter-key)
-  (let* ((key (format nil "~a-~a" (key group) filter-key))
-         (filter)
-         (tmp-filter (car (remove-if-not #'(lambda (v) (equal (key v) key))
-                                         (filters group)))))
-    (if (not tmp-filter)
-        (setf filter (make-instance 'filter))
-        (setf filter tmp-filter))
-    (setf (name filter) name)
-    (setf (func filter) filter-func)
-    (setf (key filter) key)
-    (setf (parents filter) (list group))
-    (when (not tmp-filter)
-      (setf (gethash key (storage *global-storage*)) filter)
-      (push filter (filters group)))
-    filter))
 
 (defun report.set-filters (groups filter-func name filter-key)
   (mapcar #'(lambda (gr)
-              (report.edit-filter gr filter-func name filter-key))
+              (edit-marketing-filter gr filter-key name filter-func))
           groups))
 
 (defun report.create-marketing-filters ()
-	(create-ipad3-filter (gethash "planshetnie-komputery" (storage *global-storage*)))
-	(report.set-filters (list (gethash "noutbuki" (storage *global-storage*)))
+	(create-ipad3-filter (getobj "planshetnie-komputery" 'group))
+	(report.set-filters (list (getobj "noutbuki" 'group))
 											#'(lambda (product)
 													(let ((opts))
 														(with-option1 product
@@ -431,18 +348,9 @@
 											"Для отдыха"
 											"holidays"))
 
-;; (groupd.man.restore)
-;; (groupd.woman.restore)
-;; (report.set-man-salefilter)
-;; (report.set-woman-salefilter)
-;; (eshop::create-bestprice-filter (gethash "noutbuki" (eshop::storage eshop::*global-storage*)))
-;; (eshop::create-bestprice-filter (gethash "netbuki" (eshop::storage eshop::*global-storage*)))
-
-
 (defun report.set-salefilter ()
   (mapcar #'(lambda (v)
-              (let ((gr (gethash (format nil "~a" v) (storage *global-storage*))))
-                (create-sale-filter gr)))
+              (create-sale-filter (getobj (format nil "~a" v) 'group)))
           (list "netbuki"
                 "noutbuki"
                 "planshetnie-komputery"

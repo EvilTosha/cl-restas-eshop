@@ -14,13 +14,12 @@
                        (storage.get-filtered-products group #'atom)
                        (storage.get-filtered-products group #'active)))
     (setf filters (filters.get-filters group products))
-    (if filters
-        (list (soy.fullfilter:rightfilter
-               (list :filters (mapcar #'(lambda (v)
-                                          (filters.make-string-filter (car v)
-                                                                      (cdr v)))
-                                      filters))))
-        nil)))
+    (when filters
+      (list (soy.fullfilter:rightfilter
+             (list :filters (mapcar #'(lambda (v)
+                                        (filters.make-string-filter (car v)
+                                                                    (cdr v)))
+                                    filters)))))))
 
 
 
@@ -127,31 +126,33 @@
                                        (cartrige-group (string= "cartridge-dlya-printerov" (key object)))
                                        (printer-articul (and cartrige-group (getf parameters :printer-articul)))
                                        (storage-printer (when printer-articul
-                                                          (gethash printer-articul (storage *global-storage*))))
+                                                          (getobj printer-articul 'product)))
                                        (cartrige-printer (when printer-articul
                                                            (gethash printer-articul *printer-storage*))))
-                                  (if (null (getf parameters :sort))
-                                      (setf (getf parameters :sort) "pt"))
+                                  (unless (getf parameters :sort)
+                                    (setf (getf parameters :sort) "pt"))
                                   (awhen (getf parameters :vendor)
                                     (setf products-list
                                           (remove-if-not
                                            #'(lambda (p)
                                                (vendor-filter-controller p (vendor-transform-from-alias it)))
                                            products-list)))
-                                  (if (getf parameters :fullfilter)
-                                      (setf products-list (fullfilter-controller products-list object parameters)))
+                                  (when (getf parameters :fullfilter)
+                                    (setf products-list (fullfilter-controller products-list object parameters)))
                                   (when (and printer-articul cartrige-printer)
-                                    (setf products-list (mapcar #'(lambda (articul) (gethash articul (storage *global-storage*)))
-                                                                (cartrige.get-cartriges-by-model printer-articul))))
+                                    (setf products-list (keys-to-objects
+                                                         (cartrige.get-cartriges-by-model printer-articul)
+                                                         :type 'product)))
                                   (with-sorted-paginator
                                       products-list
                                     parameters
                                     (soy.catalog:centerproduct
                                      (list
                                       :sorts (sorts parameters)
-                                      :producers (render.show-producers (if (getf parameters :showall)
-                                                                            (storage.get-filtered-products object #'atom)
-                                                                            (storage.get-filtered-products object #'active)))
+                                      :producers (render.show-producers
+                                                  (storage.get-filtered-products
+                                                   object
+                                                   (if (getf parameters :showall) #'atom #'active)))
                                       :accessories (soy.catalog:accessories)
                                       :pager pager
                                       :cartrigeselect (when cartrige-group
@@ -387,7 +388,7 @@
                     ;;список всех активных товаров кроме object
                     (let ((all))
                       (mapcar #'(lambda (v)
-                                  (when (not (equal v object))
+                                  (unless (equal v object)
                                     (push v all)))
                               (storage.get-filtered-products (products *global-storage*)))
                       all)

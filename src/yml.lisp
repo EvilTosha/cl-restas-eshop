@@ -56,7 +56,7 @@
         (min-price 500)
         (max-price 0))
     (mapcar #'(lambda (v)
-                (let* ((product (gethash (getf v :articul) (storage *global-storage*)))
+                (let* ((product (getobj (getf v :articul) 'product))
                        (d (yml.get-product-delivery-price1 product)))
                   (if (> d max-price)
                       (setf max-price d))
@@ -149,15 +149,13 @@
                         :being :the hash-key
                         :using (hash-value id)
                         :in (yml-groups)
-                        :when (typep (gethash key (storage *global-storage*)) 'group)
-                        :collect (list :id (yml-id (gethash key (storage *global-storage*)))
-                                       :name (name (gethash key (storage *global-storage*)))
-                                       :parent (if (null (class-core.parent (gethash key (storage *global-storage*))))
-                                                   0 ; если это вершина дерева
-                                                   (let* ((parent (class-core.parent (gethash key (storage *global-storage*))))
-                                                          (parent-key (key parent))
-                                                          (num-key (yml-id parent)))
-                                                     num-key))))
+                        :when (getobj key 'group)
+                        :collect (let ((obj (getobj key 'group)))
+                                   (list :id (yml-id obj)
+                                         :name (name obj)
+                                         :parent (if (null (class-core.parent obj))
+                                                     0 ; если это вершина дерева
+                                                     (yml-id (class-core.parent obj))))))
                      :offers (format nil "~{~a~}"
                                      (loop
                                         :for product
@@ -200,15 +198,13 @@
                         :being :the hash-key
                         :using (hash-value id)
                         :in (yml-groups)
-                        :when (typep (gethash key (storage *global-storage*)) 'group)
-                        :collect (list :id id
-                                       :name (name (gethash key (storage *global-storage*)))
-                                       :parent (if (null (class-core.parent (gethash key (storage *global-storage*))))
-                                                   0 ;; если это вершина дерева
-                                                   (let* ((parent (class-core.parent (gethash key (storage *global-storage*))))
-                                                          (parent-key (key parent))
-                                                          (num-key (gethash parent-key *yml-group-ids*)))
-                                                     num-key))))
+                        :when (getobj key 'group)
+                        :collect (let ((obj (getobj key 'group)))
+                                   (list :id (yml-id obj)
+                                         :name (name obj)
+                                         :parent (if (null (class-core.parent obj))
+                                                     0 ; если это вершина дерева
+                                                     (yml-id (class-core.parent obj))))))
                      :offers (format nil "~{~a~}"
                                      (loop
                                         :for product
@@ -251,15 +247,13 @@
      :being :the hash-key
      :using (hash-value id)
      :in (yml-groups)
-     :when (typep (gethash key (storage *global-storage*)) 'group)
-     :collect (list :id id
-                    :name (name (gethash key (storage *global-storage*)))
-                    :parent (if (null (class-core.parent (gethash key (storage *global-storage*))))
-                                0 ;; если это вершина дерева
-                                (let* ((parent (class-core.parent (gethash key (storage *global-storage*))))
-                                       (parent-key (key parent))
-                                       (num-key (gethash parent-key *yml-group-ids*)))
-                                  num-key)))))
+     :when (getobj key 'group)
+     :collect (let ((obj (getobj key 'group)))
+                (list :id (yml-id obj)
+                      :name (name obj)
+                      :parent (if (null (class-core.parent obj))
+                                  0 ; если это вершина дерева
+                                  (yml-id (class-core.parent obj)))))))
 
 (defun make-yml-offers()
   (loop
@@ -321,12 +315,4 @@
   "Generate uniq group id for yanedx market. Max current id +1."
   (when (groups *global-storage*)
     (1+ (loop :for g :in (groups *global-storage*) :when (yml-id g) :maximize (yml-id g)))))
-
-;;temp func only for first id setting
-(defun yml.set-groups-id ()
-  (maphash #'(lambda (k v)
-                     (let ((grp (gethash k (storage *global-storage*))))
-                       (when grp
-                         (setf (yml-id grp) v))))
-           *yml-group-ids*))
 

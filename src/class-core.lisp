@@ -6,7 +6,7 @@
   (:documentation "Method that called after unserializing all the items from files.
 Usually it transform string keys to pointers to other objects, such as parents or childs."))
 
-(defmacro class-core.make-class (name slot-list)
+(defmacro class-core.define-class (name slot-list)
   "Macro for making class by given list of slots"
   `(defclass ,name ()
      ,(mapcar #'(lambda (field)
@@ -17,7 +17,7 @@ Usually it transform string keys to pointers to other objects, such as parents o
               slot-list)))
 
 
-(defmacro class-core.make-view-method (name slot-list)
+(defmacro class-core.define-view-method (name slot-list)
   `(defmethod class-core.make-fields ((object ,name))
      (list
       ,@(mapcar #'(lambda (field)
@@ -29,7 +29,7 @@ Usually it transform string keys to pointers to other objects, such as parents o
                        ,(getf field :disabled)))
                 slot-list))))
 
-(defmacro class-core.make-edit-method (name slot-list)
+(defmacro class-core.define-edit-method (name slot-list)
   `(defmethod class-core.edit-fields ((object ,name) post-data-plist)
      (setf
        ,@(mapcan #'(lambda (field)
@@ -55,9 +55,9 @@ Usually it transform string keys to pointers to other objects, such as parents o
                      :advanced (getf tmp :advanced)))))
 
 
-(defmacro class-core.make-unserialize-method (name slot-list)
+(defmacro class-core.define-unserialize-method (name slot-list)
   `(progn
-     (defmethod unserialize (raw (dummy ,name))
+     (defmethod %unserialize (raw (dummy ,name))
        "Make an object with read from file fields"
        (make-instance
         ',name
@@ -71,7 +71,7 @@ Usually it transform string keys to pointers to other objects, such as parents o
                          val
                          ,initform)))))
            slot-list)))
-     (defmethod unserialize-from-file (filepath (dummy ,name))
+     (defmethod %unserialize-from-file (filepath (dummy ,name) storage)
        "Read from file and decode json"
        (with-open-file (file filepath)
          (let ((file-length (cl:file-length file))
@@ -87,7 +87,7 @@ Usually it transform string keys to pointers to other objects, such as parents o
                   (setf percent cur-pos)
                   (when (zerop (mod percent 10))
                     (log5:log-for info-console "Done percent: ~a%" percent)))
-                (setobj ',name (key item) item))))))))
+                (setf (gethash (key item) storage) item))))))))
 
 (defun class-core.get-transform-optgroups (item)
   (declare (product item))
@@ -112,19 +112,29 @@ Usually it transform string keys to pointers to other objects, such as parents o
     (pushnew product (products group))))
 
 
+;;; TODO: make this method standard using "before" keyword
+(defmethod %post-unserialize (dummy)
+  "Do standard post-unserialize actions with each item of same type as dummy
+Reload this method if more actions required"
+  (maphash #'(lambda (k v)
+               (declare (ignore k))
+               (%post-unserialize-item v))
+           (get-storage (type-of dummy))))
+
 ;;вызывается после десереализации продукта
-(defmethod class-core.post-unserialize ((item product))
+(defmethod %post-unserialize-item ((item product))
   ;; после десериализации в parent лежит список key родительских групп
   (setf (parents item)
         (mapcar #'(lambda (parent-key)
                     (when parent-key
-                      (let ((parent (getobj 'group parent-key)))
+                      (let ((parent (getobj parent-key 'group)))
                         ;; if parent group exists, bind that group with product
                         (when parent
                           (push item (products parent))
                           parent))))
                 (parents item)))
   ;; проверка цены, если цена в ИМ ноль, а дельта положительная нужно изменить цену
+  ;; TODO: вынести эту проверку в отдельный метод (использовать не только на старте)
   (when (and (zerop (siteprice item))
              (plusp (delta-price item)))
     (setf (siteprice item) (delta-price item))
@@ -140,110 +150,62 @@ Usually it transform string keys to pointers to other objects, such as parents o
                 (setf (vendor item) (getf option :value))))
 
 
-;;вызывается после десереализации группы
-(defmethod class-core.post-unserialize ((item group))
+(defmethod %post-unserialize-item ((item group))
   ;;adding newlines instead of #Newline
   (when (seo-text item)
     (setf (seo-text item) (object-fields.string-add-newlines (seo-text item))))
-  (when (consp (vendors-seo item))
-    (setf (vendors-seo item) (mapcar #'object-fields.string-add-newlines
-                                     (copy-list (vendors-seo item))))
-    ;;convert vendors key to downcase
-    (when (vendors-seo item)
-      (setf (vendors-seo item) (let ((num 0))
-                                 (mapcar #'(lambda (v)
-                                             (incf num)
-                                             (if (oddp num)
-                                                 (string-downcase v)
-                                                 v))
-                                         (vendors-seo item)))))
-    ;;convert vendors-seo from list to hashtable
-    (setf (vendors-seo item) (servo.list-to-hashtasble
-                              (copy-list (vendors-seo item)))))
   ;; upsale
   (setf (upsale-links item)
         (mapcar #'(lambda (group-key)
-                    ;;в случае если на месте ключей уже лежат группы
-                    (if (groupp group-key)
-                        group-key
-                        (when group-key
-                          (getobj 'group group-key))))
+                    (when group-key
+                      (getobj group-key 'group)))
                 (upsale-links item)))
   ;; после десериализации в parent лежит список key родительских групп
-  (let ((parents (copy-list (parents item))))
-    (setf (parents item)
-          (mapcar #'(lambda (parent-key)
-                      ;;в случае если на месте ключей уже лежат группы
-                      (if (groupp parent-key)
-                          parent-key
-                          (when parent-key
-                            (getobj 'group parent-key))))
-                  parents))
-    ;; удаляем nil для битых ключей
-    ;; TODO обрабатывать исключение если ключи не были найдены
-    (setf (parents item) (remove-if #'null (parents item)))
-    ;; проставление ссылок у родителей на данную группу
-    (let ((is-parent-link (remove-if-not #'(lambda (v) (equal item v))
-                                         (parents item))))
-      (unless is-parent-link
-        (mapcar #'(lambda (parent)
-                    (when parent
-                      (push item (groups parent))))
-                (parents item)))))
-  (setf (empty item) (not (null (remove-if-not #'active (products item)))))
-  (let ((keys (keyoptions item)))
-    ;;проверка на то нужно ли перерабатывать ключеве опции
-    (if (and keys
-             (not (atom keys))
-             (not (atom (car keys)))
-             (not (atom (caar keys))))
-        (setf (keyoptions item) (mapcar #'(lambda (pair)
-                                            (list :optgroup (cdr (assoc :optgroup pair))
-                                                  :optname (cdr (assoc :optname pair))))
-                                        (keyoptions item)))))
+  (setf (parents item)
+        (remove-if #'null (parents item)
+                   :key (make-curry-lambda getobj 'group)))
+  ;; проставление ссылок у родителей на данную группу
+  (mapcar #'(lambda (parent)
+              (push item (groups parent)))
+          (parents item))
+  (setf (empty item) (some #'active (products item)))
+  (setf (keyoptions item) (mapcar #'(lambda (pair)
+                                      (list :optgroup (cdr (assoc :optgroup pair))
+                                            :optname (cdr (assoc :optname pair))))
+                                  (keyoptions item)))
   ;;catalog-keyoptions
-  (let ((keys (catalog-keyoptions item)))
-    ;;проверка на то нужно ли перерабатывать ключеве опции
-    (if (and keys
-             (not (atom keys))
-             (not (atom (car keys)))
-             (not (atom (caar keys))))
-        (setf (catalog-keyoptions item) (mapcar #'(lambda (item)
-                                                    (list :optgroup (cdr (assoc :optgroup item))
-                                                          :optname (cdr (assoc :optname item))
-                                                          :showname (cdr (assoc :showname item))
-                                                          :units (cdr (assoc :units item))))
-                                                (catalog-keyoptions item)))))
-  ;;TODO эта проверка нужна для постобработки групп дессериализованных их старых быкапов, когда фулфильтры хранились прямо в fullfilter
-  (when (and (null (raw-fullfilter item))
-             (fullfilter item)
-             (not (typep (fullfilter item) 'group-filter)))
-    (setf (raw-fullfilter item) (concatenate 'string "" (fullfilter item)))
-    (setf (fullfilter item) nil))
+  (setf (catalog-keyoptions item)
+        (mapcar #'(lambda (item)
+                    (list :optgroup (cdr (assoc :optgroup item))
+                          :optname (cdr (assoc :optname item))
+                          :showname (cdr (assoc :showname item))
+                          :units (cdr (assoc :units item))))
+                (catalog-keyoptions item)))
   (when (and (raw-fullfilter item)
              (null (fullfilter item)))
     (setf (raw-fullfilter item) (object-fields.string-add-newlines (raw-fullfilter item)))
-    (setf (fullfilter item) (object-fields.string-add-newlines (raw-fullfilter item)))
-    (setf (fullfilter item) (class-core.decode (fullfilter item) (make-instance 'group-filter)))))
+    (setf (fullfilter item) (class-core.decode (raw-fullfilter item) (make-instance 'group-filter)))))
 
-(defmethod class-core.post-unserialize ((item filter))
-  ;;adding newlines instead of #Newline
+(defmethod %post-unserialize-item ((item filter))
+  ;; add newlines instead of #Newline
   (setf (func-string item) (object-fields.string-add-newlines (func-string item)))
-  ;;evaling func-string to func
+  ;; eval func-string to func
   (setf (func item) (eval (read-from-string (func-string item))))
   ;; после десериализации в parent лежит список key родительских групп
   (setf (parents item)
         (remove-if #'null
                    (mapcar #'(lambda (parent-key)
                                (when parent-key
-                                 (let ((parent (getobj 'group parent-key)))
+                                 (let ((parent (getobj parent-key 'group)))
                                    ;; if parent (group) exists, bind him with filter
                                    (when parent
                                      (push item (filters parent))
                                      parent))))
                            (parents item)))))
 
-(defmethod class-core.post-unserialize ((item vendor))
+
+(defmethod %post-unserialize-item ((item vendor))
+  "Do post-unserialize actions with vendor object"
   ;; convert seo-texts from list to hash-table
   (when (listp (seo-texts item))
     (setf (seo-texts item) (servo.list-to-hashtasble
@@ -255,74 +217,95 @@ Usually it transform string keys to pointers to other objects, such as parents o
   (let ((vendor-key (key item)))
     (maphash #'(lambda (k v)
                  (declare (ignore v))
-                 (let ((group (gethash k (storage *global-storage*))))
+                 (let ((group (getobj k 'group)))
                    (setf (gethash vendor-key (vendors group)) item)))
              (seo-texts item))))
 
-
-(defmethod class-core.post-unserialize ((item article)))
+(defmethod %post-unserialize ((dummy vendor))
+  "Do post-unserialize actions with vendor storage.
+Reloaded sandard method %post-unserialize"
+  (let ((storage (get-storage 'vendor)))
+    (maphash #'(lambda (k v)
+                 (declare (ignore k))
+                 (%post-unserialize-item v))
+             storage)
+    (maphash #'(lambda (k v)
+                 (declare (ignore k))
+                 (let ((name (name v)))
+                   (when (servo.valid-string-p name)
+                     (setobj 'vendor (string-downcase name) v))))
+             (copy-structure storage))))
 
 (defun class-core.unserialize-all ()
-  (let ((t-storage)
-        (t-vendor-storage))
-    (sb-ext:gc :full t)
-    (let ((*global-storage* (make-instance 'global-storage))
-          (*vendor-storage* (make-hash-table :test #'equal)))
-      (log5:log-for info "Unserialize groups...")
-      (unserialize-from-file (backup.last-group-backup-pathname) (class-core.get-instance "group"))
-      (log5:log-for info "Unserialize products...")
-      (unserialize-from-file (backup.last-product-backup-pathname) (class-core.get-instance "product"))
-      (log5:log-for info "Unserialize filters...")
-      (unserialize-from-file (backup.last-filter-backup-pathname) (class-core.get-instance "filter"))
-      (log5:log-for info "Unserialize vendors...")
-      (unserialize-from-file (backup.last-vendor-backup-pathname) (class-core.get-instance "vendor"))
-      (log5:log-for info "Making lists")
-      (storage.make-lists)
-      (log5:log-for info "Post-unserialize")
-      (maphash #'(lambda (key value)
-                   (declare (ignore key))
-                   (class-core.post-unserialize value))
-               (storage *global-storage*))
-      (maphash #'(lambda (key value)
-                   (declare (ignore key))
-                   (class-core.post-unserialize value))
-               *vendor-storage*)
-      (setf t-storage *global-storage*)
-      (setf t-vendor-storage *vendor-storage*))
-    (setf *global-storage* t-storage)
-    (setf *vendor-storage* t-vendor-storage)))
+  "Unsrialize all classes objects from files"
+  ;; unserialize all instances, without processing slots
+  (maphash
+   #'(lambda (class properties)
+       (let ((t-storage (make-hash-table :test #'equal)) ; storage for temp instances
+             (instance (get-instance class)))
+         (log5:log-for info "Unserialize ~A..." class)
+         (%unserialize-from-file (get-last-bakup-pathname class)
+                                 instance
+                                 t-storage)
+         ;; set real storage as fully unserialized temp storage
+         (setf (getf properties :stroage) t-storage)))
+   *classes*)
+  ;; post-unserialize actions, such as making links instead of text keys
+  ;; Note: can't be merged with previous maphash, because must be after it
+  (maphash
+   #'(lambda (class properties)
+       (declare (ignore properties))
+       (%post-unserialize (get-instance class)))
+   *classes*))
 
 (defparameter *classes* (make-hash-table :test #'equal)
   "Hash-table of all classes, containing plist of options,
 such as pointer to storage, serialize flag, etc.")
 
-(defun getobj (type key &optional default)
-  "Get object of given type from appropriate storage
-Note: returned object is setfable"
+
+(defun getobj (key &optional type default)
+  "Get object of given type from appropriate storage.
+If no type given, search in all storages.
+Note: returned object is NOT setfable (but its fields are)"
   (declare (symbol type))
-  (gethash key
-           (getf (gethash type *classes*) :storage)
-           default))
+  (if type
+      (gethash key
+               (get-storage type)
+               default)
+      ;; else, search in all storages
+      (getobj-global key)))
 
 (defun getobj-global (key)
-  "Get object regardless of type, from some storage (try to find in all)"
+  "Get object regardless of type, from some storage (try to find in all)
+Note: returned object is NOT setfable (but its fields are)"
   (let (res)
     (maphash #'(lambda (k v)
-                 (declare (ignore k))
-                 (awhen (and (not res)
-                             (gethash key (getf v :storage)))
+                 (declare (ignore v))
+                 (awhen (and (not res)  ; find only first (but almost always
+                                        ; there should be only one required object)
+                             (gethash key (get-storage k)))
                    (setf res it)))
              *classes*)
     res))
 
-(defun setobj (type key value)
-  "Set/edit object of given type in appropriate storage"
+(defun setobj (key value)
+  "Set/edit object of given type (type of value) in appropriate storage"
+  (let ((storage (get-storage (type-of value))))
+    (setf (gethash key storage) value)))
+
+(defun remobj (key &optional type)
+  "Get object of given type from appropriate storage
+If no type given, search in all storages"
   (declare (symbol type))
-  (let ((obj (getobj type key)))
-    (if (not obj)
-        (error "Object with givent type and name not found")
-        ;; else
-        (setf obj value))))
+  (if type
+      (remhash key (get-storage type))
+      (remobj-global key)))
+
+(defun remobj-global (key)
+  (maphash #'(lambda (k v)
+               (declare (ignore v))
+               (remhash key (get-storage k)))
+           *classes*))
 
 (defun get-instance (type)
   "Get singleton instance of given type (usually used as dummy for methods)"
@@ -334,6 +317,15 @@ Note: returned object is setfable"
   (declare (symbol type))
   (getf (gethash type *classes*) :storage))
 
+(defun get-last-bakup-pathname (type)
+  "Return pathname for file of last backup objects of given type"
+  (declare (symbol type))
+  (if (not (gethash type *classes*))
+      (error "type ~A doesn't exist" type)
+      ;;else
+      (merge-pathnames (format nil "~(~A~).bkp" type)
+                       (config.get-option "PATHS" "path-to-last-backup"))))
+
 (defmacro class-core.define-class-checker (name)
   "Macro for defining type-checking functions such as productp, groupp, etc"
   `(defun ,(intern (format nil "~:@(~Ap~)" name)) (obj)
@@ -343,18 +335,18 @@ Note: returned object is setfable"
 (defmacro class-core.make-class-and-methods (name slot-list &key (serialize t)
                                              (make-storage t) storage-name storage-size)
   "Make class, storage for its instances (if needed) and necessary methods for it
-\(such as serialization, unserialization, viewing, editing, etc)."
-  `(progn
+\(such as serialization, unserialization, viewing, editing, etc)"
+  `(values
      ;; make plist of properties of class
      ;; new properties will be added later it this macro
      (setf (gethash ',name *classes*) (list :serialize ,serialize))
-     (class-core.make-class ,name ,slot-list)
+     (class-core.define-class ,name ,slot-list)
      (class-core.define-class-checker ,name)
      ;; make singleton instance of class
      (setf (getf (gethash ',name *classes*) :instance)
            (make-instance ',name))
-     (class-core.make-view-method ,name ,slot-list)
-     (class-core.make-edit-method ,name ,slot-list)
+     (class-core.define-view-method ,name ,slot-list)
+     (class-core.define-edit-method ,name ,slot-list)
      ,@(when make-storage
             (let ((storage-name (aif storage-name
                                      it
@@ -366,8 +358,20 @@ Note: returned object is setfable"
                 ;; set :storage property if class as pointer to real storage
                 (setf (getf (gethash ',name *classes*) :storage) ,storage-name)
                 ,@(when serialize
-                        `((class-core.make-unserialize-method ,name ,slot-list)
-                          (backup.make-serialize-method ,name ,slot-list))))))))
+                        `((class-core.define-unserialize-method ,name ,slot-list)
+                          (backup.define-serialize-method ,name ,slot-list))))))))
+
+(defun keys-to-objects (key-list &key type (remove-func #'null) default key)
+  "Returns list of objects corresponding to given list of keys.
+If parameter type is given, use this type, otherwise doesnt check types.
+Remove elements from result list corresponding to remove-func"
+  ;;; TODO: make as method not only on lists
+  (let ((key (sequence:canonize-key key)))
+    (declare (symbol type))
+    (remove-if remove-func
+               (mapcar #'(lambda (key-obj)
+                           (getobj (funcall key key-obj) type default))
+                       key-list))))
 
 (let ((product-instance (make-instance 'product))
       (group-instance (make-instance 'group))

@@ -23,10 +23,9 @@
                                      (cnt     (cdr (assoc :count item)))
                                      (product)
                                      (price 0))
-                                 (when (and (not (null articul))
-                                            (not (null cnt)))
+                                 (when (and articul cnt)
                                    (setf cnt (parse-integer (format nil "~a" cnt) :junk-allowed t))
-                                   (setf product (gethash articul (storage *global-storage*)))
+                                   (setf product (getobj articul 'product))
                                    (when (and product
                                               (plusp cnt))
                                      (incf counter)

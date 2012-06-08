@@ -57,16 +57,14 @@
   (let* ((request-list (request-list))
          (key (cadr request-list))
          (filter (caddr request-list))
-         (grp (gethash key (storage *global-storage*)))
-         (fltr (gethash filter (storage *global-storage*))))
+         (grp (getobj key 'group))
+         (fltr (getobj filter 'filter)))
     (and grp
          fltr
-         (typep grp 'group)
-         (typep fltr 'filter)
          (equal (key (class-core.parent fltr)) key))))
 
 (defun route-filter (filter)
-  (gethash filter (storage *global-storage*)))
+  (getobj filter 'filter))
 
 (restas:define-route filter/-route ("/:key/:filter/" :requirement #'test-route-filter)
   (route-filter filter))
@@ -78,14 +76,14 @@
 ;; STORAGE OBJECT
 
 (defun vendor-transform-from-alias (alias)
-  (aif (gethash alias *vendor-storage*)
+  (aif (getobj alias 'vendor)
        (key it)
        alias))
 
 (defun test-route-storage-object ()
-  (let ((obj (gethash (cadr (request-list)) (storage *global-storage*))))
+  (let ((obj (getobj (cadr (request-list)))))
     (when obj
-      (aif (and (typep obj 'group)
+      (aif (and (groupp obj)
                 (getf (request-get-plist) :vendor))
            (let ((vendor (vendor-transform-from-alias it)))
              (some #'(lambda (p)
@@ -94,7 +92,7 @@
            t))))
 
 (defun route-storage-object (key)
-  (gethash key (storage *global-storage*)))
+  (getobj key))
 
 (restas:define-route storage-object-route  ("/:key" :requirement #'test-route-storage-object)
   (route-storage-object key))

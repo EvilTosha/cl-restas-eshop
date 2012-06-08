@@ -29,7 +29,7 @@
 
 (defun cartrige.add-printer (storage articul original-cartriges other-cartriges
                              &optional vendor name printer-type)
-  (let ((printer (gethash articul (storage *global-storage*))))
+  (let ((printer (getobj articul 'product)))
     (when (or original-cartriges
               other-cartriges)
       (setf (gethash articul storage)
@@ -52,7 +52,7 @@
 
 (defun cartrige.get-cartriges-by-model (articul &optional (cartrige-type :all))
   (let ((printer (gethash articul *printer-storage*))
-        (global-printer (gethash articul (storage *global-storage*))))
+        (global-printer (getobj articul 'product)))
     (when (and printer global-printer)
       (case cartrige-type
         (:all (append (original-cartriges printer) (other-cartriges printer)))

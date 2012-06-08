@@ -108,10 +108,10 @@
                          (list-filters.limit-region group-list start limit))))))
       ((equalp type "products")
        (if (or (null parent)
-               (null (gethash parent (storage *global-storage*))))
+               (null (getobj parent 'group)))
            "Incorrect parent"
            ;; else
-           (let ((product-list (products (gethash parent (storage *global-storage*)))))
+           (let ((product-list (products (getobj parent 'group))))
              (soy.admin-table:json-data
               (list
                :number (length product-list)

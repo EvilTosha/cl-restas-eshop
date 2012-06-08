@@ -19,25 +19,20 @@
 
 (defun storage.alphabet-group-sorter (a b)
   (when (and (name a) (name b))
-    (STRING< (name a) (name b))))
+    (string< (name a) (name b))))
 
 (defun storage.get-all-child-groups (root &optional (sorter #'storage.alphabet-group-sorter))
   (sort
-   (let ((children (groups root))
-         (res))
+   (let ((children (groups root)))
      (if (null children)
          (list root)
-         (progn
-           (mapcar #'(lambda (root)
-                       (setf res (append res (storage.get-all-child-groups root sorter))))
-                   children)
-           res))) sorter))
+         (mapcan (make-curry-lambda storage.get-all-child-groups sorter) children)))
+   sorter))
 
 (defmethod storage.get-recursive-products ((object group))
-  (let ((products (products object)))
-    (loop :for child :in (groups object) :do
-       (setf products (append products (storage.get-recursive-products child))))
-    products))
+  (append
+   (products object)
+   (mapcan #'storage.get-recursive-products (groups object))))
 
 (defmethod storage.get-filtered-products ((object group) &optional (filter #'active))
   (remove-if-not filter

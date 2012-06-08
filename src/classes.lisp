@@ -45,8 +45,6 @@
   (:name fullfilter          :initform nil                             :disabled t     :type string                    :serialize nil)
   (:name raw-fullfilter      :initform nil                             :disabled nil   :type textedit-raw              :serialize t)
   (:name vendors             :initform (make-hash-table :test #'equal) :disabled t     :type textedit-hashtable        :serialize nil)
-  ;; TODO: remove vandors-seo when vendors become full working
-  (:name vendors-seo         :initform (make-hash-table :test #'equal) :disabled t     :type textedit-hashtable        :serialize t)
   (:name seo-text            :initform nil                             :disabled nil   :type textedit                  :serialize t)
   (:name upsale-links        :initform nil                             :disabled nil   :type group-list                :serialize t)
   (:name keyoptions          :initform nil                             :disabled nil   :type keyoptions                :serialize t)

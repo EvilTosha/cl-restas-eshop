@@ -28,7 +28,7 @@
       (setf t-storage *storage-articles*))
     (setf static-pages.*storage* t-storage)
     (maphash #'(lambda (k v)
-                 (setf (gethash k (storage *global-storage*)) v))
+                 (setobj k v))
              static-pages.*storage*)
     (sb-ext:gc :full t) ;; запуск сборщика мусора
     (log5:log-for info "FINISH:RESTOR:static-pages")))

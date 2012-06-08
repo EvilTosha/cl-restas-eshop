@@ -98,58 +98,11 @@
                         *conf.emails.gateway.warn*)))))
     t))
 
-(defun gateway.process-product (articul price1 siteprice isnew isspec name realname count-total count-transit bonuscount)
-  (let* ((old-product (gethash (format nil "~a" articul) (storage *global-storage*)))
-         (product (aif old-product
-                       it
-                       (make-instance 'product :articul articul)))
-         (price (ceiling (arnesi:parse-float price1))))
-    (when (and (typep product 'product)
-               (gateway.check-price product price siteprice))
-      (setf (key product)             (format nil "~a" articul)
-            (articul product)         articul
-            (name-provider product)   (if (servo.valid-string-p name)
-                                          name
-                                          (name-provider product))
-            (name-seo product)        (if (servo.valid-string-p (name-seo product))
-                                          (name-seo product)
-                                          (if (servo.valid-string-p realname)
-                                              realname
-                                              name))
-            (delta-price product)     (if (zerop siteprice)
-                                          0
-                                          (- price siteprice))
-            (siteprice product)       (if (zerop siteprice)
-                                          price
-                                          siteprice)
-            (bonuscount product)      bonuscount
-            (count-total product)     (if count-total
-                                          (ceiling (arnesi:parse-float count-total))
-                                          (if (and count-transit
-                                                   (zerop (ceiling (arnesi:parse-float count-transit)))
-                                                   (equal (count-total product)
-                                                          (count-transit product)))
-                                              0
-                                              (if (count-total product)
-                                                  (count-total product)
-                                                  0)))
-            (active product)          (plusp (count-total product))
-            (newbie product)          (string/= "0" isnew)
-            (sale product)            (string/= "0" isspec)
-            (count-transit  product)  (if count-transit
-                                          (ceiling (arnesi:parse-float count-transit))
-                                          (if (count-transit product)
-                                              (count-transit product)
-                                              0)))
-      (unless old-product
-        (storage.edit-object product)))))
-
-
 (defun gateway.process-product1 (articul raw-price raw-siteprice isnew isspec
                                  name realname raw-count-total raw-count-transit
                                  raw-bonuscount)
   (declare (ignore isnew isspec))
-  (let* ((old-product (gethash (format nil "~a" articul) (storage *global-storage*)))
+  (let* ((old-product (getobj (format nil "~a" articul) 'product))
          (product (aif old-product
                        it
                        (make-instance 'product :articul articul)))
@@ -242,25 +195,6 @@
              (count-transit  (cdr (assoc :count--transit elt))))
          (gateway.process-product1 articul price siteprice isnew isspec name realname count-total count-transit bonuscount)))))
 
-(defun gateway.process-products (items)
-  (loop :for elt  :in items :collect
-     (block iteration
-       (let ((articul   (ceiling (arnesi:parse-float (cdr (assoc :id elt)))))
-             (price     (cdr (assoc :price elt)))
-             (siteprice (ceiling (arnesi:parse-float (cdr (assoc :price--site elt)))))
-             (bonuscount  (ceiling (arnesi:parse-float (cdr (assoc :bonuscount elt)))))
-             (isnew     (cdr (assoc :isnew  elt)))
-             (isspec    (cdr (assoc :isspec elt)))
-             (name      (cdr (assoc :name elt)))
-             (realname  (cdr (assoc :realname elt)))
-             (count-total    (cdr (assoc :count--total elt)))
-             (count-transit  (cdr (assoc :count--transit elt))))
-         ;; Нам не нужны продукты с нулевой ценой (вероятно это группы продуктов)
-         (when (zerop price)
-           (log5:log-for warning "Zero-price ~a" elt)
-           (return-from iteration))
-         (gateway.process-product articul price siteprice isnew isspec name realname count-total count-transit bonuscount)))))
-
 (defun gateway.get-pathname-fulls (&optional (timestamp (get-universal-time)))
   "список файлов выгрузок до определенной даты"
   (let* ((filename (time.encode.backup timestamp))
@@ -272,24 +206,6 @@
 (defun gateway.get-pathname-last-full (&optional (timestamp (get-universal-time)))
   "имя файла последней выгрузки относительно метки времени или текущей даты"
   (car (gateway.get-pathname-fulls timestamp)))
-
-(defun gateway.restore-singles (gateway-timestamp &optional (current-timestamp (get-universal-time)))
-  "список одиночных выгрузок"
-  (let ((filename (format nil "~a/gateway/singles.txt" *path-to-logs*))
-        (start (time.encode.backup gateway-timestamp))
-        (finish (time.encode.backup current-timestamp))
-        (stop nil)
-        (data))
-    (with-open-file (file filename)
-      (loop
-         :for line := (read-line file nil 'EOF)
-         :until (or (eq line 'EOF)
-                    stop)
-         :do (progn
-               (when (and (string<= start (subseq line 0 19))
-                          (string<= (subseq line 0 19) finish))
-                 (setf data (json:decode-json-from-string (subseq line 21)))
-                 (gateway.process-products data)))))))
 
 (defun gateway.restore-singles1 (gateway-timestamp &optional (current-timestamp (get-universal-time)))
   "список одиночных выгрузок"

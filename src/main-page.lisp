@@ -20,7 +20,7 @@
 ;; цена из хранилища товаров
 (defun main-page-view-product (key storage)
   (let* ((dp (gethash key storage))
-         (p (gethash (key dp) (storage *global-storage*)))
+         (p (getobj (key dp) 'product))
          (price (+ (siteprice p) (delta-price p)))
          (parent (class-core.parent p))
          (p-list (list :articul (articul p)
@@ -138,12 +138,10 @@
   (let ((rs))
     (maphash #'(lambda (k v)
                  (when v
-                   (let ((p (gethash (key v) (storage *global-storage*))))
-                     (if (and (not (null p))
-                              (active p)
-                              (< (date-start v) (get-universal-time) (date-finish v)))
-                         (push (cons k (weight v)) rs)
-                         ))))
+                   (let ((p (getobj (key v) 'product)))
+                     (when (and p (active p)
+                                (< (date-start v) (get-universal-time) (date-finish v)))
+                       (push (cons k (weight v)) rs)))))
              storage)
     rs))
 
@@ -154,8 +152,7 @@
                  (when v
                    (if (and (equal (key v) place)
                             (< (date-start v) (get-universal-time) (date-finish v)))
-                       (push (cons k (weight v)) rs)
-                       )))
+                       (push (cons k (weight v)) rs))))
              storage)
     rs))
 
@@ -164,10 +161,9 @@
   (let ((rs))
     (maphash #'(lambda (k v)
                  (when v
-                   (if (and (gethash (key v) (storage *global-storage*))
+                   (if (and (getobj (key v))
                             (< (date-start v) (get-universal-time) (date-finish v)))
-                       (push (cons k (weight v)) rs)
-                       )))
+                       (push (cons k (weight v)) rs))))
              storage)
     rs))
 
@@ -177,8 +173,7 @@
     (maphash #'(lambda (k v)
                  (when v
                    (if  (< (date-start v) (get-universal-time) (date-finish v))
-                        (push (cons k (weight v)) rs)
-                        )))
+                        (push (cons k (weight v)) rs))))
              storage)
     rs))
 

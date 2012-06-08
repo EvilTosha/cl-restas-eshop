@@ -91,7 +91,8 @@
                  :bankaccount ""
                  :phone phone
                  :email email
-                 :comment (format nil "Заказ через форму один клик ~@[!!! Предзаказ !!!~]" (preorder (gethash articul (storage *global-storage*))))
+                 :comment (format nil "Заказ через форму один клик ~@[!!! Предзаказ !!!~]"
+                                  (preorder (getobj articul 'product)))
                  :products products
                  :deliverysum 0
                  :itogo pricesum)))
@@ -106,7 +107,8 @@
                 :isdelivery "Самовывоз"
                 :date (time.get-date)
                 :time (time.get-time)
-                :comment (format nil "Заказ через форму один клик ~@[!!! Предзаказ !!!~]" (preorder (gethash articul (storage *global-storage*))))
+                :comment (format nil "Заказ через форму один клик ~@[!!! Предзаказ !!!~]"
+                                 (preorder (getobj articul 'product)))
                 :products products))
     (setf filename (format nil "~a_~a.txt" (time.get-short-date) order-id))
     ;;сорханение заказа
@@ -249,7 +251,7 @@
         (articul (getf request-get-plist :articul))
         (email (getf request-get-plist :email))
         (order-id))
-    (if (not (null telef))
+    (if telef
         (progn
           (if (equal "/elka2012"
                      (puri:uri-path (puri:parse-uri (hunchentoot:referer))))
@@ -276,7 +278,7 @@
          (name (getf request-get-plist :name))
          (articul (getf request-get-plist :article))
          (email (getf request-get-plist :email))
-         (pr (gethash articul (storage *global-storage*)))
+         (pr (getobj articul 'product))
          (order-id)
          (error-id 0)
          (answer (make-instance 'oneclickcart.answer :phone telef)))

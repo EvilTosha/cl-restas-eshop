@@ -127,29 +127,30 @@
                                      :options (loop :for option :in (getf optgroup :options) :collect
                                                  (list  :name (getf option :name)
                                                         :value (getf option :value))))))
-                 (product (gethash (format nil "~a" articul) (storage *global-storage*))))
-            (let ((pr (gethash articul *xls.product-table*)))
-              (if pr
-                  (progn
-                    (log5:log-for warning "WARN:~a | ~a | ~a" articul pr file)
-                    (setf *xls.errors* (concatenate 'string (format nil "<tr><td>~a</td>
+                 (product (getobj (format nil "~a" articul) 'product))
+                 (pr (gethash articul *xls.product-table*)))
+            (if pr
+                (progn
+                  (log5:log-for warning "WARN:~a | ~a | ~a" articul pr file)
+                  (setf *xls.errors* (concatenate 'string (format nil "<tr><td>~a</td>
                                                                          <td><a href=\"http://320-8080.ru/~a\">~a</a></td>
                                                                          <td>~a</td>
                                                                          <td>~a</td></tr>" articul articul realname
                                                                          (car (last (split-sequence:split-sequence #\/ (format nil "~a" pr))))
                                                                          (car (last (split-sequence:split-sequence #\/ (format nil "~a" file))))) *xls.errors*))
-                    (setf *xls.errors-num* (+ *xls.errors-num* 1)))
-                  (setf (gethash articul *xls.product-table*) file)))
+                  (setf *xls.errors-num* (+ *xls.errors-num* 1)))
+                ;; else
+                (setf (gethash articul *xls.product-table*) file))
             (if (null product)
                 (format nil "warn: product ~a (articul ~a) not found, ignore (file: ~a)" realname articul file)
+                ;; else
                 (progn
                   (setf (optgroups product) optgroups)
                   (with-option1 product "Общие характеристики" "Производитель"
                                 (setf (vendor product) (getf option :value)))
                   ;; Если есть значимое realname - перезаписать в продукте
-                  (if (not (string= "" (string-trim '(#\Space #\Tab #\Newline)
-                                                    (format nil "~@[~a~]" realname))))
-                      (setf (name-seo product) realname)))))))
+                  (when (servo.valid-string-p realname)
+                    (setf (name-seo product) realname)))))))
     (log5:log-for info "Successfully processed ~a files | ~a products" cnt num-all)))
 
 
