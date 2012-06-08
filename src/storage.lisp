@@ -2,20 +2,86 @@
 
 (in-package #:eshop)
 
-(defclass global-storage ()
-  ((storage :initarg :storage :initform (make-hash-table :test #'equal) :accessor storage)
-   (products :initarg :products :initform nil :accessor products)
-   (groups :initarg :groups :initform nil :accessor groups)
-   (filters :initarg :filters :initform nil :accessor filters)
-   (actual-groups :initarg :actual-groups :initform nil :accessor actual-groups)
-   (active-products :initarg :active-products :initform nil :accessor active-products)
-   (root-groups :initarg :root-groups :initform nil :accessor root-groups)))
+(defun get-storage (type)
+  "Get storage for given type objects"
+  (declare (symbol type))
+  (getf (gethash type *classes*) :storage))
+
+(defun getobj (key &optional type default)
+  "Get object of given type from appropriate storage.
+If no type given, search in all storages.
+Note: returned object is NOT setfable (but its fields are)"
+  (declare (symbol type))
+  (if type
+      (gethash key
+               (get-storage type)
+               default)
+      ;; else, search in all storages
+      (getobj-global key)))
+
+(defun getobj-global (key)
+  "Get object regardless of type, from some storage (try to find in all)
+Note: returned object is NOT setfable (but its fields are)"
+  (let (res)
+    (maphash #'(lambda (k v)
+                 (declare (ignore v))
+                 (awhen (and (not res)  ; find only first (but almost always
+                                        ; there should be only one required object)
+                             (gethash key (get-storage k)))
+                   (setf res it)))
+             *classes*)
+    res))
+
+(defun setobj (key value)
+  "Set/edit object of given type (type of value) in appropriate storage"
+  (let ((storage (get-storage (type-of value))))
+    (setf (gethash key storage) value)))
+
+(defun remobj (key &optional type)
+  "Get object of given type from appropriate storage
+If no type given, search in all storages"
+  (declare (symbol type))
+  (if type
+      (remhash key (get-storage type))
+      (remobj-global key)))
+
+(defun remobj-global (key)
+  (maphash #'(lambda (k v)
+               (declare (ignore v))
+               (remhash key (get-storage k)))
+           *classes*))
+
+(defun process-storage (func type)
+  "Process storage of given type apllying given func to each element.
+Func should take 1 argument - elt for processing
+Note: processed element can't be changed during processing"
+  (declare (function func) (symbol type))
+  (maphash #'(lambda (k v)
+               (declare (ignore k))
+               (funcall func v))
+           (get-storage type)))
+
+(defun process-storage-with-keys (func type)
+  "Same as process-storage, but func should take 2 arguments - key and value"
+  (declare (function func) (symbol type))
+  (maphash func (get-storage type)))
+
+(defun process-and-collect-storage (type &key (func #'identity) (when-func (constantly t)))
+  "Process storage of given type checking via when-func, applying func to
+each element and collecting its results"
+  (loop
+     :for elt :being :the hash-values :in (get-storage type)
+     :when (funcall when-func elt)
+     :collect (funcall func elt)))
+
+(defun get-root-groups ()
+  "Return list of root groups sorted by order"
+  (stable-sort
+   (process-and-collect-storage 'group :when-func (complement #'parents))
+   #'menu-sort))
 
 
-(defvar *global-storage* (make-instance 'global-storage))
-
-(defvar *vendor-storage* (make-hash-table :test #'equal)
-  "Storage for vendors (with aliases and seo-texts)")
+;;;;; old storage methods below
 
 (defun storage.alphabet-group-sorter (a b)
   (when (and (name a) (name b))
@@ -91,15 +157,6 @@
                                                       (active obj)))))
 
 
-(defun storage.get-root-groups-list (&optional (compare #'(lambda (a b)
-                                                            (when (and (order a) (order b))
-                                                              (< (order a) (order b))))))
-  (storage.round-collect-storage #'(lambda (obj)
-                                     (and (typep obj 'group)
-                                          (null (parents obj))))
-                                 (storage *global-storage*) compare))
-
-
 (defun storage.add-new-object (object storage &optional (key nil key-supplied-p))
   "Adding exactly new object to appropriate storage but not pushing it in any list"
   ;;; TODO: push all types (not only vendors to own storage)
@@ -131,9 +188,7 @@
   (when (typep object 'group)
     (setf (groups *global-storage*) (storage.edit-in-list (groups *global-storage*) object key))
     (when (and (active object) (not (empty object)))
-      (setf (actual-groups *global-storage*) (storage.edit-in-list (actual-groups *global-storage*) object key)))
-    (unless (class-core.parent object)
-      (setf (root-groups *global-storage*) (storage.edit-in-list (root-groups *global-storage*) object key))))
+      (setf (actual-groups *global-storage*) (storage.edit-in-list (actual-groups *global-storage*) object key))))
   (when (typep object 'filter)
     (setf (filters *global-storage*) (storage.edit-in-list (filters *global-storage*) object key))))
 
@@ -141,7 +196,6 @@
 (defun storage.make-lists ()
   (setf (groups *global-storage*) (storage.get-groups-list))
   (setf (actual-groups *global-storage*) (storage.get-actual-groups-list))
-  (setf (root-groups *global-storage*) (storage.get-root-groups-list))
   (setf (products *global-storage*) (storage.get-products-list))
   (setf (active-products *global-storage*) (storage.get-active-products-list))
   (setf (filters *global-storage*) (storage.get-filters-list)))

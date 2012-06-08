@@ -13,14 +13,11 @@
     :numproducts (length (active-products *global-storage*))
     :menu (class-core.menu)
     :items (let ((res)
-                 (roots (root-groups *global-storage*))
+                 (roots (get-root-groups))
                  (exception "bytovaya-technika"))
-             (setf roots (remove-if #'(lambda (root)
-                                        (string= (key root) exception))
-                                    roots))
+             (setf roots (remove exception roots :key #'key :test #'equal))
              (setf roots (append roots
-                                 (copy-list (groups (gethash exception (storage *global-storage*))))))
-             (setf roots (sort roots #'class-core.menu-sort))
+                                 (copy-list (groups (getobj exception 'group)))))
              (setf res
                    (mapcar #'(lambda (node)
                                (format nil "~a"

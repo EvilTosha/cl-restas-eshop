@@ -177,12 +177,11 @@
 ;;open - список групп до которых нужно раскрыть дерево
 ;;field-name - название поля, нужно для проставления в name в radio
 (defun object-fields.group-tree (open-groups field-name)
-  (let ((roots (root-groups *global-storage*)))
-    (soy.class_forms:group-tree
-     (list :roots
-           (mapcar #'(lambda (child)
-                       (object-fields.group-branch child open-groups field-name))
-                   roots)))))
+  (soy.class_forms:group-tree
+   (list :roots
+         (mapcar #'(lambda (child)
+                     (object-fields.group-branch child open-groups field-name))
+                 (get-root-groups)))))
 
 
 ;;group, список групп, генерируется из списка с проставленными уровнями глубины

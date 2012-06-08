@@ -133,7 +133,7 @@
               (storage.edit-object item) ;;adding item into storage
               (admin.edit-content))
             ;;else (post-data is nil)
-            (let ((empty-item (class-core.get-instance type)))
+            (let ((empty-item (get-instance type)))
               (setf (key empty-item) key)
               (if (typep empty-item 'product)
                   (setf (articul empty-item) (parse-integer key)))

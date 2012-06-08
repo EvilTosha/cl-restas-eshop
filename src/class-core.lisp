@@ -263,59 +263,14 @@ Reloaded sandard method %post-unserialize"
 such as pointer to storage, serialize flag, etc.")
 
 
-(defun getobj (key &optional type default)
-  "Get object of given type from appropriate storage.
-If no type given, search in all storages.
-Note: returned object is NOT setfable (but its fields are)"
-  (declare (symbol type))
-  (if type
-      (gethash key
-               (get-storage type)
-               default)
-      ;; else, search in all storages
-      (getobj-global key)))
+(defgeneric get-instance (type)
+  (:documentation "Get singleton instance of given type (usually used as dummy for methods)"))
 
-(defun getobj-global (key)
-  "Get object regardless of type, from some storage (try to find in all)
-Note: returned object is NOT setfable (but its fields are)"
-  (let (res)
-    (maphash #'(lambda (k v)
-                 (declare (ignore v))
-                 (awhen (and (not res)  ; find only first (but almost always
-                                        ; there should be only one required object)
-                             (gethash key (get-storage k)))
-                   (setf res it)))
-             *classes*)
-    res))
-
-(defun setobj (key value)
-  "Set/edit object of given type (type of value) in appropriate storage"
-  (let ((storage (get-storage (type-of value))))
-    (setf (gethash key storage) value)))
-
-(defun remobj (key &optional type)
-  "Get object of given type from appropriate storage
-If no type given, search in all storages"
-  (declare (symbol type))
-  (if type
-      (remhash key (get-storage type))
-      (remobj-global key)))
-
-(defun remobj-global (key)
-  (maphash #'(lambda (k v)
-               (declare (ignore v))
-               (remhash key (get-storage k)))
-           *classes*))
-
-(defun get-instance (type)
-  "Get singleton instance of given type (usually used as dummy for methods)"
-  (declare (symbol type))
+(defmethod get-instance ((type symbol))
   (getf (gethash type *classes*) :instance))
 
-(defun get-storage (type)
-  "Get storage for given type objects"
-  (declare (symbol type))
-  (getf (gethash type *classes*) :storage))
+(defmethod get-instance ((type string))
+  (get-instance (intern (format nil "~:@(~A~)" type))))
 
 (defun get-last-bakup-pathname (type)
   "Return pathname for file of last backup objects of given type"
@@ -373,22 +328,6 @@ Remove elements from result list corresponding to remove-func"
                            (getobj (funcall key key-obj) type default))
                        key-list))))
 
-(let ((product-instance (make-instance 'product))
-      (group-instance (make-instance 'group))
-      (filter-instance (make-instance 'filter))
-      (vendor-instance (make-instance 'vendor)))
-  (defun class-core.get-instance (type)
-    (let ((type-string (format nil "~(~a~)" type)))
-      (cond
-        ((equal "product" type-string)
-         product-instance)
-        ((equal "group" type-string)
-         group-instance)
-        ((equal "filter" type-string)
-         filter-instance)
-        ((equal "vendor" type-string)
-         vendor-instance)))))
-
 ;; для того чтобы работали фильтры
 (defmethod price ((object product))
   (+ (siteprice object) (delta-price object)))
@@ -417,7 +356,7 @@ Remove elements from result list corresponding to remove-func"
           (class-core.get-root-parent parent)))))
 
 
-(defun class-core.menu-sort (a b)
+(defun menu-sort (a b)
   "Function for sorting groups by order field"
   (when (and (order a) (order b))
     (< (order a)
@@ -427,8 +366,7 @@ Remove elements from result list corresponding to remove-func"
 ;;TODO временно убрана проверка на пустые группы, тк это поле невалидно
 (defun class-core.menu (&optional current-object)
   "Creating left menu"
-  (let* ((root-groups (storage.get-root-groups-list))
-         (current-root (class-core.get-root-parent current-object))
+  (let* ((current-root (class-core.get-root-parent current-object))
          (divider-list (list "setevoe-oborudovanie" "foto-and-video" "rashodnye-materialy"))
          (src-lst
           (mapcar #'(lambda (val)
@@ -460,7 +398,7 @@ Remove elements from result list corresponding to remove-func"
                                                   :key  (key val)
                                                   :name (name val)
                                                   :icon (icon val)))))
-                  (sort root-groups #'class-core.menu-sort))))
+                  (get-root-groups))))
     (soy.menu:main (list :elts src-lst))))
 
 (defun class-core.has-vendor-seo-text (group vendor-key)
