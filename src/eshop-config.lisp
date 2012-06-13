@@ -67,7 +67,8 @@
             "sendmail.soy"
             "sitemap.soy"
             "static.soy"
-            "yml.soy")))
+            "yml.soy"
+            "404.soy")))
 
 (print "Compiling all templates")
 (compile-templates)
