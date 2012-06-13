@@ -5,15 +5,15 @@
 (defparameter *special-products* (make-hash-table :test #'equal))
 
 (defun write-products-report (stream)
-  (format stream "~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~%"
+  (format stream "~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~%"
           "артикул" "цена магазина" "цена сайта" "имя" "имя real" "имя yml" "is-yml-show" "seo текст"
           "фотографии" "характеристики" "активный" "группа" "родительская группа"
-          "secret" "DTD" "vendor" "доставка")
+          "secret" "DTD" "vendor" "доставка" "серия")
   (maphash #'(lambda (k v)
                (declare (ignore k))
                (let ((id "нет") (name "нет") (name-real "нет") (name-yml "нет")
                      (desc "нет") (img "нет") (options "нет") (active "нет")
-                     (group-name "нет") (parent-group-name "нет") (secret "нет"))
+                     (group-name "нет") (parent-group-name "нет") (secret "нет") (seria "нет"))
                  (when (typep v 'product)
                    (setf id (articul v))
                    (setf name (stripper (name-provider v)))
@@ -39,13 +39,17 @@
                    (setf secret "Нет")
                    (with-option1 v "Secret" "Checked"
                                  (setf secret (getf option :value)))
-                   (format stream "~a;~a;~a;\"~a\";\"~a\";\"~a\";~a;~a;~a;~a;~a;\"~a\";\"~a\";~a;~a;~a;~a~%"
+                   (with-option1 v "Общие характеристики" "Серия"
+                                 (setf seria (getf option :value)))
+                   (format stream "~a;~a;~a;\"~a\";\"~a\";\"~a\";~a;~a;~a;~a;~a;\"~a\";\"~a\";~a;~a;~a;~a;\"~a\"~%"
                            id (price v) (siteprice v) name name-real
                            name-yml (yml.yml-show-p v) desc img options active group-name
                            parent-group-name secret
                            (gethash (articul v) *xls.product-table*)
                            (vendor v)
-                           (yml.get-product-delivery-price1 v)))))
+                           (yml.get-product-delivery-price1 v)
+                           seria
+                           ))))
            (storage *global-storage*)))
 
 (defun is-valide-option (product)
