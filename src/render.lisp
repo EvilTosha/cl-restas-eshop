@@ -348,6 +348,8 @@
       (mapcar #'(lambda (pair)
                   (let ((key-optgroup (getf pair :optgroup))
                         (key-optname  (getf pair :optname))
+                        (key-alias  (getf pair :showname))
+                        (key-units  (getf pair :units))
                         (optvalue))
                     (mapcar #'(lambda (optgroup)
                                 (when (string= (getf optgroup :name) key-optgroup)
@@ -358,8 +360,11 @@
                                             options))))
                             (optgroups object))
                     (list :optgroup key-optgroup
-                          :optname key-optname
-                          :optvalue optvalue)))
+                          :optname (if (servo.valid-string-p key-alias)
+                                       key-alias
+                                       key-optname)
+                          :optvalue optvalue
+                          :optunits key-units)))
               (keyoptions parent)))))
 
 (defmethod render.relink ((object product))

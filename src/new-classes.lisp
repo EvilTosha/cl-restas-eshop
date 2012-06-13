@@ -232,7 +232,9 @@ Usually it transform string keys to pointers to other objects, such as parents o
              (not (atom (caar keys))))
         (setf (keyoptions item) (mapcar #'(lambda (pair)
                                             (list :optgroup (cdr (assoc :optgroup pair))
-                                                  :optname (cdr (assoc :optname pair))))
+                                                  :optname (cdr (assoc :optname pair))
+                                                  :showname (cdr (assoc :showname pair))
+                                                  :units (cdr (assoc :units pair))))
                                         (keyoptions item)))))
   ;;catalog-keyoptions
   (let ((keys (catalog-keyoptions item)))
@@ -417,7 +419,9 @@ if there is not one, or no vendor passed, return group's seo-text"
          ;; if condition non-nil, it is required seo-text
          it
          ;; else
-         (seo-text group))))
+         (if vendor-key
+             ""
+             (seo-text group)))))
 
 
 ;;создание класса и методов отображения (в админке), изменения (из админки),

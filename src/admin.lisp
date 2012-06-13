@@ -308,9 +308,13 @@
        :do (let ((optgroup (getf post-data
                                  (intern (string-upcase (format nil "keyoption-og-~a" cnt)) :keyword)))
                  (optname (getf post-data
-                                (intern (string-upcase (format nil "keyoption-on-~a" cnt)) :keyword))))
+                                (intern (string-upcase (format nil "keyoption-on-~a" cnt)) :keyword)))
+                 (showname (getf post-data
+                                 (intern (string-upcase (format nil "keyoption-sn-~a" cnt)) :keyword)))
+                 (units (getf post-data
+                                (intern (string-upcase (format nil "keyoption-un-~a" cnt)) :keyword))))
              (when (and (string/= "" optgroup) (string/= "" optname))
-               (push (list :optgroup optgroup :optname optname) keyoptions))))
+               (push (list :optgroup optgroup :optname optname :showname showname :units units) keyoptions))))
     (setf result (append result (list :keyoptions (nreverse keyoptions))))
     ;;catalog keyoptions
     (loop
