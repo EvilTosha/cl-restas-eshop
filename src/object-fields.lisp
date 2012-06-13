@@ -41,31 +41,34 @@
             product-list)
     (format nil "Done!")))
 
+(defgeneric object-fields.product-groups-fix (item)
+  (:documentation "Remove given item from children lists, and
+add it to such lists for its parents"))
 
 (defmethod object-fields.product-groups-fix ((item product))
-  ;;removing given product from all groups product lists
-  (mapcar #'(lambda (group)
-              (let ((products (copy-list (products group))))
-                (setf (products group)
-                      (remove-if #'(lambda (product)
-                                     (equal (key product) (key item)))
-                                 products))))
-          (groups *global-storage*))
-  ;;adding given product to parents' product lists
+  "Remove given product from all groups' product lists and
+add it to all parents' lists"
+  ;;; TOCHECK
+  (process-storage #'(lambda (group)
+                       (setf (products group)
+                             (remove (key item) (products group)
+                                     :key #'key :test #'equal)))
+                   'group)
+  ;; add to parents
   (mapcar #'(lambda (group)
               (pushnew item (products group)))
           (parents item)))
 
 (defmethod object-fields.product-groups-fix ((item group))
-  ;;removing given group from all groups children lists
-  (mapcar #'(lambda (group)
-              (let ((groups (copy-list (groups group))))
-                (setf (groups group)
-                      (remove-if #'(lambda (group)
-                                     (equal (key group) (key item)))
-                                 groups))))
-          (groups *global-storage*))
-  ;;adding given product to parents' product lists
+  "Remove given group from all groups' children lists and
+add it to all parents' lists"
+  ;;; TOCHECK
+  (process-storage #'(lambda (group)
+                       (setf (groups group)
+                             (remove (key item) (groups group)
+                                     :key #'key :test #'equal)))
+                   'group)
+  ;;add to parents
   (mapcar #'(lambda (group)
               (pushnew item (groups group)))
           (parents item)))

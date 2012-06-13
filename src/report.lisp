@@ -244,17 +244,6 @@
                  (delivery-price g)
                  300)))))
 
-(defun report.delet-from-groups ()
-  (let ((groups (storage.get-groups-list)))
-    (mapcar #'(lambda (group)
-                (setf (products group)
-                      (remove-if-not #'(lambda (v) (let ((pr (getobj (key v) 'product)))
-                                                     (and pr
-                                                          (equal group (class-core.parent pr)))))
-                                     (products group))))
-            groups)
-    "done"))
-
 (defun report.delete-doubles (products)
   (mapcar #'(lambda (v)
               (remobj (format nil "~A" v) 'product))
@@ -274,8 +263,7 @@
               (let ((pr (getobj (format nil "~a" v) 'product)))
                 (when pr
                   (setf (parents pr) (list gr))
-                  (push pr (products gr))
-                  (storage.edit-object pr))))
+                  (push pr (products gr)))))
           product-list)
   "done")
 
@@ -321,10 +309,10 @@
    group "8mart" "Подарки к 8 марта" #'groupd.woman.is-groupd))
 
 (defun report.set-man-salefilter ()
-  (mapcar #'create-man-sale-filter (storage.get-groups-list)))
+  (process-storage #'create-man-sale-filter 'group))
 
 (defun report.set-woman-salefilter ()
-  (mapcar #'create-woman-sale-filter (storage.get-groups-list)))
+  (process-storage #'create-woman-sale-filter 'group))
 
 
 (defun report.set-filters (groups filter-func name filter-key)
@@ -343,7 +331,8 @@
 														(equal opts "Ультрабук")))
 											"Ультрабуки"
 											"ultrabooks")
-	(report.set-filters (storage.get-groups-list)
+  ;; TODO: убрать костыль
+	(report.set-filters (process-and-collect-storage 'group)
 											#'groupd.holiday.is-groupd
 											"Для отдыха"
 											"holidays"))
@@ -386,33 +375,35 @@
 
 (defun report.write-alias (&optional (stream *standard-output*))
   (format stream "имя группы; наличие алиасов; группа опций ; опция; имя алиаса; ед. измерения;")
-  (mapcar #'(lambda (gr)
-              (if (null (catalog-keyoptions gr))
-                  (format stream "~&~a; нет;" (name gr))
-                  (mapcar #'(lambda (alias)
-                              (let ((alias-temp (mapcar #'stripper
-                                                        (remove-if #'keywordp alias))))
-                                (format stream "~&\"~a\";~a;~{\" ~a \";~}"
-                                        (stripper (name gr))
-                                        (if alias-temp "есть" "нет")
-                                        alias-temp)))
-                          (catalog-keyoptions gr))))
-          (storage.get-groups-list)))
+  (process-and-collect-storage
+   'group
+   :func #'(lambda (gr)
+             (if (null (catalog-keyoptions gr))
+                 (format stream "~&~a; нет;" (name gr))
+                 (mapcar #'(lambda (alias)
+                             (let ((alias-temp (mapcar #'stripper
+                                                       (remove-if #'keywordp alias))))
+                               (format stream "~&\"~a\";~a;~{\" ~a \";~}"
+                                       (stripper (name gr))
+                                       (if alias-temp "есть" "нет")
+                                       alias-temp)))
+                         (catalog-keyoptions gr))))))
 
 (defun report.write-keyoptions (&optional (stream *standard-output*))
   (format stream "имя группы; наличие ключевых опций; группа опций ; опция;")
-  (mapcar #'(lambda (gr)
-              (if (null (keyoptions gr))
-                  (format stream "~&~a; нет;" (name gr))
-                  (mapcar #'(lambda (alias)
-                              (let ((alias-temp (mapcar #'stripper
-                                                        (remove-if #'keywordp alias))))
-                                (format stream "~&\"~a\";~a;~{\" ~a \";~}"
-                                        (stripper (name gr))
-                                        (if alias-temp "есть" "нет")
-                                        alias-temp)))
-                          (keyoptions gr))))
-          (storage.get-groups-list)))
+  (process-and-collect-storage
+   'group
+   :func #'(lambda (gr)
+             (if (null (keyoptions gr))
+                 (format stream "~&~a; нет;" (name gr))
+                 (mapcar #'(lambda (alias)
+                             (let ((alias-temp (mapcar #'stripper
+                                                       (remove-if #'keywordp alias))))
+                               (format stream "~&\"~a\";~a;~{\" ~a \";~}"
+                                       (stripper (name gr))
+                                       (if alias-temp "есть" "нет")
+                                       alias-temp)))
+                         (keyoptions gr))))))
 
 
 (defun report.do-alias-reports ()
@@ -446,21 +437,22 @@
 (defun report.write-pictures (&optional (stream *standard-output*))
   (let ((num 0))
     (format stream "артикул;имя;файл;ширина;высота;размер;")
-    (mapcar #'(lambda (gr)
-                (mapcar #'(lambda (product)
-                            (let* ((articul (articul product))
-                                   (path-art  (ppcre:regex-replace  "(\\d{1,3})(\\d{0,})"  (format nil "~a" articul)  "\\1/\\1\\2" )))
-                              (mapcar #'(lambda (pic)
-                                          (let ((src-pic-path
-                                                 (format nil "~a/~a/~a/~a"
-                                                         (config.get-option "PATHS" "path-to-pics") "big" path-art pic)))
-                                            (with-open-file
-                                                (stream-file src-pic-path)
+    (process-storage
+     #'(lambda (gr)
+         (mapcar #'(lambda (product)
+                     (let* ((articul (articul product))
+                            (path-art  (ppcre:regex-replace  "(\\d{1,3})(\\d{0,})"  (format nil "~a" articul) "\\1/\\1\\2")))
+                       (mapcar #'(lambda (pic)
+                                   (let ((src-pic-path
+                                          (format nil "~a/~a/~a/~a"
+                                                  (config.get-option "PATHS" "path-to-pics") "big" path-art pic)))
+                                     (with-open-file
+                                         (stream-file src-pic-path)
 
-                                              (when (zerop (file-length stream-file))
-                                                (incf num)
-                                                (format stream "~&~a;~a" articul (file-length stream-file))))))
-                                      (get-pics articul))))
-                        (products gr)))
-            (storage.get-groups-list))
+                                       (when (zerop (file-length stream-file))
+                                         (incf num)
+                                         (format stream "~&~a;~a" articul (file-length stream-file))))))
+                               (get-pics articul))))
+                 (products gr)))
+     'group)
     num))

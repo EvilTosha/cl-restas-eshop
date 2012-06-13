@@ -13,14 +13,14 @@
   "Строим *yml-group-ids*"
   (let ((current-id 1))
     (clrhash *yml-group-ids*)
-    (maphash #'(lambda(k g)
-                 (when (typep g 'group)
-                   ;; Если группа имеет дочерние группы ИЛИ yml-show == true
-                   (when (or (groups g) (ymlshow g))
-                     ;; Кладем ее в *yml-group-ids* и увеличиваем current-id
-                     (setf (gethash k *yml-group-ids*) current-id )
-                     (incf current-id))))
-             (storage *global-storage*))
+    (process-storage
+     #'(lambda (gr)
+         ;; Если группа имеет дочерние группы ИЛИ yml-show == true
+         (when (or (groups gr) (ymlshow gr))
+           ;; Кладем ее в *yml-group-ids* и увеличиваем current-id
+           (setf (gethash (key gr) *yml-group-ids*) current-id )
+           (incf current-id)))
+     'group)
     *yml-group-ids*))
 
 (defun yml.yml-show-p (product)
@@ -139,106 +139,104 @@
 
 (defun yml-page ()
   (setf (hunchentoot:content-type*) "application/xml; charset=utf-8")
-  (soy.yml:xml (list :datetime (time.get-date-time)
-                     :marketname "ЦиFры 320-8080"
-                     :marketcompany "ЦиFры 320-8080"
-                     :marketurl "http://www.320-8080.ru/"
-                     :categoryes
-                     (loop
-                        :for key
-                        :being :the hash-key
-                        :using (hash-value id)
-                        :in (yml-groups)
-                        :when (getobj key 'group)
-                        :collect (let ((obj (getobj key 'group)))
-                                   (list :id (yml-id obj)
-                                         :name (name obj)
-                                         :parent (if (null (class-core.parent obj))
-                                                     0 ; если это вершина дерева
-                                                     (yml-id (class-core.parent obj))))))
-                     :offers (format nil "~{~a~}"
-                                     (loop
-                                        :for product
-                                        :being :the hash-values
-                                        :in (storage *global-storage*)
-                                        ;;продукт должен находиться в группе маркированной как ymlshow
-                                        ;;быть активным и иметь не нулевую цену
-                                        :when (yml.yml-show-p product)
-                                        :collect (soy.yml:offer (list :articul (articul product)
-                                                                      :available (servo.available-for-order-p product)
-                                                                      :deliveryprice (yml.get-product-delivery-price1 product)
-                                                                      :price (siteprice product)
-                                                                      :category (yml-id (class-core.parent product))
-                                                                      :picture (let ((pics (get-pics
-                                                                                            (articul product))))
-                                                                                 (when pics
-                                                                                   (encode-uri (car pics))))
-                                                                      :name (let ((yml-name))
-                                                                              (with-option1 product "Secret" "Yandex"
-                                                                                            (setf yml-name (getf option :value)))
-                                                                              (if (or (null yml-name)
-                                                                                      (string= ""
-                                                                                               (stripper yml-name))
-                                                                                      (string= "No"
-                                                                                               (stripper yml-name)))
-                                                                                  (name-seo product)
-                                                                                  yml-name))
-                                                                      :description nil)))))))
+  (soy.yml:xml
+   (list :datetime (time.get-date-time)
+         :marketname "ЦиFры 320-8080"
+         :marketcompany "ЦиFры 320-8080"
+         :marketurl "http://www.320-8080.ru/"
+         :categoryes
+         (loop
+            :for key
+            :being :the hash-key
+            :in (yml-groups)
+            :when (getobj key 'group)
+            :collect (let ((obj (getobj key 'group)))
+                       (list :id (yml-id obj)
+                             :name (name obj)
+                             :parent (if (null (class-core.parent obj))
+                                         0 ; если это вершина дерева
+                                         (yml-id (class-core.parent obj))))))
+         :offers (format nil "~{~a~}"
+                         (process-and-collect-storage
+                          'product
+                          ;;продукт должен находиться в группе маркированной как ymlshow
+                          ;;быть активным и иметь не нулевую цену
+                          :when-func #'yml.yml-show-p
+                          :func #'(lambda (product)
+                                    (soy.yml:offer (list :articul (articul product)
+                                                         :available (servo.available-for-order-p product)
+                                                         :deliveryprice (yml.get-product-delivery-price1 product)
+                                                         :price (siteprice product)
+                                                         :category (yml-id (class-core.parent product))
+                                                         :picture (let ((pics (get-pics
+                                                                               (articul product))))
+                                                                    (when pics
+                                                                      (encode-uri (car pics))))
+                                                         :name (let ((yml-name))
+                                                                 (with-option1 product "Secret" "Yandex"
+                                                                               (setf yml-name (getf option :value)))
+                                                                 (if (or (null yml-name)
+                                                                         (string= ""
+                                                                                  (stripper yml-name))
+                                                                         (string= "No"
+                                                                                  (stripper yml-name)))
+                                                                     (name-seo product)
+                                                                     yml-name))
+                                                         :description nil))))))))
 
 
 (defun yml-page-for-parser ()
   (setf (hunchentoot:content-type*) "application/xml; charset=utf-8")
-  (soy.yml:xml (list :datetime (time.get-date-time)
-                     :marketname "ЦиFры 320-8080"
-                     :marketcompany "ЦиFры 320-8080"
-                     :marketurl "http://www.320-8080.ru/"
-                     :categoryes
-                     (loop
-                        :for key
-                        :being :the hash-key
-                        :using (hash-value id)
-                        :in (yml-groups)
-                        :when (getobj key 'group)
-                        :collect (let ((obj (getobj key 'group)))
-                                   (list :id (yml-id obj)
-                                         :name (name obj)
-                                         :parent (if (null (class-core.parent obj))
-                                                     0 ; если это вершина дерева
-                                                     (yml-id (class-core.parent obj))))))
-                     :offers (format nil "~{~a~}"
-                                     (loop
-                                        :for product
-                                        :being :the hash-values
-                                        :in (storage *global-storage*)
-                                        ;;продукт должен находиться в группе маркированной как ymlshow
-                                        ;;быть активным и иметь не нулевую цену
-                                        :when (yml.yml-show-p product)
-                                        :collect (soy.yml:offer (list :articul (articul product)
-                                                                      :price (siteprice product)
-                                                                      :category (gethash
-                                                                                 (key (class-core.parent product))
-                                                                                 *yml-group-ids*)
-                                                                      :picture (let ((pics (get-pics
-                                                                                            (articul product))))
-                                                                                 (when pics
-                                                                                   (encode-uri (car pics))))
-                                                                      :name (let ((yml-name)
-                                                                                  (parser-name))
-                                                                              (with-option1 product "Secret" "Yandex"
-                                                                                            (setf yml-name (getf option :value)))
-                                                                              (with-option1 product "Secret" "Parser"
-                                                                                            (setf parser-name (getf option :value)))
-                                                                              (if (or (null parser-name)
-                                                                                      (string= "" parser-name))
-                                                                                  (if (or (null yml-name)
-                                                                                          (string= ""
-                                                                                                   (stripper yml-name))
-                                                                                          (string= "No"
-                                                                                                   (stripper yml-name)))
-                                                                                      (name product)
-                                                                                      yml-name)
-                                                                                  parser-name))
-                                                                      :description nil)))))))
+  (soy.yml:xml
+   (list :datetime (time.get-date-time)
+         :marketname "ЦиFры 320-8080"
+         :marketcompany "ЦиFры 320-8080"
+         :marketurl "http://www.320-8080.ru/"
+         :categoryes
+         (loop
+            :for key
+            :being :the hash-key
+            :in (yml-groups)
+            :when (getobj key 'group)
+            :collect (let ((obj (getobj key 'group)))
+                       (list :id (yml-id obj)
+                             :name (name obj)
+                             :parent (if (null (class-core.parent obj))
+                                         0 ; если это вершина дерева
+                                         (yml-id (class-core.parent obj))))))
+         :offers (format nil "~{~a~}"
+                         (process-and-collect-storage
+                          'product
+                          ;;продукт должен находиться в группе маркированной как ymlshow
+                          ;;быть активным и иметь не нулевую цену
+                          :when-func #'yml.yml-show-p
+                          :func #'(lambda (product)
+                                    (soy.yml:offer (list :articul (articul product)
+                                                         :price (siteprice product)
+                                                         :category (gethash
+                                                                    (key (class-core.parent product))
+                                                                    *yml-group-ids*)
+                                                         :picture (let ((pics (get-pics
+                                                                               (articul product))))
+                                                                    (when pics
+                                                                      (encode-uri (car pics))))
+                                                         :name (let ((yml-name)
+                                                                     (parser-name))
+                                                                 (with-option1 product "Secret" "Yandex"
+                                                                               (setf yml-name (getf option :value)))
+                                                                 (with-option1 product "Secret" "Parser"
+                                                                               (setf parser-name (getf option :value)))
+                                                                 (if (or (null parser-name)
+                                                                         (string= "" parser-name))
+                                                                     (if (or (null yml-name)
+                                                                             (string= ""
+                                                                                      (stripper yml-name))
+                                                                             (string= "No"
+                                                                                      (stripper yml-name)))
+                                                                         (name product)
+                                                                         yml-name)
+                                                                     parser-name))
+                                                         :description nil))))))))
 
 
 (defun make-yml-categoryes()
@@ -256,35 +254,33 @@
                                   (yml-id (class-core.parent obj)))))))
 
 (defun make-yml-offers()
-  (loop
-     :for product
-     :being :the hash-values
-     :in (storage *global-storage*)
-     ;;продукт должен находиться в группе маркированной как ymlshow
-     ;;быть активным и иметь не нулевую цену
-     :when (yml.yml-show-p product)
-     :collect
-     (soy.yml:offer (list :articul (articul product)
-                          :deliveryprice (yml.get-product-delivery-price1 product)
-                          :price (siteprice product)
-                          :category (gethash
-                                     (key (class-core.parent product))
-                                     *yml-group-ids*)
-                          :picture  (let ((pics (get-pics
-                                                 (articul product))))
-                                      (when pics
-                                        (encode-uri (car pics))))
-                          :name   (let ((yml-name))
-                                    (with-option1 product "Secret" "Yandex"
-                                                  (setf yml-name (getf option :value)))
-                                    (if (or (null yml-name)
-                                            (string= ""
-                                                     (stripper yml-name))
-                                            (string= "No"
-                                                     (stripper yml-name)))
-                                        (name-seo product)
-                                        yml-name))
-                          :description nil))))
+  (process-and-collect-storage
+   'product
+   ;;продукт должен находиться в группе маркированной как ymlshow
+   ;;быть активным и иметь не нулевую цену
+   :when-func #'yml.yml-show-p
+   :func #'(lambda (product)
+             (soy.yml:offer (list :articul (articul product)
+                                  :deliveryprice (yml.get-product-delivery-price1 product)
+                                  :price (siteprice product)
+                                  :category (gethash
+                                             (key (class-core.parent product))
+                                             *yml-group-ids*)
+                                  :picture  (let ((pics (get-pics
+                                                         (articul product))))
+                                              (when pics
+                                                (encode-uri (car pics))))
+                                  :name   (let ((yml-name))
+                                            (with-option1 product "Secret" "Yandex"
+                                                          (setf yml-name (getf option :value)))
+                                            (if (or (null yml-name)
+                                                    (string= ""
+                                                             (stripper yml-name))
+                                                    (string= "No"
+                                                             (stripper yml-name)))
+                                                (name-seo product)
+                                                yml-name))
+                                  :description nil)))))
 
 
 (defun make-yml-data()

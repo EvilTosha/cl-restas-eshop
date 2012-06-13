@@ -13,57 +13,53 @@
 (defparameter *sitemap-routs-storage* nil)
 (defparameter *sitemap-stream* nil)
 
+(defun sitemap.get-item-route (item &key (lastmod *sitemap-lastmod-time*)
+                               (changefreq "daily") (priority "0.5"))
+  ;; TODO: get rid of explicit url (move to global var?)
+  ;; TOCHECK
+  (list :loc (format nil "http://www.320-8080.ru/~a" (hunchentoot:url-encode (key item)))
+        :lastmod lastmod
+        :changefreq changefreq
+        :priority priority))
+
 (defun sitemap.get-groups-routes ()
-  (remove-if #'null
-             (mapcar #'(lambda (group)
-                         (when (and (active group)
-                                    (not (empty group)))
-                           (list :loc (format nil "http://www.320-8080.ru/~a" (hunchentoot:url-encode (key group)))
-                                 :lastmod *sitemap-lastmod-time*
-                                 :changefreq "daily"
-                                 :priority "0.5")))
-                     (groups *global-storage*))))
+  (process-and-collect-storage
+   'group :func #'sitemap.get-item-route
+   :when-func #'(lambda (group)
+                  (and group (active group)
+                       (not (empty group))))))
 
 (defun sitemap.get-products-routes ()
-  (mapcar #'(lambda (product)
-              (list :loc (format nil "http://www.320-8080.ru/~a" (hunchentoot:url-encode (key product)))
-                    :lastmod *sitemap-lastmod-time*
-                    :changefreq "daily"
-                    :priority "0.5"))
-          (active-products *global-storage*)))
+  (process-and-collect-storage
+   'product :func #'sitemap.get-item-route
+   :when-func #'active))
 
 (defun sitemap.get-filters-routes ()
-  (mapcar #'(lambda (filter)
-              (list :loc (format nil "http://www.320-8080.ru/~a" (hunchentoot:url-encode (key filter)))
-                    :lastmod *sitemap-lastmod-time*
-                    :changefreq "daily"
-                    :priority "0.5"))
-          (filters *global-storage*)))
+  (process-and-collect-storage 'filter :func #'sitemap.get-item-route))
 
 (defun sitemap.get-articles-routes ()
+  ;;; TOCHECK: is key in article the same as key in storage?
   (maphash #'(lambda (k v)
-               (declare (ignore v))
-               (list :loc (format nil "http://www.320-8080.ru/~a" (hunchentoot:url-encode k))
-                     :lastmod *sitemap-lastmod-time*
-                     :changefreq "monthly"
-                     :priority "0.5"))
+               (declare (ignore k))
+               (sitemap.get-item-route v :changefreq "monthly"))
            *storage-articles*))
 
 (defun sitemap.get-vendors-routes ()
   (let ((res))
-    (mapcar #'(lambda (group)
-                (maphash #'(lambda (key v)
-                             (declare (ignore v))
-                             (push
-                              (list :loc (format nil "http://www.320-8080.ru/~a?vendor=~a"
-                                                 (hunchentoot:url-encode (key group))
-                                                 (hunchentoot:url-encode key))
-                                    :lastmod *sitemap-lastmod-time*
-                                    :changefreq "daily"
-                                    :priority "0.5")
-                              res))
-                         (storage.get-vendors group)))
-            (groups *global-storage*))
+    (process-storage
+     #'(lambda (group)
+         (maphash #'(lambda (key v)
+                      (declare (ignore v))
+                      (push
+                       (list :loc (format nil "http://www.320-8080.ru/~a?vendor=~a"
+                                          (hunchentoot:url-encode (key group))
+                                          (hunchentoot:url-encode key))
+                             :lastmod *sitemap-lastmod-time*
+                             :changefreq "daily"
+                             :priority "0.5")
+                       res))
+                  (storage.get-vendors group)))
+     'group)
     res))
 
 (defun sitemap.get-static-routes ()

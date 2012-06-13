@@ -130,7 +130,7 @@
               (class-core.edit-fields item post-data)
               ;;don't work with filters
               (object-fields.product-groups-fix item)
-              (storage.edit-object item) ;;adding item into storage
+              (setobj item) ;;adding item into storage
               (admin.edit-content))
             ;;else (post-data is nil)
             (let ((empty-item (get-instance type)))
@@ -248,10 +248,10 @@
                                  (getobj group 'group)))
                             groups))
                 products)))
-    (let ((unparented-products (storage.get-filtered-products
-                                (storage.get-products-list)
-                                #'(lambda (item)
-                                    (null (class-core.parent item))))))
+    (let ((unparented-products (process-and-collect-storage
+                                'product
+                                :when-func #'(lambda (item)
+                                               (null (class-core.parent item))))))
       (soy.class_forms:parenting-page
        (list :products (mapcar #'(lambda (product)
                                    (soy.class_forms:unparented-product-checkbox

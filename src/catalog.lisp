@@ -10,7 +10,7 @@
   (soy.new-catalog:catalog-main
    (list
     :error404 error404
-    :numproducts (length (active-products *global-storage*))
+    :numproducts (count-storage 'product #'active)
     :menu (class-core.menu)
     :items (let ((res)
                  (roots (get-root-groups))
@@ -20,7 +20,7 @@
                                  (copy-list (groups (getobj exception 'group)))))
              (setf res
                    (mapcar #'(lambda (node)
-                               (format nil "~a"
+                               (format nil "~A"
                                        (soy.new-catalog:catalog-item
                                         (let* ((pic (unless (equal "" (pic node))
                                                       (pic node)))

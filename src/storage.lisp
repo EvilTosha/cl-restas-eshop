@@ -11,7 +11,7 @@
   "Get object of given type from appropriate storage.
 If no type given, search in all storages.
 Note: returned object is NOT setfable (but its fields are)"
-  (declare (symbol type))
+  (declare (string key) (symbol type))
   (if type
       (gethash key
                (get-storage type)
@@ -22,6 +22,7 @@ Note: returned object is NOT setfable (but its fields are)"
 (defun getobj-global (key)
   "Get object regardless of type, from some storage (try to find in all)
 Note: returned object is NOT setfable (but its fields are)"
+  (declare (string key))
   (let (res)
     (maphash #'(lambda (k v)
                  (declare (ignore v))
@@ -32,15 +33,31 @@ Note: returned object is NOT setfable (but its fields are)"
              *classes*)
     res))
 
-(defun setobj (key value)
+(defun setobj (key value &optional type)
   "Set/edit object of given type (type of value) in appropriate storage"
-  (let ((storage (get-storage (type-of value))))
+  (declare (string key) (symbol type))
+  ;;; TODO: check key in object
+  (let ((storage (get-storage (if type
+                                  type
+                                  (type-of value)))))
     (setf (gethash key storage) value)))
+
+(defun editobj (value &optional type)
+  "Edit obj in storage, if it's found, do nothing otherwise.
+Key and type is accessed from element itself"
+  (declare (symbol type))
+  (let ((type (if type
+                  type
+                  (type-of value)))
+        (key (key value)))
+    (when (getobj key type)
+      (setobj key value type))))
+
 
 (defun remobj (key &optional type)
   "Get object of given type from appropriate storage
 If no type given, search in all storages"
-  (declare (symbol type))
+  (declare (string key) (symbol type))
   (if type
       (remhash key (get-storage type))
       (remobj-global key)))
@@ -66,7 +83,7 @@ Note: processed element can't be changed during processing"
   (declare (function func) (symbol type))
   (maphash func (get-storage type)))
 
-(defun process-and-collect-storage (type &key (func #'identity) (when-func (constantly t)))
+(defun process-and-collect-storage (type &key (func #'identity) (when-func #'identity))
   "Process storage of given type checking via when-func, applying func to
 each element and collecting its results"
   (loop
@@ -74,31 +91,63 @@ each element and collecting its results"
      :when (funcall when-func elt)
      :collect (funcall func elt)))
 
+(defun count-storage (type &key (when-fn #'identity when-fn-supplied-p))
+  "Count number of elements in storage, satisfying given function when-fn"
+  (declare (symbol type) (function when-fn))
+  (if when-fn-supplied-p
+      (loop
+         :for v :being :the hash-value :in (get-storage type)
+         :count (funcall when-fn v))
+      ;; else
+      (hash-table-count (get-storage type))))
+
+
 (defun get-root-groups ()
   "Return list of root groups sorted by order"
   (stable-sort
    (process-and-collect-storage 'group :when-func (complement #'parents))
    #'menu-sort))
 
-
-;;;;; old storage methods below
-
 (defun storage.alphabet-group-sorter (a b)
   (when (and (name a) (name b))
     (string< (name a) (name b))))
 
+(defun storage.get-recursive-products (group &optional (when-func #'active))
+  "Return list of all products of given group and all its child groups,
+filtered by wgen-func"
+  (declare (group group))
+  (append
+   (remove-if-not when-func (products group))
+   (mapcan #'storage.get-recursive-products (groups group) when-func)))
+
+(defgeneric storage.get-vendors (object)
+  (:documentation ""))
+
+(defmethod storage.get-vendors ((object group))
+  (storage.get-vendors (storage.get-recursive-products object)))
+
+(defmethod storage.get-vendors ((object list))
+  "By given product-list return hash table of vendors,
+where key is vendor name and value is number of products with this vendor"
+  (let ((vendors (make-hash-table :test #'equal)))
+    (mapcar #'(lambda (product)
+                (let ((vendor (vendor product)))
+                  (when (servo.valid-string-p vendor)
+                    (sif (gethash vendor vendors)
+                         (incf it)
+                         (setf it 1)))))
+            object)
+    vendors))
+
 (defun storage.get-all-child-groups (root &optional (sorter #'storage.alphabet-group-sorter))
   (sort
-   (let ((children (groups root)))
-     (if (null children)
-         (list root)
-         (mapcan (make-curry-lambda storage.get-all-child-groups sorter) children)))
+   (aif (groups root)
+        ;; no need for sort in mapcan, because it will be sorted anyway
+        (mapcan #'storage.get-all-child-groups it)
+        (list root))  ; else
    sorter))
 
-(defmethod storage.get-recursive-products ((object group))
-  (append
-   (products object)
-   (mapcan #'storage.get-recursive-products (groups object))))
+;;;;; old storage methods below
 
 (defmethod storage.get-filtered-products ((object group) &optional (filter #'active))
   (remove-if-not filter
@@ -106,97 +155,3 @@ each element and collecting its results"
 
 (defmethod storage.get-filtered-products ((object list) &optional (filter #'active))
   (remove-if-not filter object))
-
-(defgeneric storage.get-vendors (object)
-  (:documentation ""))
-
-(defmethod storage.get-vendors ((object group))
-  (storage.get-vendors (storage.get-filtered-products object)))
-
-(defmethod storage.get-vendors ((object list))
-  (let ((products-list object)
-        (vendors (make-hash-table :test #'equal)))
-    (mapcar #'(lambda (product)
-                (let ((vendor (vendor product)))
-                  (when (and vendor (string/= "" vendor))
-                    (if (gethash vendor vendors)
-                        (incf (gethash vendor vendors))
-                        (setf (gethash vendor vendors) 1)))))
-            products-list)
-    vendors))
-
-
-
-(defun storage.round-collect-storage (checker &optional (storage (storage *global-storage*)) (compare t compare-supplied-p))
-  "Processing storage (storage should be hash-table) and creating list according to checker function. Sorting with passed comparator"
-  (declare (hash-table storage))
-  (let ((result
-         (loop
-            :for elt :being :the hash-value :in storage
-            :when (funcall checker elt)
-            :collect elt)))
-    (if compare-supplied-p
-        (stable-sort (copy-list result) compare)
-        result)))
-
-(defun storage.get-products-list ()
-  (storage.round-collect-storage #'(lambda (obj) (typep obj 'product))))
-
-(defun storage.get-active-products-list ()
-  (storage.round-collect-storage #'(lambda (obj) (and (typep obj 'product) (active obj)))))
-
-(defun storage.get-groups-list ()
-  (storage.round-collect-storage #'(lambda (obj) (typep obj 'group))))
-
-(defun storage.get-filters-list ()
-  (storage.round-collect-storage #'(lambda (obj) (typep obj 'filter))))
-
-(defun storage.get-actual-groups-list ()
-  (storage.round-collect-storage #'(lambda (obj) (and (typep obj 'group)
-                                                      (not (empty obj))
-                                                      (active obj)))))
-
-
-(defun storage.add-new-object (object storage &optional (key nil key-supplied-p))
-  "Adding exactly new object to appropriate storage but not pushing it in any list"
-  ;;; TODO: push all types (not only vendors to own storage)
-  (let ((key (if key-supplied-p
-                 key
-                 (key object))))
-    (setf (gethash key storage) object)))
-
-(defun storage.edit-in-list (list object &optional (key nil key-supplied-p))
-  "Editing or adding (if not exist) object in given list"
-  (unless key-supplied-p
-    (setf key (key object)))
-  (aif (find key list :key #'key)
-       (progn
-         (setf (nth it list) object)
-         list)
-       (push object list)))
-
-
-(defun storage.edit-object (object &optional (key nil key-supplied-p))
-  "Editing or adding object to storage and edit it in appropriate lists"
-  (unless key-supplied-p
-    (setf key (key object)))
-  (setf (gethash key (storage *global-storage*)) object)
-  (when (typep object 'product)
-    (setf (products *global-storage*) (storage.edit-in-list (products *global-storage*) object key))
-    (when (active object)
-      (setf (active-products *global-storage*) (storage.edit-in-list (active-products *global-storage*) object key))))
-  (when (typep object 'group)
-    (setf (groups *global-storage*) (storage.edit-in-list (groups *global-storage*) object key))
-    (when (and (active object) (not (empty object)))
-      (setf (actual-groups *global-storage*) (storage.edit-in-list (actual-groups *global-storage*) object key))))
-  (when (typep object 'filter)
-    (setf (filters *global-storage*) (storage.edit-in-list (filters *global-storage*) object key))))
-
-
-(defun storage.make-lists ()
-  (setf (groups *global-storage*) (storage.get-groups-list))
-  (setf (actual-groups *global-storage*) (storage.get-actual-groups-list))
-  (setf (products *global-storage*) (storage.get-products-list))
-  (setf (active-products *global-storage*) (storage.get-active-products-list))
-  (setf (filters *global-storage*) (storage.get-filters-list)))
-

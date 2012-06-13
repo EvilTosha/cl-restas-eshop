@@ -147,7 +147,7 @@
       ;; проставляем флаг active
       (setf (active product) (plusp (count-total product)))
       (unless old-product
-        (storage.edit-object product)))))
+        (setobj product)))))
 
 
 (defun gateway.store-single-gateway (raws &optional (timestamp (get-universal-time)))
@@ -226,6 +226,7 @@
                  (gateway.process-products1 data)))))))
 
 (defun gateway.update-actives (data)
+  ;; TOCHECK
   (let ((articuls (make-hash-table :test #'equal)))
     (mapcar #'(lambda (v)
                 (let ((articul (format nil "~a" (cdr (assoc :id v)))))
@@ -233,14 +234,13 @@
                   (setf articul (format nil "~a" articul))
                   (setf (gethash articul articuls) t)))
             data)
-    (mapcar #'(lambda (v)
-                (when (and (not (gethash (format nil "~a" (articul v)) articuls))
-                           (active v))
-                  (setf (active v) nil)
-                  (setf (count-total v) 0)
-                  (setf (count-transit v) 0)
-                  (storage.edit-object v)))
-            (products *global-storage*))))
+    (process-storage #'(lambda (v)
+                         (when (and (not (gethash (key v) articuls))
+                                    (active v))
+                           (setf (active v) nil)
+                           (setf (count-total v) 0)
+                           (setf (count-transit v) 0)))
+                     'product)))
 
 
 (defun gateway.restore-history (&optional (timestamp (get-universal-time)))

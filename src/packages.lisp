@@ -46,7 +46,5 @@
 (defclass oneclickcart.answer () ())
 ;; list-filters.lisp
 (defclass field-filter () ())
-;; storage.lisp
-(defclass global-storage () ())
 ;; cartrige.lisp
 (defclass printer () ())
