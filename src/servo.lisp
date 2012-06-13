@@ -2,21 +2,13 @@
 
 (in-package #:eshop)
 
-(defmacro re-assoc (alist key val)
-  `(progn
-     (when (assoc ,key ,alist)
-       (setf ,alist (remove-if #'(lambda (x)
-                                   (equal x (assoc ,key ,alist)))
-                               ,alist)))
-     (push (cons ,key  ,val) ,alist)))
-
 (defmacro with-sorted-paginator (get-products request-get-plist body)
   `(let* ((products ,get-products)
           (sorting  (getf ,request-get-plist :sort))
           (sorted-products   (cond ((string= sorting "pt")
-                                    (product-sort products #'< #'siteprice))
+                                    (sort products #'< :key #'siteprice))
                                    ((string= sorting "pb")
-                                    (product-sort products #'> #'siteprice))
+                                    (sort products #'> :key #'siteprice))
                                    (t products))))
      (multiple-value-bind (paginated pager)
          (paginator ,request-get-plist sorted-products)
@@ -52,17 +44,6 @@
                    (class-core.get-group-seo-text
                     object
                     (getf parameters :vendor)))))))
-
-(defmacro with-option (product optgroup-name option-name body)
-  `(mapcar #'(lambda (optgroup)
-               (if (string= (name optgroup) ,optgroup-name)
-                   (let ((options (options optgroup)))
-                     (mapcar #'(lambda (option)
-                                 (if (string= (name option) ,option-name)
-                                     ,body))
-                             options))))
-           (optgroups ,product)))
-
 
 (defmacro with-option1 (product optgroup-name option-name body)
   `(mapcar #'(lambda (optgroup)
@@ -256,18 +237,6 @@
                                              (hunchentoot:header-in* "User-Agent"))))))
 
 
-(defun checkout-page (&optional (content nil))
-  (soy.index:main (list :header (soy.header:shortheader)
-                        :content (if content
-                                     content
-                                     "test page"))))
-
-(defun checkout-thankes-page (&optional (content nil))
-  (soy.index:main (list :header (soy.header:short-linked-header)
-                        :content (if content
-                                     content
-                                     "test page"))))
-
 (defun request-str ()
   (let* ((request-full-str (hunchentoot:url-decode (hunchentoot:request-uri hunchentoot:*request*)))
          (request-parted-list (split-sequence:split-sequence #\? request-full-str))
@@ -301,21 +270,6 @@
 (defun servo.make-get-str (request-get-plist)
   "Convert plist of get params to url (without encoding)"
   (format nil "~{~(~A~)=~A~^&~}" request-get-plist))
-
-(defun parse-id (id-string)
-  (let ((group_id (handler-bind ((SB-INT:SIMPLE-PARSE-ERROR
-                                  #'(lambda (c)
-                                      (declare (ignore c))
-                                      (invoke-restart 'set-nil)))
-                                 (TYPE-ERROR
-                                  #'(lambda (c)
-                                      (declare (ignore c))
-                                      (invoke-restart 'set-nil)))
-                                 )
-                    (restart-case (parse-integer id-string)
-                      (set-nil ()
-                        nil)))))
-    group_id))
 
 (defun strip ($string)
   (cond ((vectorp $string) (let (($ret nil))
@@ -370,43 +324,6 @@
        :while pos)))
 
 
-(defun merge-plists (a b)
-  (let* ((result (copy-list a)))
-    (loop
-       :while b
-       :do (setf (getf result (pop b)) (pop b)))
-    result))
-
-
-(defun reverse-plist (inlist)
-  (let ((result))
-    (loop
-       :for i :in inlist :by #'cddr
-       :do (setf (getf result i) (getf inlist i)))
-    result))
-
-
-(defun numerizable (param)
-  (coerce (loop
-             :for i :across param
-             :when (parse-integer (string i) :junk-allowed t)
-             :collect i)
-          'string))
-
-
-(defun slice (cnt lst)
-  (let ((ret))
-    (tagbody re
-       (push (loop
-                :for elt :in lst
-                :repeat cnt
-                :collect
-                (pop lst)) ret)
-       (when lst
-         (go re)))
-    (reverse ret)))
-
-
 (defun cut (cnt lst)
   (values (loop
              :for elt :in lst
@@ -414,15 +331,6 @@
              :collect
              (pop lst))
           lst))
-
-
-(defun get-procent (base real)
-  (when (equal 0 base)
-    (return-from get-procent (values 0 0)))
-  (if (or (null base) (null real))
-      (return-from get-procent 0))
-  (values (format nil "~$"  (- base real))
-          (format nil "~1$" (- 100 (/ (* real 100) base)))))
 
 (defun get-pics (articul)
   (let* ((articul-str (format nil "~a" articul))
@@ -435,42 +343,23 @@
                         (pathname-name pic)
                         (pathname-type pic)))))
 
-
-
 (defun get-format-price (p)
   (format nil "~,,' ,3:d" p))
-
 
 
 ;; выбор нескольких случайных элементов из списка
 ;; если количество не указано то возвращается список из одного элемента
 ;; если количество больше длинны входного списка, то возвращается перемешанный входной список
-(defun get-randoms-from-list (input-list &optional (count 1))
-  (let ((result)
-        (current-list input-list))
-    ;;уменьшаем count до длинны списка если надо
-    (if (< (length input-list)
-           count)
-        (setf count (length input-list)))
-    (setf result (loop
-                    :for n
-                    :from 1 to count
-                    :collect (let* ((pos (random (length current-list)))
-                                    (element (nth pos current-list)))
-                               (setf current-list (remove-if #'(lambda (v)
-                                                                 (equal v element))
-                                                             current-list))
-                               element)))
-    result))
-
-
-(defun product-sort (products operation getter)
-  (sort (copy-list products) #'(lambda (a b)
-                                 (if (funcall operation
-                                              (funcall getter a)
-                                              (funcall getter b))
-                                     t
-                                     nil))))
+(defun get-randoms-from-list (elts &optional (count 1))
+  ;;уменьшаем count до длинны списка если надо
+  (when (< (length elts) count)
+    (setf count (length elts)))
+  (loop
+     :for n :from 1 :to count
+     :collect (let* ((pos (random (length elts)))
+                     (element (nth pos elts)))
+                (setf elts (remove element elts :count 1))
+                element)))
 
 (defmethod get-filter-function-option (malformed-filter-list)
   (let ((option nil))
@@ -698,7 +587,7 @@
 
 
 (defun servo.anything-to-keyword (item)
-  (intern (string-upcase (format nil "~a" item)) :keyword))
+  (intern (format nil "~:@(~A~)" item) :keyword))
 
 (defun servo.alist-to-plist (alist)
   (if (not (consp alist))
@@ -742,15 +631,14 @@
 
 (defun servo.diff-percentage (full part)
   "Returns difference in percents. (1 - part / full) * 100%"
-  (if (or (null full) (null part) (equal 0 full))
-      nil
-      (format nil "~1$" (* (- 1 (/ part full)) 100))))
+  (when (and full part (not (zerop full)))
+    (format nil "~1$" (* (- 1 (/ part full)) 100))))
 
 (defun servo.diff-price (product-1 product-2)
   (if (plusp (siteprice product-1))
       (abs (/ (- (siteprice product-1) (siteprice product-2))
               (siteprice product-1)))
-      ;;infinity
+      ;; else infinity
       999999))
 
 (defun servo.get-option (product opgroup optname)
@@ -835,52 +723,6 @@
                              t)
        ;; for returning t if valid (not number)
        t))
-
-(defun servo.run-with-log (function &key (params nil params-supplied-p) (stream *standard-output*))
-  (format stream "~&~a Start ~a~%" (time.get-full-human-time) function)
-  (let ((successful t))
-    (handler-case
-        (if params-supplied-p
-            (apply function params)
-            (funcall function))
-      (error (e)
-        (progn
-          (format stream "~&~a ERROR: ~a~%" (time.get-full-human-time) e)
-          (setf successful nil))))
-    (if successful
-        (format stream "~&~a Finish ~a~%" (time.get-full-human-time) function)
-        (format stream "~&~a ~a finished with error~%" (time.get-full-human-time) function))))
-
-(defgeneric servo.iterate (func collection &key key)
-  (:documentation "Iterate over collection using function func"))
-
-(defmethod servo.iterate (func (collection list) &key key)
-  (if key
-      (mapcar func (mapcar key collection))
-      (mapcar func collection)))
-
-(defmethod servo.iterate (func (collection hash-table) &key key)
-  (let ((key (sequence:canonize-key key)))
-    (maphash #'(lambda (k v)
-               (declare (ignore k))
-               (funcall func (funcall key v)))
-             collection)))
-
-(defgeneric servo.collection-count (collection)
-  (:documentation "Returns number of objects in collection"))
-
-(defmethod servo.collection-count ((collection list))
-  (length collection))
-
-(defmethod servo.collection-count ((collection hash-table))
-  (hash-table-count collection))
-
-(defun class-equal-p (&rest objects)
-  "Check whether all objects are of same type"
-  (unless
-      (remove (class-of (first objects)) objects :test #'equal :key #'class-of)
-    t))
-
 
 (defmacro make-curry-lambda (func const-arg)
   "Makes lambda that calls func with one lambda's argument another const-arg
