@@ -610,8 +610,8 @@
          (veiws nil))
     (remf url-parameters :page)
     (maphash #'(lambda (k x)
-                 (let* ((vendor-alias (awhen (gethash (string-downcase k) *vendor-storage*)
-                                        (alias it)))
+                 (let* ((vendor-alias (awhen (getobj (string-downcase k) 'vendor)
+                                             (alias it)))
                         (vendor-url (if (servo.valid-string-p vendor-alias)
                                         vendor-alias
                                         k)))
