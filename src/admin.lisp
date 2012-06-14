@@ -53,9 +53,6 @@
 (restas:define-route admin-test-get-request-route ("/administration-super-panel/test-get-post" :method :get)
   (admin.test-get-post-parse))
 
-(restas:define-route admin-get-json ("/administration-super-panel/getjson" :method :get)
-  (list-filters.get-json))
-
 (defun admin-compile-templates ()
   (servo.compile-soy "admin.soy"
                      "class_forms.soy"

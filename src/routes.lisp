@@ -92,7 +92,10 @@
            t))))
 
 (defun route-storage-object (key)
-  (getobj key))
+  (aif (getobj key)
+       it
+       ;; else: static pages
+       (gethash key static-pages.*storage*)))
 
 (restas:define-route storage-object-route  ("/:key" :requirement #'test-route-storage-object)
   (route-storage-object key))

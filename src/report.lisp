@@ -9,44 +9,43 @@
           "артикул" "цена магазина" "цена сайта" "имя" "имя real" "имя yml" "is-yml-show" "seo текст"
           "фотографии" "характеристики" "активный" "группа" "родительская группа"
           "secret" "DTD" "vendor" "доставка")
-  (maphash #'(lambda (k v)
-               (declare (ignore k))
-               (let ((id "нет") (name "нет") (name-real "нет") (name-yml "нет")
-                     (desc "нет") (img "нет") (options "нет") (active "нет")
-                     (group-name "нет") (parent-group-name "нет") (secret "нет"))
-                 (when (typep v 'product)
-                   (setf id (articul v))
-                   (setf name (stripper (name-provider v)))
-                   (setf name-real (stripper (name-seo v)))
-                   (with-option1 v "Secret" "Yandex"
-                                 (setf name-yml (stripper (getf option :value))))
-                   (setf desc (if (and (not (null (seo-text v)))
-                                       (not (string= "" (stripper (seo-text v)))))
-                                  "есть"
-                                  "нет"))
-                   (setf img (length (get-pics (articul v))))
-                   (setf options (if (is-valide-option v)
-                                     "есть"
-                                     "нет"))
-                   (setf active (if (active v)
-                                    "да"
-                                    "нет"))
-                   (setf group-name (when (class-core.parent v)
-                                      (stripper (name (class-core.parent v)))))
-                   (setf parent-group-name (when (and (class-core.parent v)
-                                                      (class-core.parent (class-core.parent v)))
-                                             (stripper (name (class-core.parent (class-core.parent v))))))
-                   (setf secret "Нет")
-                   (with-option1 v "Secret" "Checked"
-                                 (setf secret (getf option :value)))
-                   (format stream "~a;~a;~a;\"~a\";\"~a\";\"~a\";~a;~a;~a;~a;~a;\"~a\";\"~a\";~a;~a;~a;~a~%"
-                           id (price v) (siteprice v) name name-real
-                           name-yml (yml.yml-show-p v) desc img options active group-name
-                           parent-group-name secret
-                           (gethash (articul v) *xls.product-table*)
-                           (vendor v)
-                           (yml.get-product-delivery-price1 v)))))
-           (storage *global-storage*)))
+  (process-storage
+   #'(lambda (v)
+       (let ((id "нет") (name "нет") (name-real "нет") (name-yml "нет")
+             (desc "нет") (img "нет") (options "нет") (active "нет")
+             (group-name "нет") (parent-group-name "нет") (secret "нет"))
+         (setf id (articul v))
+         (setf name (stripper (name-provider v)))
+         (setf name-real (stripper (name-seo v)))
+         (with-option1 v "Secret" "Yandex"
+                       (setf name-yml (stripper (getf option :value))))
+         (setf desc (if (and (not (null (seo-text v)))
+                             (not (string= "" (stripper (seo-text v)))))
+                        "есть"
+                        "нет"))
+         (setf img (length (get-pics (articul v))))
+         (setf options (if (is-valide-option v)
+                           "есть"
+                           "нет"))
+         (setf active (if (active v)
+                          "да"
+                          "нет"))
+         (setf group-name (when (class-core.parent v)
+                            (stripper (name (class-core.parent v)))))
+         (setf parent-group-name (when (and (class-core.parent v)
+                                            (class-core.parent (class-core.parent v)))
+                                   (stripper (name (class-core.parent (class-core.parent v))))))
+         (setf secret "Нет")
+         (with-option1 v "Secret" "Checked"
+                       (setf secret (getf option :value)))
+         (format stream "~a;~a;~a;\"~a\";\"~a\";\"~a\";~a;~a;~a;~a;~a;\"~a\";\"~a\";~a;~a;~a;~a~%"
+                 id (price v) (siteprice v) name name-real
+                 name-yml (yml.yml-show-p v) desc img options active group-name
+                 parent-group-name secret
+                 (gethash (articul v) *xls.product-table*)
+                 (vendor v)
+                 (yml.get-product-delivery-price1 v))))
+   'product))
 
 (defun is-valide-option (product)
   (let ((flag nil))
@@ -72,22 +71,20 @@
           "seo-text"
           "продуктов"
           "активных")
-  (maphash #'(lambda (k v)
-               (declare (ignore k))
-               (when (typep v 'group)
-                 (format stream "\"~a\";http://www.320-8080.ru/~a;~a;~a;~a;~a;~%"
-                         (stripper (name v))
-                         (key v)
-                         (if (active v)
-                             "yes"
-                             "no")
-                         (if (and (seo-text v)
-                                  (not (string= "" (stripper (seo-text v)))))
-                             "yes"
-                             "no")
-                         (length (products v))
-                         (length (remove-if-not #'active (products v))))))
-           (storage *global-storage*)))
+  (process-storage
+   #'(lambda (v)
+       (format stream "\"~a\";http://www.320-8080.ru/~a;~a;~a;~a;~a;~%"
+               (stripper (name v))
+               (key v)
+               (if (active v)
+                   "yes"
+                   "no")
+               (if (servo.valid-string-p (seo-text v))
+                   "yes"
+                   "no")
+               (length (products v))
+               (length (remove-if-not #'active (products v)))))
+   'group))
 
 (defun write-groups-active-product-num (stream)
   (format stream "~a;~a;~a;~a;~%"
@@ -95,17 +92,16 @@
           "url страницы"
           "Active"
           "кол-во товаров")
-  (maphash #'(lambda (k v)
-               (declare (ignore k))
-               (when (typep v 'group)
-                 (format stream "\"~a\";http://www.320-8080.ru/~a;~a;~a;~%"
-                         (stripper (name v))
-                         (key v)
-                         (if (active v)
-                             "yes"
-                             "no")
-                         (length (remove-if-not #'active (storage.get-recursive-products v))))))
-           (storage *global-storage*)))
+  (process-storage
+   #'(lambda (v)
+       (format stream "\"~a\";http://www.320-8080.ru/~a;~a;~a;~%"
+               (stripper (name v))
+               (key v)
+               (if (active v)
+                   "yes"
+                   "no")
+               (length (storage.get-recursive-products v #'active))))
+   'group))
 
 
 
@@ -119,27 +115,25 @@
             "url страницы"
             "Active"
             "seo-text")
-    (maphash #'(lambda (k v)
-                 (declare (ignore k))
-                 (when (typep v 'product)
-                   (setf vendor-name "Нет")
-                   (setf vendor-name (vendor v))
-                   (setf desc (if (and (seo-text v)
-                                       (not (string= "" (stripper (seo-text v)))))
-                                  "yes"
-                                  "no"))
-                   (format stream "\"~a\";\"~a\";\"~a\";http://www.320-8080.ru/~a;~a;~a;~%"
-                           (if (class-core.parent v)
-                               (stripper (name (class-core.parent v)))
-                               "Нет категории")
-                           (stripper vendor-name)
-                           (stripper (name-seo v))
-                           (articul v)
-                           (if (active v)
-                               "yes"
-                               "no")
-                           desc)))
-             (storage *global-storage*))))
+    (process-storage
+     #'(lambda (v)
+         (setf vendor-name "Нет")
+         (setf vendor-name (vendor v))
+         (setf desc (if (servo.valid-string-p (seo-text v))
+                        "yes"
+                        "no"))
+         (format stream "\"~a\";\"~a\";\"~a\";http://www.320-8080.ru/~a;~a;~a;~%"
+                 (if (class-core.parent v)
+                     (stripper (name (class-core.parent v)))
+                     "Нет категории")
+                 (stripper vendor-name)
+                 (stripper (name-seo v))
+                 (articul v)
+                 (if (active v)
+                     "yes"
+                     "no")
+                 desc))
+    'product)))
 
 
 (defun write-vendors (stream)
@@ -151,29 +145,28 @@
           "seo-text"
           "продуктов"
           "активных")
-  (maphash #'(lambda (k v)
-               (declare (ignore k))
-               (when (and (typep v 'group)
-                          (null (groups v)))
-                 (maphash #'(lambda (vendor num)
-                              (declare (ignore num))
-                              (let ((products
-                                     (remove-if-not #'(lambda (p)
-                                                        (vendor-filter-controller p vendor))
-                                                    (products v))))
-                                (format stream "\"~a\";\"~a\";http://www.320-8080.ru/~a?vendor=~a;~a;~a;~a;~a;~%"
-                                        (stripper (name v))
-                                        (stripper vendor)
-                                        (hunchentoot:url-encode (key v))
-                                        (hunchentoot:url-encode (stripper vendor))
-                                        "yes"
-                                        (if (class-core.has-vendor-seo-text v vendor)
-                                            "yes"
-                                            "no")
-                                        (length products)
-                                        (length (remove-if-not #'active products)))))
-                          (storage.get-vendors (storage.get-filtered-products v #'atom)))))
-           (storage *global-storage*)))
+  (process-storage
+   #'(lambda (v)
+       (unless (groups v)
+         (maphash #'(lambda (vendor num)
+                      (declare (ignore num))
+                      (let ((products
+                             (remove-if-not #'(lambda (p)
+                                                (vendor-filter-controller p vendor))
+                                            (products v))))
+                        (format stream "\"~a\";\"~a\";http://www.320-8080.ru/~a?vendor=~a;~a;~a;~a;~a;~%"
+                                (stripper (name v))
+                                (stripper vendor)
+                                (hunchentoot:url-encode (key v))
+                                (hunchentoot:url-encode (stripper vendor))
+                                "yes"
+                                (if (class-core.has-vendor-seo-text v vendor)
+                                    "yes"
+                                    "no")
+                                (length products)
+                                (length (remove-if-not #'active products)))))
+                  (storage.get-vendors (storage.get-filtered-products v #'atom)))))
+   'group))
 
 (defun create-report (file-name report-func)
   (let ((filename (format nil "~a/~a" *path-to-dropbox* file-name)))
@@ -182,28 +175,6 @@
       (print stream)
       (funcall report-func stream))))
 
-
-(defun check-valid-siteprice ()
-  (format t "~&~a;\"~a\";~a;~a;~a;"
-          "Артикул"
-          "Имя"
-          "Активный"
-          "Цена магазина"
-          "Цена 3208080")
-  (maphash #'(lambda(k v)
-               (declare (ignore k))
-               (when (typep v 'product)
-                 (if (< (price v)
-                        (siteprice v))
-                     (format t "~&~a;\"~a\";~a;~a;~a;"
-                             (articul v)
-                             (stripper (name v))
-                             (if (active v)
-                                 "yes"
-                                 "no")
-                             (price v)
-                             (siteprice v)))))
-           (storage *global-storage*)))
 
 (defun post-proccess-gateway ()
   (mapcar #'(lambda (v)
@@ -223,14 +194,13 @@
            "999111"
            "999777"))
   (let ((rs))
-    (maphash #'(lambda (k v)
-                 (declare (ignore k))
-                 (when (and (typep v 'product)
-                            (active v)
-                            (zerop (siteprice v)))
-                   (push v rs)
-                   (setf (active v) nil)))
-             (storage *global-storage*))
+    (process-storage
+     #'(lambda (v)
+         (when (and (active v)
+                    (zerop (siteprice v)))
+           (push v rs)
+           (setf (active v) nil)))
+     'product)
     (length rs)))
 
 (defun product-delivery (p)
@@ -248,15 +218,6 @@
   (mapcar #'(lambda (v)
               (remobj (format nil "~A" v) 'product))
           products))
-
-(defun serials.all-prs ()
-  (let ((rs))
-    (maphash #'(lambda (k v)
-                 (declare (ignore k))
-                 (when (typep v 'product)
-                   (push v rs)))
-             (storage *global-storage*))
-    rs))
 
 (defun report.add-products-to-group (product-list gr)
   (mapcar #'(lambda (v)

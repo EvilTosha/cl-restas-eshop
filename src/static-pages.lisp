@@ -22,15 +22,10 @@
 (defun static-pages.restore ()
   (let ((t-storage))
     (log5:log-for info "START:RESTOR:static-pages")
-    (sb-ext:gc :full t) ;; запуск сборщика мусора
     (let ((*storage-articles* (make-hash-table :test #'equal)))
       (static-pages.process-dir (config.get-option "PATHS" "path-to-static-pages") "static")
       (setf t-storage *storage-articles*))
     (setf static-pages.*storage* t-storage)
-    (maphash #'(lambda (k v)
-                 (setobj k v))
-             static-pages.*storage*)
-    (sb-ext:gc :full t) ;; запуск сборщика мусора
     (log5:log-for info "FINISH:RESTOR:static-pages")))
 
 ;;обновление шаблонов для отображения

@@ -68,12 +68,9 @@
                     :lastmod *sitemap-lastmod-time*
                     :changefreq "monthly"
                     :priority "0.5"))
-          (let ((statics))
-            (maphash #'(lambda (k v)
-                         (if (typep v 'article)
-                             (push k statics)))
-                     (storage *global-storage*))
-            statics)))
+          (loop
+             :for key :being :the hash-keys :in static-pages.*storage*
+             :collect key)))
 
 (defun sitemap.get-special-routes ()
   (list

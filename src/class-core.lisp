@@ -321,8 +321,8 @@ such as pointer to storage, serialize flag, etc.")
 If parameter type is given, use this type, otherwise doesnt check types.
 Remove elements from result list corresponding to remove-func"
   ;;; TODO: make as method not only on lists
+  (declare (symbol type))
   (let ((key (sequence:canonize-key key)))
-    (declare (symbol type))
     (remove-if remove-func
                (mapcar #'(lambda (key-obj)
                            (getobj (funcall key key-obj) type default))

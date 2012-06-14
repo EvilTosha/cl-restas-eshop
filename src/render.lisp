@@ -390,7 +390,7 @@
                       (mapcar #'(lambda (v)
                                   (unless (equal v object)
                                     (push v all)))
-                              (storage.get-filtered-products (products *global-storage*)))
+                              (process-and-collect-storage :when-func #'active))
                       all)
                     4))
     (loop
