@@ -40,7 +40,7 @@
 
 (defmethod render.get-title ((object group) &optional (parameters (request-get-plist)))
   (let ((name (name object))
-        (vendor (getf parameters :vendor)))
+        (vendor (vendor-transform-from-alias (getf parameters :vendor))))
     (string-convertion-for-title
      (if vendor
          (format nil "~a ~a - купить ~a ~a по низкой цене, продажа ~a ~a с доставкой и гарантией в ЦиFры 320-8080"
@@ -349,6 +349,8 @@
       (mapcar #'(lambda (pair)
                   (let ((key-optgroup (getf pair :optgroup))
                         (key-optname  (getf pair :optname))
+                        (key-alias  (getf pair :showname))
+                        (key-units  (getf pair :units))
                         (optvalue))
                     (mapcar #'(lambda (optgroup)
                                 (when (string= (getf optgroup :name) key-optgroup)
@@ -359,8 +361,11 @@
                                             options))))
                             (optgroups object))
                     (list :optgroup key-optgroup
-                          :optname key-optname
-                          :optvalue optvalue)))
+                          :optname (if (servo.valid-string-p key-alias)
+                                       key-alias
+                                       key-optname)
+                          :optvalue optvalue
+                          :optunits key-units)))
               (keyoptions parent)))))
 
 (defmethod render.relink ((object product))

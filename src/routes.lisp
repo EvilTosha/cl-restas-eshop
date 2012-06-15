@@ -77,7 +77,7 @@
 
 (defun vendor-transform-from-alias (alias)
   (aif (getobj alias 'vendor)
-       (key it)
+       (name it)
        alias))
 
 (defun test-route-storage-object ()
@@ -228,7 +228,21 @@
   (log5:log-for test "error 404: ~a" any)
   (restas:abort-route-handler
    (babel:string-to-octets
-    (default-page (catalog.sitemap-page t)
+    (default-page
+      (soy.404:content
+       (list :menu (new-classes.menu)
+
+             :dayproducts (main-page-products-show (daily *main-page.storage*) 4)
+             :olist (soy.main-page:olist)
+             :lastreview (soy.main-page:lastreview (main-page-show-lastreview (review *main-page.storage*)))
+             :bestpriceproducts (main-page-products-show (best *main-page.storage*) 4)
+             :hit (soy.main-page:hit (list :items (main-page-products-show (hit *main-page.storage*) 2)))
+             :newproducts (main-page-products-show (new *main-page.storage*) 4)
+             :post (soy.main-page:post
+                    (list :news (articles-view-articles (list-filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "новости")) 3))
+                          :akcii (articles-view-articles(list-filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "акции")) 3))
+                          :reviews (articles-view-articles(list-filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "обзоры")) 3))))
+             :plus (soy.main-page:plus)))
         :keywords "Купить компьютер и другую технику вы можете в Цифрах. Цифровая техника в Интернет-магазине 320-8080.ru"
         :description "каталог, компьютеры, купить компьютер, компьютерная техника, Петербург, Спб, Питер, Санкт-Петербург, продажа компьютеров, магазин компьютерной техники, магазин компьютеров, интернет магазин компьютеров, интернет магазин компьютерной техники, продажа компьютерной техники, магазин цифровой техники, цифровая техника, Цифры, 320-8080"
         :title "Каталог интернет-магазина: купить компьютер, цифровую технику, комплектующие в Санкт-Петербурге")

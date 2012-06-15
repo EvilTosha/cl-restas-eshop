@@ -53,6 +53,7 @@
    error404
    (soy.new-catalog:catalog-item
     (list
+     :other t
      :maingrouplink "Покупателям"
      :maingroupimg nil
      :other t))))

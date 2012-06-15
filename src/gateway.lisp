@@ -193,6 +193,7 @@
              (realname  (cdr (assoc :realname elt)))
              (count-total    (cdr (assoc :count--total elt)))
              (count-transit  (cdr (assoc :count--transit elt))))
+         ;; (log5:log-for info-console "~a" elt)
          (gateway.process-product1 articul price siteprice isnew isspec name realname count-total count-transit bonuscount)))))
 
 (defun gateway.get-pathname-fulls (&optional (timestamp (get-universal-time)))
@@ -224,6 +225,8 @@
                           (string<= (subseq line 0 19) finish))
                  (setf data (json:decode-json-from-string (subseq line 21)))
                  (gateway.process-products1 data)))))))
+
+
 
 (defun gateway.update-actives (data)
   ;; TOCHECK

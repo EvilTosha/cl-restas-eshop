@@ -561,7 +561,7 @@
 (defun breadcrumbs-add-vendor1 (breadcrumbs parameters)
   (let ((belts (getf breadcrumbs :breadcrumbelts))
         (tail (getf breadcrumbs :breadcrumbtail))
-        (vendor (getf parameters :vendor)))
+        (vendor (vendor-transform-from-alias (getf parameters :vendor))))
     (if vendor
         (list :breadcrumbelts (append belts (list tail))
               :breadcrumbtail (list :key vendor
