@@ -176,6 +176,6 @@
         (read-line stream nil)
         (loop
            :for line := (read-line stream nil)
-           :while (servo.valid-string-p line :unwanted-chars (list #\,) :del-method :trim)
+           :while (servo.valid-string-p line :unwanted-chars (list #\, #\Space #\Tab) :del-method :trim)
            :do (funcall line-processor line))))
     (log5:log-for info "DONE ~a" restore-name)))

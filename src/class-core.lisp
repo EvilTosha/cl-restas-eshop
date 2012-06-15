@@ -2,10 +2,6 @@
 
 (in-package #:eshop)
 
-(defgeneric class-core.post-unserialize (item)
-  (:documentation "Method that called after unserializing all the items from files.
-Usually it transform string keys to pointers to other objects, such as parents or childs."))
-
 (defmacro class-core.define-class (name slot-list)
   "Macro for making class by given list of slots"
   `(defclass ,name ()
@@ -80,8 +76,8 @@ Usually it transform string keys to pointers to other objects, such as parents o
               :for line := (read-line file nil 'EOF)
               :until (eq line 'EOF)
               :do
-              (let ((item (unserialize (decode-json-from-string line)
-                                       dummy))
+              (let ((item (%unserialize (decode-json-from-string line)
+                                        dummy))
                     (cur-pos (round (* 100 (/ (cl:file-position file) file-length)))))
                 (when (> cur-pos percent)
                   (setf percent cur-pos)
@@ -111,6 +107,13 @@ Usually it transform string keys to pointers to other objects, such as parents o
                (products group))
     (pushnew product (products group))))
 
+
+(defgeneric %post-unserialize (item)
+  (:documentation "Method that called after unserializing all the items from files.
+Usually it transform string keys to pointers to other objects, such as parents or childs."))
+
+(defgeneric %post-unserialize-item (item)
+  (:documentation "Processing individual item after unserialize"))
 
 ;;; TODO: make this method standard using "before" keyword
 (defmethod %post-unserialize (dummy)
@@ -162,8 +165,7 @@ Reload this method if more actions required"
                 (upsale-links item)))
   ;; после десериализации в parent лежит список key родительских групп
   (setf (parents item)
-        (remove-if #'null (parents item)
-                   :key (make-curry-lambda getobj 'group)))
+        (keys-to-objects (parents item) :type 'group))
   ;; проставление ссылок у родителей на данную группу
   (mapcar #'(lambda (parent)
               (push item (groups parent)))
@@ -233,7 +235,7 @@ Reloaded sandard method %post-unserialize"
                  (declare (ignore k))
                  (let ((name (name v)))
                    (when (servo.valid-string-p name)
-                     (setobj 'vendor (string-downcase name) v))))
+                     (setobj (string-downcase name) v 'vendor))))
              (copy-structure storage))))
 
 (defun class-core.unserialize-all ()
@@ -248,7 +250,7 @@ Reloaded sandard method %post-unserialize"
                                  instance
                                  t-storage)
          ;; set real storage as fully unserialized temp storage
-         (setf (getf properties :stroage) t-storage)))
+         (setf (getf properties :storage) t-storage)))
    *classes*)
   ;; post-unserialize actions, such as making links instead of text keys
   ;; Note: can't be merged with previous maphash, because must be after it
@@ -285,10 +287,10 @@ such as pointer to storage, serialize flag, etc.")
   "Macro for defining type-checking functions such as productp, groupp, etc"
   `(defun ,(intern (format nil "~:@(~Ap~)" name)) (obj)
      ,(format nil "Checks if the object is of type ~A" name)
-     (typep obj ,name)))
+     (typep obj ',name)))
 
 (defmacro class-core.make-class-and-methods (name slot-list &key (serialize t)
-                                             (make-storage t) storage-name storage-size)
+                                             (make-storage t) storage-size)
   "Make class, storage for its instances (if needed) and necessary methods for it
 \(such as serialization, unserialization, viewing, editing, etc)"
   `(values
@@ -303,18 +305,13 @@ such as pointer to storage, serialize flag, etc.")
      (class-core.define-view-method ,name ,slot-list)
      (class-core.define-edit-method ,name ,slot-list)
      ,@(when make-storage
-            (let ((storage-name (aif storage-name
-                                     it
-                                     (intern (format nil "*~@:(~A-storage~)*" name)))))
-              `((defparameter ,storage-name
-                  (make-hash-table :test #'equal ,@(awhen storage-size
-                                                          '(:size it)))
-                  ,(format nil "Automatically created storage for objects of type ~A" name))
-                ;; set :storage property if class as pointer to real storage
-                (setf (getf (gethash ',name *classes*) :storage) ,storage-name)
-                ,@(when serialize
-                        `((class-core.define-unserialize-method ,name ,slot-list)
-                          (backup.define-serialize-method ,name ,slot-list))))))))
+         `(;; set :storage property if class as pointer to real storage
+           (setf (getf (gethash ',name *classes*) :storage)
+                 (make-hash-table :test #'equal ,@(awhen storage-size
+                                                         (list :size it))))
+           (class-core.define-unserialize-method ,name ,slot-list)
+           ,@(when serialize
+               `((backup.define-serialize-method ,name ,slot-list)))))))
 
 (defun keys-to-objects (key-list &key type (remove-func #'null) default key)
   "Returns list of objects corresponding to given list of keys.
@@ -388,7 +385,7 @@ Remove elements from result list corresponding to remove-func"
                                                                ;; (empty g)
                                                                (not (active g))))
                                                           (groups val))
-                                               #'class-core.menu-sort)
+                                               #'menu-sort)
                                           :collect
                                           (list :key  (key child) :name (name child)))))
                           ;; else - this is ordinal

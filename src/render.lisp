@@ -95,7 +95,7 @@
                                   :producers (when (getf parameters :showall)
                                                (render.show-producers (storage.get-filtered-products object #'atom)))
                                   :accessories (soy.catalog:accessories)
-                                  :groups (let ((sort-groups (sort (remove-if-not #'active (groups object)) #'class-core.menu-sort)))
+                                  :groups (let ((sort-groups (sort (remove-if-not #'active (groups object)) #'menu-sort)))
                                             (mapcar #'(lambda (child)
                                                         (let* ((show-func (if (getf parameters :showall)
                                                                               #'atom
@@ -387,10 +387,11 @@
     (setf temp-rs2 (get-randoms-from-list
                     ;;список всех активных товаров кроме object
                     (let ((all))
-                      (mapcar #'(lambda (v)
-                                  (unless (equal v object)
-                                    (push v all)))
-                              (process-and-collect-storage :when-func #'active))
+                      (process-storage #'(lambda (v)
+                                           (when (and (active v)
+                                                      (not (equal v object)))
+                                             (push v all)))
+                                       'product)
                       all)
                     4))
     (loop

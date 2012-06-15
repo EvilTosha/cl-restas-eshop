@@ -92,7 +92,7 @@
            t))))
 
 (defun route-storage-object (key)
-  (aif (getobj key)
+  (aif (and key (getobj key))
        it
        ;; else: static pages
        (gethash key static-pages.*storage*)))

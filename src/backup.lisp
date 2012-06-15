@@ -4,7 +4,7 @@
 
 ;;; Backup functions and macros
 
-(defmacro backup.make-serialize-method (name class-fields)
+(defmacro backup.define-serialize-method (name class-fields)
   "Macros for creating serialize method"
   `(defmethod backup.serialize-entity ((object ,name))
      (format nil "{~{~a~^,~}}"

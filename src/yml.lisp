@@ -309,10 +309,12 @@
 
 (defun yml.get-next-yml-id ()
   "Generate uniq group id for yanedx market. Max current id +1."
-  (let ((max 0))
-    (process-storage #'(lambda (gr)
-                         (let ((id (yml-id gr)))
-                           (when (and id (< max id))
-                             (setf max id))))
-                     'group)
-    (1+ max)))
+  (if (not (get-storage 'group))
+      0
+      (let ((max 0))
+        (process-storage #'(lambda (gr)
+                             (let ((id (yml-id gr)))
+                               (when (and id (< max id))
+                                 (setf max id))))
+                         'group)
+        (1+ max))))

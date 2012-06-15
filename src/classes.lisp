@@ -23,7 +23,8 @@
   (:name count-transit     :initform 0                      :disabled t     :type int         :serialize t)
   (:name count-total       :initform 0                      :disabled t     :type int         :serialize t)
   (:name optgroups         :initform nil                    :disabled t     :type optgroups   :serialize nil)
-  (:name vendor            :initform ""                     :disabled nil   :type string      :serialize t)))
+  (:name vendor            :initform ""                     :disabled nil   :type string      :serialize t))
+ :storage-size 70000)
 
 
 (class-core.make-class-and-methods
@@ -49,7 +50,8 @@
   (:name upsale-links        :initform nil                             :disabled nil   :type group-list                :serialize t)
   (:name keyoptions          :initform nil                             :disabled nil   :type keyoptions                :serialize t)
   (:name catalog-keyoptions  :initform nil                             :disabled nil   :type catalog-keyoptions        :serialize t)
-  (:name life-time           :initform 100                             :disabled nil   :type int                       :serialize t)))
+  (:name life-time           :initform 100                             :disabled nil   :type int                       :serialize t))
+ :storage-size 400)
 
 
 (class-core.make-class-and-methods
@@ -58,14 +60,16 @@
   (:name parents           :initform nil      :disabled t    :type group-list)
   (:name name              :initform ""       :disabled nil  :type string)
   (:name func              :initform ""       :disabled t    :type string)
-  (:name func-string       :initform ""       :disabled t    :type textedit)))
+  (:name func-string       :initform ""       :disabled t    :type textedit))
+ :serialize nil)
 
 (class-core.make-class-and-methods
  vendor
  ((:name key       :initform ""                              :disabled t   :type string             :serialize t)
   (:name name      :initform ""                              :disabled nil :type string             :serialize t)
   (:name alias     :initform ""                              :disabled nil :type string             :serialize t)
-  (:name seo-texts :initform (make-hash-table :test #'equal) :disabled t   :type textedit-hashtable :serialize t)))
+  (:name seo-texts :initform (make-hash-table :test #'equal) :disabled t   :type textedit-hashtable :serialize t))
+ :storage-size 300)
 
 (defclass group-filter ()
   ((name              :initarg :name            :initform nil       :accessor name)

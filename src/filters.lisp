@@ -37,7 +37,7 @@
   "Возвращает список ненулевых фильтров на списке объектов и количество объесктов в выборке"
   (remove-if #'null (mapcar #'(lambda (filter)
                                 (let ((num (length
-                                            (remove-if-not #'(lambda (p) (funcall (func filter) p)) products))))
-                                  (if (not (= num 0))
-                                      (cons filter num))))
+                                            (remove-if-not (func filter) products))))
+                                  (when (plusp num)
+                                    (cons filter num))))
                             filters)))

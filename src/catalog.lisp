@@ -10,7 +10,7 @@
   (soy.new-catalog:catalog-main
    (list
     :error404 error404
-    :numproducts (count-storage 'product #'active)
+    :numproducts (count-storage 'product :when-fn #'active)
     :menu (class-core.menu)
     :items (let ((res)
                  (roots (get-root-groups))

@@ -147,7 +147,7 @@
       ;; проставляем флаг active
       (setf (active product) (plusp (count-total product)))
       (unless old-product
-        (setobj product)))))
+        (setobj (key product) product)))))
 
 
 (defun gateway.store-single-gateway (raws &optional (timestamp (get-universal-time)))

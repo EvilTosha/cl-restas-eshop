@@ -112,13 +112,15 @@ each element and collecting its results"
   (when (and (name a) (name b))
     (string< (name a) (name b))))
 
-(defun storage.get-recursive-products (group &optional (when-func #'active))
+(defun storage.get-recursive-products (group &optional (when-fn #'active))
   "Return list of all products of given group and all its child groups,
 filtered by wgen-func"
-  (declare (group group))
+  (declare (group group) (function when-fn))
   (append
-   (remove-if-not when-func (products group))
-   (mapcan #'storage.get-recursive-products (groups group) when-func)))
+   (remove-if-not when-fn (products group))
+   (mapcan #'(lambda (gr)
+               (storage.get-recursive-products gr when-fn))
+           (groups group))))
 
 (defgeneric storage.get-vendors (object)
   (:documentation ""))
@@ -150,8 +152,7 @@ where key is vendor name and value is number of products with this vendor"
 ;;;;; old storage methods below
 
 (defmethod storage.get-filtered-products ((object group) &optional (filter #'active))
-  (remove-if-not filter
-                 (storage.get-recursive-products object)))
+  (storage.get-recursive-products object filter))
 
 (defmethod storage.get-filtered-products ((object list) &optional (filter #'active))
   (remove-if-not filter object))
