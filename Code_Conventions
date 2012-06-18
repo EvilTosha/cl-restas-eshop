@@ -5,28 +5,23 @@ http://www.cliki.net/naming%20conventions
 http://www.cs.umd.edu/~nau/cmsc421/norvig-lisp-style.pdf
 
 Project specific conventions:
-- Each function name shoud start with name of containing file. Example: function in xls.lisp file should look like (defun xls.foo () ...)
-
-- Each keyword in loop macro should start with colon. Example:
-(loop
-   :for x
-   :in (list 1 2 3)
-   :do (foo x))
-but not
-(loop
-   for x
-   in (list 1 2 3)
-   do (foo x))
-
-- When you describe new anonimous function it should follow #'(lambda () ...) (not (lambda () ...)) convention.
 
 - When you need to validate some data, use (if data ...) not (if (not (null data)) ...)
 
 - Add documentation lines, if purpose of function/variable is not obvious
 
+- Use declares with types of arguments (when it's known) at functions' beginning, it makes function more safe to use and allow compiler to make optimizations as well. Example:
+(defun setobj (key value &optional type)
+   (declare (string key) (symbol type))
+   ...)
+
 - For creating pathnames use 'merge-pathnames function
 
 - All the pathnames should be in config files
+
+- Try to minimize number of warnings. Use (declare (ignore ...)) directives, get rid of unused code
+
+- Don't keep old code in comments. It makes all code much harder to read. If it became needed, you always can restore it from git
 
 - Use for variables "talking names". Bad: (let ((r 0) (pc 0)) ...); Good: (let ((result 0) (product-counter 0)) ...)
 
@@ -43,6 +38,19 @@ result)
 
 - Write format directives in uppercase for make them stand out from lowercase text surrounding. Example: (format nil "~&Number ~D~%" num)
 
-- When you want to iterate a list and check its elements with some predicate use every, some, notany and notevery directives instead of explicit mapcar and remove-if
+- When you want to iterate a list and check its elements with some predicate use every, some, notany and notevery directives instead of explicit mapcar or remove-if
 
-- Use short commands for simple number checks, such as evenp, oddp, plusp, zerop, etc.
+- Use short commands for simple number and type checks, such as evenp, oddp, plusp, zerop, stringp, numberp, etc.
+
+- Each keyword in loop macro should start with colon. Example:
+(loop
+   :for x
+   :in (list 1 2 3)
+   :do (foo x))
+but not
+(loop
+   for x
+   in (list 1 2 3)
+   do (foo x))
+
+- When you describe new anonimous function it should follow #'(lambda () ...) (not (lambda () ...)) convention

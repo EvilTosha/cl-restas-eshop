@@ -31,11 +31,11 @@
            (setf active (if (active v)
                             "да"
                             "нет"))
-           (setf group-name (when (new-classes.parent v)
-                              (stripper (name (new-classes.parent v)))))
-           (setf parent-group-name (when (and (new-classes.parent v)
-                                              (new-classes.parent (new-classes.parent v)))
-                                     (stripper (name (new-classes.parent (new-classes.parent v))))))
+           (setf group-name (when (class-core.parent v)
+                              (stripper (name (class-core.parent v)))))
+           (setf parent-group-name (when (and (class-core.parent v)
+                                              (class-core.parent (class-core.parent v)))
+                                     (stripper (name (class-core.parent (class-core.parent v))))))
            (setf secret "Нет")
            (with-option1 v "Secret" "Checked"
                          (setf secret (getf option :value)))
@@ -164,7 +164,7 @@
                                 (hunchentoot:url-encode (key v))
                                 (hunchentoot:url-encode (stripper vendor))
                                 "yes"
-                                (if (new-classes.has-vendor-seo-text v vendor)
+                                (if (class-core.has-vendor-seo-text v vendor)
                                     "yes"
                                     "no")
                                 (length products)

@@ -24,10 +24,10 @@
     *yml-group-ids*))
 
 (defun yml.yml-show-p (product)
-  (and (typep product 'product)
-       (class-core.parent product)
+  (declare (product product))
+  (and (class-core.parent product)
        (ymlshow (class-core.parent product))
-       (active product)
+       (or (active product) (servo.available-for-order-p product))
        (price product)
        (plusp (price product))
        ;;для селективного исключения товаров по значению специальной опции
@@ -164,7 +164,7 @@
                           :when-func #'yml.yml-show-p
                           :func #'(lambda (product)
                                     (soy.yml:offer (list :articul (articul product)
-                                                         :available (servo.available-for-order-p product)
+                                                         :available (active product) ; если не active, то прошел available-for-order
                                                          :deliveryprice (yml.get-product-delivery-price1 product)
                                                          :price (siteprice product)
                                                          :category (yml-id (class-core.parent product))

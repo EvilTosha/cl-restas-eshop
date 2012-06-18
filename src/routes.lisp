@@ -76,7 +76,7 @@
 ;; STORAGE OBJECT
 
 (defun vendor-transform-from-alias (alias)
-  (aif (getobj alias 'vendor)
+  (aif (and alias (getobj alias 'vendor))
        (name it)
        alias))
 
@@ -230,7 +230,7 @@
    (babel:string-to-octets
     (default-page
       (soy.404:content
-       (list :menu (new-classes.menu)
+       (list :menu (class-core.menu)
 
              :dayproducts (main-page-products-show (daily *main-page.storage*) 4)
              :olist (soy.main-page:olist)

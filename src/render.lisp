@@ -408,8 +408,8 @@
 (defmethod restas:render-object ((designer eshop-render) (object product))
   (let* ((pics (get-pics (articul object)))
          (diff-percent (servo.diff-percentage (price object) (siteprice object)))
-         (is-vintage (null (active object)))
-         (is-available t ) ;;(servo.available-for-order-p object))
+         (is-available (servo.available-for-order-p object))
+         (is-vintage (not (or (active object) is-available)))
          (product-view)
          (group (class-core.parent object)))
     (setf product-view (list :menu (class-core.menu object)
@@ -474,7 +474,6 @@
                                                                     (list-filters.limit-end (servo.find-relative-product-list object) 4))))
                              :seotextflag (and (not (null (seo-text object)))
                                                (string/= (seo-text object) ""))
-                             :available t
                              :predzakaz (preorder object)
                              :addproductcart (if (preorder object)
                                                  (soy.buttons:add-predzakaz (list :articul (articul object)))
