@@ -54,8 +54,7 @@
                      ;; сохраняем запрос
                      (gateway.store-singles (list (list (time.get-date-time) name raw)))
                      ;; обрабатываем данные пришедшие в одиночном запросе
-                     ;; (gateway.process-products1 (json:decode-json-from-string
-                     ;; (sb-ext:octets-to-string raw :external-format :cp1251)))
+                     (gateway.restore-singles1 (gateway.get-last-gateway-ts) (get-universal-time))
                      ;; возможно тут необходимо пересчитать списки активных товаров или еще что-то
                      "single")))
                 (t
@@ -307,6 +306,7 @@
          :do (progn
                (when (and (string<= start (subseq line 0 19))
                           (string<= (subseq line 0 19) finish))
+                 (log5:log-for info "single: ~a" line)
                  (setf data (json:decode-json-from-string (subseq line 21)))
                  (gateway.process-products1 data)))))))
 
@@ -331,6 +331,21 @@
                   (storage.edit-object v)))
             (storage.get-products-list))))
 
+(defun gateway.get-last-gateway-ts (&optional (timestamp (get-universal-time)))
+  (let* ((filename (time.encode.backup timestamp))
+         (current-name (format nil "~a/gateway/~a.bkp" *path-to-logs* filename))
+         (last-gateway))
+    (setf last-gateway (car
+                        (remove-if #'(lambda (v) (string< current-name (format nil "~a" v)))
+                                   (reverse (directory
+                                             (format nil "~a/gateway/*.bkp" *path-to-logs*))))))
+    (if last-gateway
+        (time.decode.backup
+         (subseq
+          (car (last (split-sequence:split-sequence
+                      #\/
+                      (format nil "~a" last-gateway)))) 0 19))
+        timestamp)))
 
 (defun gateway.restore-history (&optional (timestamp (get-universal-time)))
   (let* ((filename (time.encode.backup timestamp))
