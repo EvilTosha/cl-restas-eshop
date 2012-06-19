@@ -52,7 +52,7 @@
                    (let ((name (hunchentoot:get-parameter "user")))
                      (log5:log-for info "GATEWAY::Single")
                      ;; сохраняем запрос
-                     (gateway.store-singles (list (list (time.get-date-time) name raw)))
+                     (gateway.store-singles (list (list (time.encode.backup) name raw)))
                      ;; обрабатываем данные пришедшие в одиночном запросе
                      (gateway.restore-singles1 (gateway.get-last-gateway-ts) (get-universal-time))
                      ;; возможно тут необходимо пересчитать списки активных товаров или еще что-то
@@ -379,5 +379,5 @@
 
 (defun gateway.store-singles (history)
   (mapcar #'(lambda (v)
-              (gateway.store-single-gateway (object-fields.string-delete-newlines (sb-ext:octets-to-string (third v) :external-format :cp1251)) (time.decode-gateway-time (car v))))
+              (gateway.store-single-gateway (object-fields.string-delete-newlines (sb-ext:octets-to-string (third v) :external-format :cp1251)) (time.decode.backup (car v))))
           history))
