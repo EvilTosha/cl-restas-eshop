@@ -15,7 +15,7 @@
 
 (defun object-fields.string-replace-newlines (string)
   "Processing string and replace newline characters with #Newline"
-  (regex-replace-all (format nil "~a" #\Return)
+  (regex-replace-all (string #\Return)
                      (regex-replace-all "\\n" string "#Newline")
                      ""))
 
@@ -35,11 +35,10 @@
                         :external-format :utf-8)
     (mapcar #'(lambda (product)
                 (when (optgroups product)
-                  (format file "{\"key\":~a, \"optgroups\":~a}~%"
+                  (format file "{\"key\":~A,\"optgroups\":~A}~%"
                           (key product) (object-fields.optgroups-field-serialize
                                          (optgroups product)))))
-            product-list)
-    (format nil "Done!")))
+            product-list)))
 
 (defgeneric object-fields.product-groups-fix (item)
   (:documentation "Remove given item from children lists, and
@@ -90,14 +89,14 @@ add it to all parents' lists"
 
 
 (defun object-fields.string-field-serialize (string)
-  (format nil "\"~a\"" (object-fields.string-escaping string)))
+  (format nil "\"~A\"" (object-fields.string-escaping string)))
 
 ;;int
 (defun object-fields.int-field-view (value name disabled)
   (object-fields.string-field-view (format nil "~a" value) name disabled))
 
 (defun object-fields.int-field-get-data (string)
-  (when (and string (string/= "" string) (string/= "NIL" string))
+  (when (and (servo.valid-string-p string) (string/= "NIL" string))
     (parse-integer string)))
 
 (defun object-fields.int-field-serialize (int)
@@ -197,17 +196,15 @@ add it to all parents' lists"
 ;;group - корень ветви, open-groups - список групп, до которых нужно раскрыть дерево
 ;;field-name - имя поля, нужно для проставления в name в radio
 (defun object-fields.group-branch (group open-groups field-name)
-  (let ((open nil)
-        (child-open nil)
-        (children)
-        (checked nil))
-    ;; (log5:log-for test "~&GROUP:~a ~{~a~}" (key group) (groups group))
-    ;;выясняем нужно ли открывать группу
-    (mapcar #'(lambda (open-group)
-                (when (eq (key group) (key open-group))
-                  (setf open t)
-                  (setf checked t)))
-            open-groups)
+  (let* ((open
+          ;;выясняем нужно ли открывать группу
+          (some
+           #'(lambda (open-group)
+                 (eq (key group) (key open-group)))
+           open-groups))
+         (checked open)
+         child-open
+         children)
     ;;строим список дочерних ветвей и проверяем нужно ли открыть данный узел
     (setf children
           (mapcar #'(lambda (child)
@@ -231,7 +228,7 @@ add it to all parents' lists"
     (keys-to-objects (ensure-list string-list) :type 'group)))
 
 (defun object-fields.group-list-field-serialize (groups)
-  (format nil "[~{\"~a\"~^,~}]" (mapcar #'key groups)))
+  (format nil "[~{\"~A\"~^,~}]" (mapcar #'key groups)))
 
 ;;optgroups
 (defun object-fields.optgroups-field-view (value name disabled)

@@ -81,17 +81,21 @@
        alias))
 
 (defun test-route-storage-object ()
-  (let ((obj (getobj (cadr (request-list)))))
-    (when obj
-      (aif (and (groupp obj)
-                (getf (request-get-plist) :vendor))
-           (let ((vendor (vendor-transform-from-alias it)))
-             (some #'(lambda (p)
-                       (vendor-filter-controller p vendor))
-                   (storage.get-recursive-products obj)))
-           t))))
+  (let* ((key (cadr (request-list)))
+         (obj (getobj key)))
+    (if (gethash key static-pages.*storage*)
+        t
+        (when obj
+          (aif (and (groupp obj)
+                    (getf (request-get-plist) :vendor))
+               (let ((vendor (vendor-transform-from-alias it)))
+                 (some #'(lambda (p)
+                           (vendor-filter-controller p vendor))
+                       (storage.get-recursive-products obj)))
+               t)))))
 
 (defun route-storage-object (key)
+  (log5:log-for info-console "~A~%" key)
   (aif (and key (getobj key))
        it
        ;; else: static pages

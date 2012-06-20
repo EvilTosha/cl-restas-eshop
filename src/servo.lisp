@@ -698,7 +698,7 @@
   (let ((parent (class-core.parent object)))
     (when (and parent (life-time parent) (plusp (life-time parent)))
       (< (get-universal-time) (+ (date-modified object)
-                                 (* 60 60 24 (life-time (class-core.parent object))))))))
+                                 (* 60 60 24 (life-time parent)))))))
 
 (defun servo.string-replace-chars (string char-list &key (replacement nil))
   "Replacing all chars in char-list from string"
