@@ -172,6 +172,10 @@
               (setf (name-seo product) realname))
           (if (equal "" (name-seo product))
               (setf (name-seo product) name)))
+      ;; пересчет дельты если пришла только цена сайта
+      (if (and raw-siteprice
+               (not raw-price))
+          (setf (delta-price product) (- (price product) siteprice)))
       ;; цены
       (if raw-siteprice
           (setf (siteprice product) siteprice))
