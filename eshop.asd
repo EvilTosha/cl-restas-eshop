@@ -7,6 +7,7 @@
                       :components ((:file "common-lisp-backend")
                                    (:file "parse")))
              (:file "packages" :depends-on ("patch-closure-templates"))
+             (:file "images" :depends-on ("packages")) ;; imagemagic
              (:file "config" :depends-on ("packages"))
              (:file "time" :depends-on ("config"))
              (:file "eshop-config" :depends-on ("time"))
@@ -25,13 +26,12 @@
              (:file "newcart" :depends-on ("sklonenie"))
              (:file "sitemap" :depends-on ("newcart"))
              (:file "rename" :depends-on ("sitemap"))
-             (:file "catalog" :depends-on ("rename"))
+             (:file "catalog" :depends-on ("rename" "images"))
              (:file "prerender" :depends-on ("catalog"))
              (:file "storage" :depends-on ("prerender"))
              (:file "main-page" :depends-on ("storage"))
              (:file "filters" :depends-on ("main-page"))
              (:file "oneclickcart" :depends-on ("filters"))
-             (:file "images" :depends-on ("oneclickcart")) ;; imagemagic
              (:file "static-pages" :depends-on ("images"))
              (:file "list-filters" :depends-on ("static-pages"))
              (:file "object-fields" :depends-on ("list-filters"))

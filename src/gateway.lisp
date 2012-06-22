@@ -111,43 +111,42 @@
          (count-total (ceiling (arnesi:parse-float raw-count-total)))
          (count-transit (ceiling (arnesi:parse-float raw-count-transit)))
          (bonuscount (ceiling (arnesi:parse-float raw-bonuscount))))
-    (when (typep product 'product)
-      ;; ключ строка
-      (setf (key product) (format nil "~a" articul))
-      ;; артикул число
-      (setf (articul product) articul)
-      ;; имена
-      ;; имя из 1С
-      (when (and name
-                 (equal "" (name-provider product)))
-        (setf (name-provider product)  name))
-      (if realname
-          (if (equal "" (name-seo product))
-              (setf (name-seo product) realname))
-          (if (equal "" (name-seo product))
-              (setf (name-seo product) name)))
-      ;; цены
-      (if raw-siteprice
-          (setf (siteprice product) siteprice))
-      (if raw-price
-          (setf (delta-price product) (- price (siteprice product))))
-      ;; бонусы (нужно пересчитывать когда приходит новая цена)
-      (if raw-bonuscount
-          (setf (bonuscount product) bonuscount))
-      ;; количество
-      (if raw-count-total
-          (setf (count-total product) count-total)
-          (if (and raw-count-transit
-                   (equal 0 count-transit)
-                   (equal (count-total product)
-                          (count-transit product)))
-              0))
-      (if raw-count-transit
-          (setf (count-transit  product) count-transit))
-      ;; проставляем флаг active
-      (setf (active product) (plusp (count-total product)))
-      (unless old-product
-        (setobj (key product) product)))))
+    ;; ключ строка
+    (setf (key product) (format nil "~a" articul))
+    ;; артикул число
+    (setf (articul product) articul)
+    ;; имена
+    ;; имя из 1С
+    (when (and name
+               (equal "" (name-provider product)))
+      (setf (name-provider product)  name))
+    (if realname
+        (if (equal "" (name-seo product))
+            (setf (name-seo product) realname))
+        (if (equal "" (name-seo product))
+            (setf (name-seo product) name)))
+    ;; цены
+    (if raw-siteprice
+        (setf (siteprice product) siteprice))
+    (if raw-price
+        (setf (delta-price product) (- price (siteprice product))))
+    ;; бонусы (нужно пересчитывать когда приходит новая цена)
+    (if raw-bonuscount
+        (setf (bonuscount product) bonuscount))
+    ;; количество
+    (if raw-count-total
+        (setf (count-total product) count-total)
+        (if (and raw-count-transit
+                 (equal 0 count-transit)
+                 (equal (count-total product)
+                        (count-transit product)))
+            0))
+    (if raw-count-transit
+        (setf (count-transit  product) count-transit))
+    ;; проставляем флаг active
+    (setf (active product) (plusp (count-total product)))
+    (unless old-product
+      (setobj (key product) product))))
 
 
 (defun gateway.store-single-gateway (raws &optional (timestamp (get-universal-time)))

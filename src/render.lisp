@@ -71,20 +71,19 @@
 
 
 (defmethod render.render ((object group) &optional (parameters (request-get-plist)))
-  (let ((name (name object)))
+  (let ((name (name object))
+        (showall (getf parameters :showall)))
     (default-page
         (soy.catalog:content
          (list :name name
                :breadcrumbs (soy.catalog:breadcrumbs (breadcrumbs-add-vendor1 (class-core.breadcrumbs object) parameters))
                :menu (class-core.menu object)
                :rightblocks (append
-                             (render.get-oneclick-filters object
-                                                          (getf parameters :showall))
+                             (render.get-oneclick-filters object showall)
                              ;;fullfilter
                              (let ((ret (rightblocks object parameters)))
-                               (if (and (fullfilter object)
-                                        (not (equal "" (fullfilter object))))
-                                   (push (render.render (fullfilter object) parameters) ret))
+                               (when (servo.valid-string-p (fullfilter object))
+                                 (push (render.render (fullfilter object) parameters) ret))
                                ret))
                :subcontent  (if (and (null (products object))
                                      (null (getf parameters :fullfilter))
@@ -92,12 +91,12 @@
                                 ;; Отображаем группы
                                 (soy.catalog:centergroup
                                  (list
-                                  :producers (when (getf parameters :showall)
+                                  :producers (when showall
                                                (render.show-producers (storage.get-filtered-products object #'atom)))
                                   :accessories (soy.catalog:accessories)
                                   :groups (let ((sort-groups (sort (remove-if-not #'active (groups object)) #'menu-sort)))
                                             (mapcar #'(lambda (child)
-                                                        (let* ((show-func (if (getf parameters :showall)
+                                                        (let* ((show-func (if showall
                                                                               #'atom
                                                                               #'active))
                                                                (products (storage.get-filtered-products child show-func))
@@ -120,7 +119,7 @@
                                                                             filters))))
                                                     sort-groups))))
                                 ;;else
-                                (let* ((products-list (if (getf parameters :showall)
+                                (let* ((products-list (if showall
                                                           (storage.get-filtered-products object #'atom)
                                                           (storage.get-filtered-products object #'active)))
                                        (cartrige-group (string= "cartridge-dlya-printerov" (key object)))
@@ -152,7 +151,7 @@
                                       :producers (render.show-producers
                                                   (storage.get-filtered-products
                                                    object
-                                                   (if (getf parameters :showall) #'atom #'active)))
+                                                   (if showall #'atom #'active)))
                                       :accessories (soy.catalog:accessories)
                                       :pager pager
                                       :cartrigeselect (when cartrige-group
@@ -299,14 +298,12 @@
                                     "Secret")
                           (let ((options
                                  (mapcar #'(lambda (option)
-                                             (when (not (equal "" (getf option :value)))
+                                             (unless (equal "" (getf option :value))
                                                (soy.product:option
                                                 (list :name (getf option :name)
                                                       :value (getf option :value)))))
                                          (getf optgroup :options))))
-                            (if (not (null (remove-if
-                                            #'null
-                                            options)))
+                            (if (notevery #'null options)
                                 (soy.product:optgroup (list :name (getf optgroup :name)
                                                             :options options))
                                 ""))))
@@ -408,7 +405,7 @@
 (defmethod restas:render-object ((designer eshop-render) (object product))
   (let* ((pics (get-pics (articul object)))
          (diff-percent (servo.diff-percentage (price object) (siteprice object)))
-         (is-available (servo.available-for-order-p object))
+         (is-available (yml.available-for-order-p object))
          (is-vintage (not (or (active object) is-available)))
          (product-view)
          (group (class-core.parent object)))
@@ -453,7 +450,7 @@
                                                           " Акция: только в апреле доставим со скидкой 70%.")))
                              :others (soy.product:others
                                       (list :others (mapcar #'(lambda (x)
-                                                                (if (typep x 'product)
+                                                                (if (productp x)
                                                                     (render.view x)
                                                                     (list :aricul "0"
                                                                           :name ""

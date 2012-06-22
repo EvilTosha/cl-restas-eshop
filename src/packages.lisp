@@ -1,15 +1,21 @@
 ;;;; packages.lisp
 
-;; TODO fix exports
+(defpackage :pics
+  (:use :cl :anaphora)
+  (:export :get-dimensions
+           :style-for-resize))
 
+;;; TODO: why not defpackage? Edit if needed
 (restas:define-module #:eshop
-    (:use :cl
-          :closure-template
-          :anaphora
-          :split-sequence
-          :cl-ppcre
-          :json
-          :cl-fad)
+    (:use
+     ;; system and libs' packages
+     :cl
+     :closure-template
+     :anaphora
+     :split-sequence
+     :cl-ppcre
+     :json
+     :cl-fad)
   (:import-from :arnesi :parse-float)
   (:import-from :alexandria :read-file-into-string)
   (:export :config.parse-config

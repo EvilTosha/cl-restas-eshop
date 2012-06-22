@@ -87,7 +87,7 @@
       (setf post-data (admin.post-data-preprocessing (servo.plist-to-unique post-data)))
       (class-core.edit-fields item post-data)
       ;; need to fix
-      (when (and (typep item 'group) (getf post-data :fullfilter))
+      (when (and (groupp item) (getf post-data :fullfilter))
         (setf (fullfilter item) (getf post-data :fullfilter)))
       (object-fields.product-groups-fix item)
       (setf item-fields (class-core.make-fields item)))
@@ -132,7 +132,7 @@
             ;;else (post-data is nil)
             (let ((empty-item (get-instance type)))
               (setf (key empty-item) key)
-              (if (typep empty-item 'product)
+              (if (productp empty-item)
                   (setf (articul empty-item) (parse-integer key)))
               (soy.class_forms:formwindow
                (list :key key

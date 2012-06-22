@@ -149,7 +149,9 @@ where key is vendor name and value is number of products with this vendor"
         (list root))  ; else
    sorter))
 
-;;;;; old storage methods below
+(defgeneric storage.get-filtered-products (object &optional filter)
+  (:documentation "Returns list of prodicts taken from object somehow, and deleted all
+products, which don't match filter function"))
 
 (defmethod storage.get-filtered-products ((object group) &optional (filter #'active))
   (storage.get-recursive-products object filter))

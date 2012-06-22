@@ -337,7 +337,7 @@ Remove elements from result list corresponding to remove-func"
   "Processing parents until nil, creating breadcrumbs"
   (if in
       (progn
-        (if (typep in 'product)
+        (if (productp in)
             (push (list :key (articul in) :val (name-seo in)) out)
             (push (list :key (key in) :val (name in)) out))
         (class-core.breadcrumbs (class-core.parent in) out))

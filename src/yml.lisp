@@ -27,7 +27,7 @@
   (declare (product product))
   (and (class-core.parent product)
        (ymlshow (class-core.parent product))
-       (or (active product) (servo.available-for-order-p product))
+       (or (active product) (yml.available-for-order-p product))
        (price product)
        (plusp (price product))
        ;;для селективного исключения товаров по значению специальной опции
@@ -318,3 +318,40 @@
                                  (setf max id))))
                          'group)
         (1+ max))))
+
+(defun yml.available-for-order-p (product)
+  (declare (product product))
+  ;; life-time is given in days
+  (let ((parent (class-core.parent product)))
+    (when (and parent (life-time parent) (plusp (life-time parent)))
+      (< (get-universal-time) (+ (date-modified product)
+                                 (* 60 60 24 (life-time parent)))))))
+
+
+(defun yml.count-products-for-order (&optional group)
+  "Count number of products, which are not active, but available for order by calling"
+  (declare ((or group null) group))
+  (let ((products (if group
+                      (storage.get-recursive-products group (complement #'active))
+                      (process-and-collect-storage 'product :when-func (complement #'active)))))
+      (count-if #'yml.available-for-order-p products)))
+
+(defun yml.pretty-count-products-for-order ()
+  "Count number of products, which are not active, with pretty print for all groups"
+  (format nil "~{~A~%~}"
+          (mapcar #'(lambda (gr)
+                      (format nil "Group: ~A, products for order: ~D"
+                              (key gr)
+                              (yml.count-products-for-order gr)))
+                  (sort
+                      (process-and-collect-storage 'group
+                                       :when-func
+                                       #'(lambda (gr)
+                                           (plusp (yml.count-products-for-order gr))))
+                      #'< :key #'yml.count-products-for-order))))
+
+(defun yml.get-list-for-order (group)
+  (declare (group group))
+  (remove-if-not #'yml.available-for-order-p
+                 (storage.get-recursive-products group (complement #'active))))
+

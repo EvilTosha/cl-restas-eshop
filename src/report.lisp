@@ -14,58 +14,52 @@
        (let ((id "нет") (name "нет") (name-real "нет") (name-yml "нет")
              (desc "нет") (img "нет") (options "нет") (active "нет")
              (group-name "нет") (parent-group-name "нет") (secret "нет") (seria "нет"))
-         (when (typep v 'product)
-           (setf id (articul v))
-           (setf name (stripper (name-provider v)))
-           (setf name-real (stripper (name-seo v)))
-           (with-option1 v "Secret" "Yandex"
-                         (setf name-yml (stripper (getf option :value))))
-           (setf desc (if (and (not (null (seo-text v)))
-                               (not (string= "" (stripper (seo-text v)))))
-                          "есть"
+         (setf id (articul v))
+         (setf name (stripper (name-provider v)))
+         (setf name-real (stripper (name-seo v)))
+         (with-option1 v "Secret" "Yandex"
+                       (setf name-yml (stripper (getf option :value))))
+         (setf desc (if (and (not (null (seo-text v)))
+                             (not (string= "" (stripper (seo-text v)))))
+                        "есть"
+                        "нет"))
+         (setf img (length (get-pics (articul v))))
+         (setf options (if (valid-option-p v)
+                           "есть"
+                           "нет"))
+         (setf active (if (active v)
+                          "да"
                           "нет"))
-           (setf img (length (get-pics (articul v))))
-           (setf options (if (is-valide-option v)
-                             "есть"
-                             "нет"))
-           (setf active (if (active v)
-                            "да"
-                            "нет"))
-           (setf group-name (when (class-core.parent v)
-                              (stripper (name (class-core.parent v)))))
-           (setf parent-group-name (when (and (class-core.parent v)
-                                              (class-core.parent (class-core.parent v)))
-                                     (stripper (name (class-core.parent (class-core.parent v))))))
-           (setf secret "Нет")
-           (with-option1 v "Secret" "Checked"
-                         (setf secret (getf option :value)))
-           (with-option1 v "Общие характеристики" "Серия"
-                         (setf seria (getf option :value)))
-           (format stream "~a;~a;~a;\"~a\";\"~a\";\"~a\";~a;~a;~a;~a;~a;\"~a\";\"~a\";~a;~a;~a;~a;\"~a\"~%"
-                   id (price v) (siteprice v) name name-real
-                   name-yml (yml.yml-show-p v) desc img options active group-name
-                   parent-group-name secret
-                   (gethash (articul v) *xls.product-table*)
-                   (vendor v)
-                   (yml.get-product-delivery-price1 v)
-                   seria))))
+         (setf group-name (when (class-core.parent v)
+                            (stripper (name (class-core.parent v)))))
+         (setf parent-group-name (when (and (class-core.parent v)
+                                            (class-core.parent (class-core.parent v)))
+                                   (stripper (name (class-core.parent (class-core.parent v))))))
+         (setf secret "Нет")
+         (with-option1 v "Secret" "Checked"
+                       (setf secret (getf option :value)))
+         (with-option1 v "Общие характеристики" "Серия"
+                       (setf seria (getf option :value)))
+         (format stream "~a;~a;~a;\"~a\";\"~a\";\"~a\";~a;~a;~a;~a;~a;\"~a\";\"~a\";~a;~a;~a;~a;\"~a\"~%"
+                 id (price v) (siteprice v) name name-real
+                 name-yml (yml.yml-show-p v) desc img options active group-name
+                 parent-group-name secret
+                 (gethash (articul v) *xls.product-table*)
+                 (vendor v)
+                 (yml.get-product-delivery-price1 v)
+                 seria)))
    'product))
 
-(defun is-valide-option (product)
-  (let ((flag nil))
-    (mapcar #'(lambda (v) (mapcar #'(lambda (l)
-                                      (when (and (not (equal (getf v :name) "Secret"))
-                                                 l
-                                                 (getf l :value)
-                                                 (not (equal
-                                                       (string-trim (list #\Space #\Tab #\Newline) (getf l :value))
-                                                       ""))
-                                                 (not (equal (getf l :name) "Производитель"))
-                                                 (not (equal (getf l :name) "Модель")))
-                                        (setf flag t)))
-                                  (getf v :options)))
-            (optgroups product))
-    flag))
+(defun valid-option-p (product)
+  (declare (product product))
+  (some #'(lambda (optgroup) (some #'(lambda (option)
+                                       (and option
+                                            (servo.valid-string-p (getf option :value))
+                                            (not (find (getf option :name)
+                                                       (list "Производитель" "Модель") :test #'equal))))
+                                   (getf optgroup :options)))
+        (remove "Secret" (optgroups product)  ; remove Secret group
+                :test #'equal :key #'(lambda (opt) (getf opt :name)))))
 
 (defun write-groups (stream)
   (format stream "~a;~a;~a;~a;~a;~a;~%"

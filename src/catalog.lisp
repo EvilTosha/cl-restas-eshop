@@ -26,9 +26,9 @@
                                                       (pic node)))
                                                (style (when pic
                                                         (multiple-value-bind (width height)
-                                                            (images-get-dimensions
+                                                            (pics:get-dimensions
                                                              (format nil "~a/htimgs~a" *path-to-dropbox* (pic node)))
-                                                          (images-style-for-resize width height 70)))))
+                                                          (pics:style-for-resize width height 70)))))
                                           (list
                                            :other nil
                                            :maingrouplink (format nil "<a href=\"/~a\">~a</a>~%" (key node) (name node))

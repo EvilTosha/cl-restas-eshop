@@ -95,7 +95,6 @@
                t)))))
 
 (defun route-storage-object (key)
-  (log5:log-for info-console "~A~%" key)
   (aif (and key (getobj key))
        it
        ;; else: static pages
@@ -229,7 +228,7 @@
 
 ;;необходимо отдавать 404 ошибку для несуществеющих страниц
 (restas:define-route not-found-route ("*any")
-  (log5:log-for test "error 404: ~a" any)
+  (log5:log-for info "error 404: ~a" any)
   (restas:abort-route-handler
    (babel:string-to-octets
     (default-page
