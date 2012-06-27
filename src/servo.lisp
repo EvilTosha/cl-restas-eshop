@@ -655,7 +655,7 @@
 
 (defun servo.find-relative-product-list (product &optional (coef 2))
   "Returns list of products from same group with similar vendor"
-  (when (class-core.parent product)
+  (when (parent product)
     (let* ((vendor (servo.get-product-vendor product))
            (diff-list
             (remove-if #'(lambda (v) (or (equal 0 (siteprice (cdr v)))
@@ -667,7 +667,7 @@
                                               coef)))
                                      (cons (* diff (servo.diff-price product a))
                                            a)))
-                               (copy-list (products (class-core.parent product)))))))
+                               (copy-list (products (parent product)))))))
       (mapcar #'cdr
               (sort diff-list
                     #'(lambda (a b)

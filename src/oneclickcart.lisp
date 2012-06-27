@@ -268,9 +268,14 @@
 
 
 (defclass oneclickcart.answer ()
-  ((phone     :initarg :phone    :initform nil   :accessor phone)
+  ((phone     :initarg :phone     :initform nil   :accessor phone)
    (orderid   :initarg :orderid   :initform nil   :accessor orderid)
-   (errorid   :initarg :errorid  :initform nil   :accessor errorid)
+   (errorid   :initarg :errorid   :initform nil   :accessor errorid)
+   (articul   :initarg :articul   :initform nil   :accessor articul)
+   (total     :initarg :total     :initform nil   :accessor total)
+   (name      :initarg :name      :initform nil   :accessor name)
+   (group     :initarg :group     :initform nil   :accessor group)
+   (price     :initarg :price     :initform nil   :accessor price)
    ))
 
 (defun oneclickcart.make-common-order (request-get-plist)
@@ -291,4 +296,11 @@
         (setf error-id 2)) ;; no phone number in parameters
     (setf (orderid answer) order-id)
     (setf (errorid answer) error-id)
+    (awhen (and articul
+                (getobj articul 'product))
+      (setf (articul answer) articul
+            (total answer) (siteprice it)
+            (name answer) (name-seo it)
+            (group answer) (name (car (parents it)))
+            (price answer) (siteprice it)))
     (json:encode-json-to-string answer)))

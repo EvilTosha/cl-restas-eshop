@@ -248,7 +248,7 @@
     (let ((unparented-products (process-and-collect-storage
                                 'product
                                 :when-func #'(lambda (item)
-                                               (null (class-core.parent item))))))
+                                               (null (parent item))))))
       (soy.class_forms:parenting-page
        (list :products (mapcar #'(lambda (product)
                                    (soy.class_forms:unparented-product-checkbox

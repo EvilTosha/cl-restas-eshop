@@ -19,7 +19,7 @@
               (name filter)
               num)
       (format nil "<a class=\"rightfilter\" href=\"/~a/~a\">~a</a> (~a)<br/>"
-              (key (class-core.parent filter))
+              (key (parent filter))
               (key filter)
               (name filter)
               num)))

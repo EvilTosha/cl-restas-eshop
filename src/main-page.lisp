@@ -22,7 +22,7 @@
   (let* ((dp (gethash key storage))
          (p (getobj (key dp) 'product))
          (price (+ (siteprice p) (delta-price p)))
-         (parent (class-core.parent p))
+         (parent (parent p))
          (p-list (list :articul (articul p)
                        :name (name dp)
                        :siteprice (siteprice p)

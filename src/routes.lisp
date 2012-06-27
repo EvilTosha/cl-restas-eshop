@@ -61,7 +61,7 @@
          (fltr (getobj filter 'filter)))
     (and grp
          fltr
-         (equal (key (class-core.parent fltr)) key))))
+         (equal (key (parent fltr)) key))))
 
 (defun route-filter (filter)
   (getobj filter 'filter))

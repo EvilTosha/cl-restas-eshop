@@ -11,7 +11,7 @@
      #'(lambda (val)
          (let ((key (key val)))
            (when (and (active val)
-                      (class-core.parent val))
+                      (parent val))
              (let ((name (string-downcase (format nil "~a" (name-seo val)))))
                (mapcar #'(lambda (word)
                            (let* ((search-result (search word name))

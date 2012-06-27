@@ -30,11 +30,11 @@
          (setf active (if (active v)
                           "да"
                           "нет"))
-         (setf group-name (when (class-core.parent v)
-                            (stripper (name (class-core.parent v)))))
-         (setf parent-group-name (when (and (class-core.parent v)
-                                            (class-core.parent (class-core.parent v)))
-                                   (stripper (name (class-core.parent (class-core.parent v))))))
+         (setf group-name (when (parent v)
+                            (stripper (name (parent v)))))
+         (setf parent-group-name (when (and (parent v)
+                                            (parent (parent v)))
+                                   (stripper (name (parent (parent v))))))
          (setf secret "Нет")
          (with-option1 v "Secret" "Checked"
                        (setf secret (getf option :value)))
@@ -121,8 +121,8 @@
                         "yes"
                         "no"))
          (format stream "\"~a\";\"~a\";\"~a\";http://www.320-8080.ru/~a;~a;~a;~%"
-                 (if (class-core.parent v)
-                     (stripper (name (class-core.parent v)))
+                 (if (parent v)
+                     (stripper (name (parent v)))
                      "Нет категории")
                  (stripper vendor-name)
                  (stripper (name-seo v))

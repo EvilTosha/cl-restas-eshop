@@ -25,8 +25,8 @@
 
 (defun yml.yml-show-p (product)
   (declare (product product))
-  (and (class-core.parent product)
-       (ymlshow (class-core.parent product))
+  (and (parent product)
+       (ymlshow (parent product))
        (or (active product) (yml.available-for-order-p product))
        (price product)
        (plusp (price product))
@@ -38,7 +38,7 @@
                    (string= "No" (stripper yml-show)))))))
 
 (defun yml.get-product-delivery-price (product)
-  (let ((parent (class-core.parent product)))
+  (let ((parent (parent product)))
     (if (delivery-price product)
         (delivery-price product)
         (if (and parent (delivery-price parent))
@@ -70,7 +70,7 @@
 
 
 (defun yml.get-product-delivery-price1 (product)
-  (let ((parent (if product (class-core.parent product)))
+  (let ((parent (if product (parent product)))
         (key)
         (result 300))
     (when parent
@@ -101,6 +101,13 @@
                (yml.is-daily-product product))
               (setf result 0)
               (if (or
+                   (equal key "planshetnie-komputery")
+                   (equal key "mobilephones")
+                   (equal key "cifrovye-fotoapparaty")
+                   (equal key "videokamery")
+                   (equal key "ustroistva-dlya-chtenia-electronnyh-knig")
+                   (equal key "gps-navigatory")
+                   (equal key "cartridge-dlya-printerov")
                    ;; (equal key "mobilephones")
                    ;; (equal key "planshetnie-komputery")
                    ;; (equal key "cifrovye-fotoapparaty")
@@ -132,7 +139,7 @@
                    ;; (equal key "epilyatory")
                    ;; (equal key "britvy")
                    )
-                  (setf result 100)))))
+                  (setf result 200)))))
     result))
 
 
@@ -153,9 +160,9 @@
             :collect (let ((obj (getobj key 'group)))
                        (list :id (yml-id obj)
                              :name (name obj)
-                             :parent (if (null (class-core.parent obj))
+                             :parent (if (null (parent obj))
                                          0 ; если это вершина дерева
-                                         (yml-id (class-core.parent obj))))))
+                                         (yml-id (parent obj))))))
          :offers (format nil "~{~a~}"
                          (process-and-collect-storage
                           'product
@@ -167,7 +174,7 @@
                                                          :available (active product) ; если не active, то прошел available-for-order
                                                          :deliveryprice (yml.get-product-delivery-price1 product)
                                                          :price (siteprice product)
-                                                         :category (yml-id (class-core.parent product))
+                                                         :category (yml-id (parent product))
                                                          :picture (let ((pics (get-pics
                                                                                (articul product))))
                                                                     (when pics
@@ -201,9 +208,9 @@
             :collect (let ((obj (getobj key 'group)))
                        (list :id (yml-id obj)
                              :name (name obj)
-                             :parent (if (null (class-core.parent obj))
+                             :parent (if (null (parent obj))
                                          0 ; если это вершина дерева
-                                         (yml-id (class-core.parent obj))))))
+                                         (yml-id (parent obj))))))
          :offers (format nil "~{~a~}"
                          (process-and-collect-storage
                           'product
@@ -214,7 +221,7 @@
                                     (soy.yml:offer (list :articul (articul product)
                                                          :price (siteprice product)
                                                          :category (gethash
-                                                                    (key (class-core.parent product))
+                                                                    (key (parent product))
                                                                     *yml-group-ids*)
                                                          :picture (let ((pics (get-pics
                                                                                (articul product))))
@@ -249,9 +256,9 @@
      :collect (let ((obj (getobj key 'group)))
                 (list :id (yml-id obj)
                       :name (name obj)
-                      :parent (if (null (class-core.parent obj))
+                      :parent (if (null (parent obj))
                                   0 ; если это вершина дерева
-                                  (yml-id (class-core.parent obj)))))))
+                                  (yml-id (parent obj)))))))
 
 (defun make-yml-offers()
   (process-and-collect-storage
@@ -264,7 +271,7 @@
                                   :deliveryprice (yml.get-product-delivery-price1 product)
                                   :price (siteprice product)
                                   :category (gethash
-                                             (key (class-core.parent product))
+                                             (key (parent product))
                                              *yml-group-ids*)
                                   :picture  (let ((pics (get-pics
                                                          (articul product))))
@@ -322,7 +329,7 @@
 (defun yml.available-for-order-p (product)
   (declare (product product))
   ;; life-time is given in days
-  (let ((parent (class-core.parent product)))
+  (let ((parent (parent product)))
     (when (and parent (life-time parent) (plusp (life-time parent)))
       (< (get-universal-time) (+ (date-modified product)
                                  (* 60 60 24 (life-time parent)))))))

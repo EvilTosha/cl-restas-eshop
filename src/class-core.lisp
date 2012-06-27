@@ -329,7 +329,7 @@ Remove elements from result list corresponding to remove-func"
 (defmethod price ((object product))
   (+ (siteprice object) (delta-price object)))
 
-(defun class-core.parent (item)
+(defun parent (item)
   "Returns main parent of item"
   (car (parents item)))
 
@@ -340,14 +340,14 @@ Remove elements from result list corresponding to remove-func"
         (if (productp in)
             (push (list :key (articul in) :val (name-seo in)) out)
             (push (list :key (key in) :val (name in)) out))
-        (class-core.breadcrumbs (class-core.parent in) out))
+        (class-core.breadcrumbs (parent in) out))
       ;; else -  end of recursion
       (list :breadcrumbelts (butlast out)
             :breadcrumbtail (car (last out)))))
 
 (defun class-core.get-root-parent (item)
   (when item
-    (let ((parent (class-core.parent item)))
+    (let ((parent (parent item)))
       (if (null parent)
           item
           (class-core.get-root-parent parent)))))

@@ -39,6 +39,9 @@
                                            :count cnt
                                            :name (name-seo product)
                                            :price price
+                                           :group (aif (car (parents product))
+                                                       (name it)
+                                                       "Без группы")
                                            ;;данные для корзины
                                            :siteprice (siteprice product)
                                            :articul (if (= 5 (length articul))
@@ -220,7 +223,8 @@
       (setf addr (cond ((string= pickup "pickup-1") "Левашовский пр., д.12")
                        ((string= pickup "pickup-2") "Петергоф, ул. Ботаническая, д.18, к.3")
                        (t "Левашовский пр., д.12")))) ;; по умолчанию главный магазин
-    (if discount-cart
+    (if (or (equal discount-cart t)
+            (servo.valid-string-p discount-cart))
         (setf ekk discount-cart-number))
     (values-list (list phone delivery-type name email city addr courier_comment pickup pickup_comment payment bankaccount ekk family))))
 
@@ -316,7 +320,8 @@
                                   :products (append products
                                                     (if (string= delivery-type "express")
                                                         (list (list :articul "107209"
-                                                                    :cnt "1"))))))
+                                                                    :cnt "1"
+                                                                    :siteprice 300))))))
             (setf filename (format nil "~a_~a.txt" (time.get-short-date) order-id))
             ;;сорханение заказа
             (save-order-text order-id client-mail)
@@ -330,7 +335,12 @@
             (unless (string= email "")
               (send-client-mail (list email) client-mail order-id))
             (soy.newcart:fullpage
-             (list :head (soy.newcart:newcart-head)
+             (list :head (soy.newcart:newcart-head
+                          (list :thanks
+                                (list :orderid order-id
+                                      :total pricesum
+                                      :delivery deliverysum
+                                      :products products)))
                    :header (soy.newcart:header-linked)
                    :leftcells (soy.newcart:thanks
                                (list :sum pricesum
@@ -342,8 +352,9 @@
                                                  (if (equal comment "") nil comment))
                                      :email (if (equal email "") nil email)
                                      :name (if (equal name "") nil (report.convert-name name))
-                                     :bonuscount (if ekk
-                                                     bonuscount)
+                                     :bonuscount (if (or (equal ekk t)
+                                                          (servo.valid-string-p ekk))
+                                                      bonuscount)
                                      :bonusname (if bonuscount
                                                     (nth (skls.get-count-skls bonuscount)
                                                          (list "бонус" "бонуса" "бонусов")))
