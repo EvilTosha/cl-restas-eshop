@@ -314,12 +314,6 @@
   (string-trim (list #\Space #\Tab #\Newline)
                (format nil "~:(~a~)" input-string)))
 
-(defun report.get-groups (group)
-  (if (null (groups group))
-      (format t "~&(equal key \"~a\")" (key group))
-      (mapcar #'report.get-groups (groups group))))
-
-
 (defun report.do-seo-reports ()
   (let ((name (format nil "reports/seo-report-groups-~a.csv" (time.encode.backup-filename))))
     (log5:log-for info "Do groups SEO report")
@@ -374,23 +368,6 @@
     (let ((name (format nil "reports/keyoptions-report-~a.csv" (time.encode.backup-filename))))
       (create-report name #'report.write-keyoptions)
       "KEYOPTIONS REPORT DONE")))
-
-
-(defun report.check-product-picture (product &optional (stream *standard-output*))
-  (let* ((articul (articul product))
-         (is-need-reconvert nil)
-         (path-art  (ppcre:regex-replace  "(\\d{1,3})(\\d{0,})"  (format nil "~a" articul)  "\\1/\\1\\2" )))
-    (mapcar #'(lambda (pic)
-                (let ((src-pic-path
-                       (format nil "~a/~a/~a/~a"
-                               (config.get-option "PATHS" "path-to-pics") "big" path-art pic)))
-                  (with-open-file
-                      (stream-file src-pic-path)
-                    (when (zerop (file-length stream-file))
-                      (setf is-need-reconvert t)
-                      (format stream "~&~a;~a" articul (file-length stream-file))))))
-            (get-pics articul))
-    is-need-reconvert))
 
 
 (defun report.write-pictures (&optional (stream *standard-output*))
