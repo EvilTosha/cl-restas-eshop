@@ -124,20 +124,6 @@
     order-id))
 
 
-(defun oneclickcart-page (request-get-plist)
-  (let ((telef (getf request-get-plist :telef))
-        (name (getf request-get-plist :name))
-        (articul (getf request-get-plist :articul))
-        (email (getf request-get-plist :email))
-        (order-id))
-    (if (not (null telef))
-        (progn
-          (setf order-id (oneclick-sendmail telef articul name email))
-          (soy.oneclickcart:answerwindow (list :phone telef
-                                               :orderid order-id)))
-        (soy.oneclickcart:formwindow (list :articul articul)))))
-
-
 (defun oneclick-sendmail2 (phone articul name email)
   (let ((client-mail)
         (mail-file)
@@ -242,29 +228,6 @@
     (unless (string= email "")
       (send-client-mail (list email) client-mail order-id))
     order-id))
-
-
-
-(defun oneclickcart.page (request-get-plist)
-  (let ((telef (getf request-get-plist :telef))
-        (name (getf request-get-plist :name))
-        (articul (getf request-get-plist :articul))
-        (email (getf request-get-plist :email))
-        (order-id))
-    (if telef
-        (progn
-          (if (equal "/elka2012"
-                     (puri:uri-path (puri:parse-uri (hunchentoot:referer))))
-              (setf order-id (oneclick-sendmail telef articul name email))
-              (if (equal "33" articul)
-                  (setf order-id (oneclick-sendmail2 telef articul name email))
-                  (if (equal "34" articul)
-                      (setf order-id (oneclick-sendmail3 telef articul name email))
-                      (setf order-id (oneclick-sendmail1 telef articul name email)))))
-          (soy.oneclickcart:answerwindow (list :phone telef
-                                               :orderid order-id)))
-        (soy.oneclickcart:formwindow1 (list :articul articul)))))
-
 
 
 (defclass oneclickcart.answer ()

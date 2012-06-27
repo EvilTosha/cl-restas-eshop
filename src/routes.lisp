@@ -256,9 +256,6 @@
 (restas:define-route request-route ("/request")
   (oneclickcart.make-common-order (request-get-plist)))
 
-(restas:define-route request1-route ("/request1")
-  (oneclickcart.page (request-get-plist)))
-
 (restas:define-route compare-route ("/compare")
 	 (soy.compare:compare-page
 		(list :keywords "" ;;keywords

@@ -462,7 +462,6 @@
                              :keyoptions (list-filters.limit-end (remove-if #'(lambda (v) (equal (getf v :optvalue) "")) (render.get-keyoptions object)) 6)
                              :active (active object)
                              :vintage is-vintage
-                             :available is-available
                              :shortdescr (seo-text object)
                              :bestproducts (soy.product:similar-products
                                             (list :products (mapcar #'(lambda (prod)
