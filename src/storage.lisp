@@ -11,27 +11,29 @@
   "Get object of given type from appropriate storage.
 If no type given, search in all storages.
 Note: returned object is NOT setfable (but its fields are)"
-  (declare (string key) (symbol type))
-  (if type
-      (gethash key
-               (get-storage type)
-               default)
-      ;; else, search in all storages
-      (getobj-global key)))
+  (declare ((or null string) key) (symbol type))
+  (when key
+    (if type
+        (gethash key
+                 (get-storage type)
+                 default)
+        ;; else, search in all storages
+        (getobj-global key))))
 
 (defun getobj-global (key)
   "Get object regardless of type, from some storage (try to find in all)
 Note: returned object is NOT setfable (but its fields are)"
-  (declare (string key))
-  (let (res)
-    (maphash #'(lambda (k v)
-                 (declare (ignore v))
-                 (awhen (and (not res)  ; find only first (but almost always
+  (declare ((or null string) key))
+  (when key
+    (let (res)
+      (maphash #'(lambda (k v)
+                   (declare (ignore v))
+                   (awhen (and (not res)  ; find only first (but almost always
                                         ; there should be only one required object)
-                             (gethash key (get-storage k)))
-                   (setf res it)))
-             *classes*)
-    res))
+                               (gethash key (get-storage k)))
+                     (setf res it)))
+               *classes*)
+      res)))
 
 (defun setobj (key value &optional type)
   "Set/edit object of given type (type of value) in appropriate storage"

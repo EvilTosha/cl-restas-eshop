@@ -55,8 +55,7 @@
 
 (defun admin-compile-templates ()
   (servo.compile-soy "admin.soy"
-                     "class_forms.soy"
-                     "admin-table.soy"))
+                     "class_forms.soy"))
 
 (defun admin-update ()
   "Updates templates"
