@@ -101,6 +101,13 @@
                (yml.is-daily-product product))
               (setf result 0)
               (if (or
+                   (equal key "planshetnie-komputery")
+                   (equal key "mobilephones")
+                   (equal key "cifrovye-fotoapparaty")
+                   (equal key "videokamery")
+                   (equal key "ustroistva-dlya-chtenia-electronnyh-knig")
+                   (equal key "gps-navigatory")
+                   (equal key "cartridge-dlya-printerov")
                    ;; (equal key "mobilephones")
                    ;; (equal key "planshetnie-komputery")
                    ;; (equal key "cifrovye-fotoapparaty")
@@ -132,7 +139,7 @@
                    ;; (equal key "epilyatory")
                    ;; (equal key "britvy")
                    )
-                  (setf result 100)))))
+                  (setf result 200)))))
     result))
 
 
