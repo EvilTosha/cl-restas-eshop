@@ -5,50 +5,57 @@
 (defparameter *special-products* (make-hash-table :test #'equal))
 
 (defun write-products-report (stream)
-  (format stream "~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~%"
-          "артикул" "цена магазина" "цена сайта" "имя" "имя real" "имя yml" "is-yml-show" "seo текст"
-          "фотографии" "характеристики" "активный" "группа" "родительская группа"
-          "secret" "DTD" "vendor" "доставка" "серия")
-  (process-storage
-   #'(lambda (v)
-       (let ((id "нет") (name "нет") (name-real "нет") (name-yml "нет")
-             (desc "нет") (img "нет") (options "нет") (active "нет")
-             (group-name "нет") (parent-group-name "нет") (secret "нет") (seria "нет"))
-         (setf id (articul v))
-         (setf name (stripper (name-provider v)))
-         (setf name-real (stripper (name-seo v)))
-         (with-option1 v "Secret" "Yandex"
-                       (setf name-yml (stripper (getf option :value))))
-         (setf desc (if (and (not (null (seo-text v)))
-                             (not (string= "" (stripper (seo-text v)))))
-                        "есть"
-                        "нет"))
-         (setf img (length (get-pics (articul v))))
-         (setf options (if (valid-option-p v)
-                           "есть"
-                           "нет"))
-         (setf active (if (active v)
-                          "да"
+  (labels ((get-2-lvl-group (obj)
+             (when (parent obj)
+                 (if (parent (parent obj))
+                     (get-2-lvl-group (parent obj))
+                     obj))))
+    (format stream "~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~%"
+            "артикул" "цена магазина" "цена сайта" "имя" "имя real" "имя yml" "is-yml-show" "seo текст"
+            "фотографии" "характеристики" "активный" "группа" "родительская группа" "группа 2-го уровня"
+            "secret" "DTD" "vendor" "доставка" "серия")
+    (process-storage
+     #'(lambda (v)
+         (let ((id "нет") (name "нет") (name-real "нет") (name-yml "нет")
+               (desc "нет") (img "нет") (options "нет") (active "нет")
+               (group-name "нет") (parent-group-name "нет") (2-group-name "нет") (secret "нет") (seria "нет"))
+           (setf id (articul v))
+           (setf name (stripper (name-provider v)))
+           (setf name-real (stripper (name-seo v)))
+           (with-option1 v "Secret" "Yandex"
+                         (setf name-yml (stripper (getf option :value))))
+           (setf desc (if (and (not (null (seo-text v)))
+                               (not (string= "" (stripper (seo-text v)))))
+                          "есть"
                           "нет"))
-         (setf group-name (when (parent v)
-                            (stripper (name (parent v)))))
-         (setf parent-group-name (when (and (parent v)
-                                            (parent (parent v)))
-                                   (stripper (name (parent (parent v))))))
-         (setf secret "Нет")
-         (with-option1 v "Secret" "Checked"
-                       (setf secret (getf option :value)))
-         (with-option1 v "Общие характеристики" "Серия"
-                       (setf seria (getf option :value)))
-         (format stream "~a;~a;~a;\"~a\";\"~a\";\"~a\";~a;~a;~a;~a;~a;\"~a\";\"~a\";~a;~a;~a;~a;\"~a\"~%"
-                 id (price v) (siteprice v) name name-real
-                 name-yml (yml.yml-show-p v) desc img options active group-name
-                 parent-group-name secret
-                 (gethash (articul v) *xls.product-table*)
-                 (vendor v)
-                 (yml.get-product-delivery-price1 v)
-                 seria)))
-   'product))
+           (setf img (length (get-pics (articul v))))
+           (setf options (if (valid-option-p v)
+                             "есть"
+                             "нет"))
+           (setf active (if (active v)
+                            "да"
+                            "нет"))
+           (setf group-name (when (parent v)
+                              (stripper (name (parent v)))))
+           (setf parent-group-name (when (and (parent v)
+                                              (parent (parent v)))
+                                     (stripper (name (parent (parent v))))))
+           (setf 2-group-name (when (and (parent v) (parent (parent v)))
+                                (stripper (name (get-2-lvl-group v)))))
+           (setf secret "Нет")
+           (with-option1 v "Secret" "Checked"
+                         (setf secret (getf option :value)))
+           (with-option1 v "Общие характеристики" "Серия"
+                         (setf seria (getf option :value)))
+           (format stream "~a;~a;~a;\"~a\";\"~a\";\"~a\";~a;~a;~a;~a;~a;\"~a\";\"~a\";\"~a\";~a;~a;~a;~a;\"~a\"~%"
+                   id (price v) (siteprice v) name name-real
+                   name-yml (yml.yml-show-p v) desc img options active group-name
+                   parent-group-name 2-group-name secret
+                   (gethash (articul v) *xls.product-table*)
+                   (vendor v)
+                   (yml.get-product-delivery-price1 v)
+                   seria)))
+     'product)))
 
 (defun valid-option-p (product)
   (declare (product product))
