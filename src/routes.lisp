@@ -76,7 +76,7 @@
 ;; STORAGE OBJECT
 
 (defun vendor-transform-from-alias (alias)
-  (aif (and alias (getobj alias 'vendor))
+  (aif (getobj alias 'vendor)
        (name it)
        alias))
 
@@ -95,7 +95,7 @@
                t)))))
 
 (defun route-storage-object (key)
-  (aif (and key (getobj key))
+  (aif (getobj key)
        it
        ;; else: static pages
        (gethash key static-pages.*storage*)))
@@ -233,8 +233,7 @@
    (babel:string-to-octets
     (default-page
       (soy.404:content
-       (list :menu (class-core.menu)
-
+       (list :menu (render.menu)
              :dayproducts (main-page-products-show (daily *main-page.storage*) 4)
              :olist (soy.main-page:olist)
              :lastreview (soy.main-page:lastreview (main-page-show-lastreview (review *main-page.storage*)))

@@ -96,7 +96,7 @@
 (defun main-page-show ()
   (default-page
       (soy.index:content
-       (list :menu (class-core.menu)
+       (list :menu (render.menu)
              :dayly  (soy.main-page:daily (list :items (main-page-products-show (daily *main-page.storage*) 6)))
              :banner (soy.main-page:banner (main-page-show-banner "center" (banner *main-page.storage*)))
              :olist (soy.main-page:olist)

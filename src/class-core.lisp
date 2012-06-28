@@ -362,44 +362,6 @@ Remove elements from result list corresponding to remove-func"
        (order b))))
 
 
-;;TODO временно убрана проверка на пустые группы, тк это поле невалидно
-(defun class-core.menu (&optional current-object)
-  "Creating left menu"
-  (let* ((current-root (class-core.get-root-parent current-object))
-         (divider-list (list "setevoe-oborudovanie" "foto-and-video" "rashodnye-materialy"))
-         (src-lst
-          (mapcar #'(lambda (val)
-                      (if (and current-root
-                               (equal (key val) (key current-root)))
-                          ;; This is current
-                          (soy.menu:selected
-                           (list :divider (notevery #'(lambda (divider)
-                                                        (string/= (key val) divider))
-                                                    divider-list)
-                                 :key (key val)
-                                 :name (name val)
-                                 :icon (icon val)
-                                 :subs (loop
-                                          :for child
-                                          :in (sort
-                                               (remove-if #'(lambda (g)
-                                                              (or
-                                                               ;; (empty g)
-                                                               (not (active g))))
-                                                          (groups val))
-                                               #'menu-sort)
-                                          :collect
-                                          (list :key  (key child) :name (name child)))))
-                          ;; else - this is ordinal
-                          (soy.menu:ordinal (list :divider (notevery #'(lambda (divider)
-                                                                         (string/= (key val) divider))
-                                                                     divider-list)
-                                                  :key  (key val)
-                                                  :name (name val)
-                                                  :icon (icon val)))))
-                  (get-root-groups))))
-    (soy.menu:main (list :elts src-lst))))
-
 (defun class-core.has-vendor-seo-text (group vendor-key)
   "Chech whether there is vendor's seo-text for given group"
   (and group (servo.valid-string-p vendor-key)

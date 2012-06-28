@@ -2,12 +2,6 @@
 
 (in-package #:eshop)
 
-;;обновление страницы
-(defun oneclickcart-update ()
-  (servo.compile-soy "oneclickcart.soy"
-                     "buttons.soy"))
-
-
 (defun oneclick-sendmail (phone articul name email)
   (let ((client-mail)
         (mail-file)
@@ -259,8 +253,7 @@
         (setf error-id 2)) ;; no phone number in parameters
     (setf (orderid answer) order-id)
     (setf (errorid answer) error-id)
-    (awhen (and articul
-                (getobj articul 'product))
+    (awhen (getobj articul 'product)
       (setf (articul answer) articul
             (total answer) (siteprice it)
             (name answer) (name-seo it)

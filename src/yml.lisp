@@ -49,7 +49,7 @@
   (loop
      :for v :being :the hash-values :in (daily *main-page.storage*)
      :thereis (and (equal (key v) (key product))
-                (< (date-start v) (get-universal-time) (date-finish v)))))
+                   (< (date-start v) (get-universal-time) (date-finish v)))))
 
 (defun yml.get-delivery-price (cart)
   (let ((result 300)
@@ -164,7 +164,7 @@
                                          0 ; если это вершина дерева
                                          (yml-id (parent obj))))))
          :offers (format nil "~{~a~}"
-                         (process-and-collect-storage
+                         (collect-storage
                           'product
                           ;;продукт должен находиться в группе маркированной как ymlshow
                           ;;быть активным и иметь не нулевую цену
@@ -212,7 +212,7 @@
                                          0 ; если это вершина дерева
                                          (yml-id (parent obj))))))
          :offers (format nil "~{~a~}"
-                         (process-and-collect-storage
+                         (collect-storage
                           'product
                           ;;продукт должен находиться в группе маркированной как ymlshow
                           ;;быть активным и иметь не нулевую цену
@@ -261,7 +261,7 @@
                                   (yml-id (parent obj)))))))
 
 (defun make-yml-offers()
-  (process-and-collect-storage
+  (collect-storage
    'product
    ;;продукт должен находиться в группе маркированной как ymlshow
    ;;быть активным и иметь не нулевую цену
@@ -340,8 +340,8 @@
   (declare ((or group null) group))
   (let ((products (if group
                       (storage.get-recursive-products group (complement #'active))
-                      (process-and-collect-storage 'product :when-func (complement #'active)))))
-      (count-if #'yml.available-for-order-p products)))
+                      (collect-storage 'product :when-func (complement #'active)))))
+    (count-if #'yml.available-for-order-p products)))
 
 (defun yml.pretty-count-products-for-order ()
   "Count number of products, which are not active, with pretty print for all groups"
@@ -351,11 +351,11 @@
                               (key gr)
                               (yml.count-products-for-order gr)))
                   (sort
-                      (process-and-collect-storage 'group
-                                       :when-func
-                                       #'(lambda (gr)
-                                           (plusp (yml.count-products-for-order gr))))
-                      #'< :key #'yml.count-products-for-order))))
+                   (collect-storage 'group
+                                    :when-func
+                                    #'(lambda (gr)
+                                        (plusp (yml.count-products-for-order gr))))
+                   #'< :key #'yml.count-products-for-order))))
 
 (defun yml.get-list-for-order (group)
   (declare (group group))

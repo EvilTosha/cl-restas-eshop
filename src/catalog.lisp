@@ -11,7 +11,7 @@
    (list
     :error404 error404
     :numproducts (count-storage 'product)
-    :menu (class-core.menu)
+    :menu (render.menu)
     :items (let ((res)
                  (roots (get-root-groups))
                  (exception "bytovaya-technika"))

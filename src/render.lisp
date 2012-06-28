@@ -6,6 +6,40 @@
 
 (setf *default-render-method* (make-instance 'eshop-render))
 
+;;TODO временно убрана проверка на пустые группы, тк это поле невалидно
+(defun render.menu (&optional current-object)
+  "Creating left menu"
+  (let* ((current-root (class-core.get-root-parent current-object))
+         (dividers (list "setevoe-oborudovanie" "foto-and-video" "rashodnye-materialy"))
+         (src-lst
+          (mapcar #'(lambda (val)
+                      (if (and current-root
+                               (equal (key val) (key current-root)))
+                          ;; This is current
+                          (soy.menu:selected
+                           (list :divider (member (key val) dividers :test #'equal)
+                                 :key (key val)
+                                 :name (name val)
+                                 :icon (icon val)
+                                 :subs (loop
+                                          :for child
+                                          :in (sort
+                                               (remove-if #'(lambda (g)
+                                                              (or
+                                                               ;; (empty g)
+                                                               (not (active g))))
+                                                          (groups val))
+                                               #'menu-sort)
+                                          :collect
+                                          (list :key (key child) :name (name child)))))
+                          ;; else - this is ordinal
+                          (soy.menu:ordinal (list :divider (member (key val) dividers :test #'equal)
+                                                  :key  (key val)
+                                                  :name (name val)
+                                                  :icon (icon val)))))
+                  (get-root-groups))))
+    (soy.menu:main (list :elts src-lst))))
+
 (defmethod render.get-oneclick-filters ((group group) &optional (full nil))
   "Отобрадение фильтров в один клик"
   (let ((products)
@@ -77,7 +111,7 @@
         (soy.catalog:content
          (list :name name
                :breadcrumbs (soy.catalog:breadcrumbs (breadcrumbs-add-vendor1 (class-core.breadcrumbs object) parameters))
-               :menu (class-core.menu object)
+               :menu (render.menu object)
                :rightblocks (append
                              (render.get-oneclick-filters object showall)
                              ;;fullfilter
@@ -409,7 +443,7 @@
          (is-vintage (not (or (active object) is-available)))
          (product-view)
          (group (parent object)))
-    (setf product-view (list :menu (class-core.menu object)
+    (setf product-view (list :menu (render.menu object)
                              :breadcrumbs (soy.product:breadcrumbs (class-core.breadcrumbs object))
                              :articul (articul object)
                              :name (name-seo object)
@@ -559,7 +593,7 @@
           (soy.catalog:content
            (list :name (name object)
                  :breadcrumbs (soy.catalog:breadcrumbs (class-core.breadcrumbs object))
-                 :menu (class-core.menu object)
+                 :menu (render.menu object)
                  :rightblocks (append
                                (render.get-oneclick-filters (parent object)
                                                             (getf request-get-plist :showall))

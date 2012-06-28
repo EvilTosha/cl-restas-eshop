@@ -7,9 +7,9 @@
 (defun write-products-report (stream)
   (labels ((get-2-lvl-group (obj)
              (when (parent obj)
-                 (if (parent (parent obj))
-                     (get-2-lvl-group (parent obj))
-                     obj))))
+               (if (parent (parent obj))
+                   (get-2-lvl-group (parent obj))
+                   obj))))
     (format stream "~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~%"
             "артикул" "цена магазина" "цена сайта" "имя" "имя real" "имя yml" "is-yml-show" "seo текст"
             "фотографии" "характеристики" "активный" "группа" "родительская группа" "группа 2-го уровня"
@@ -138,7 +138,7 @@
                      "yes"
                      "no")
                  desc))
-    'product)))
+     'product)))
 
 
 (defun write-vendors (stream)
@@ -224,99 +224,6 @@
               (remobj (format nil "~A" v) 'product))
           products))
 
-(defun report.add-products-to-group (product-list gr)
-  (mapcar #'(lambda (v)
-              (let ((pr (getobj (format nil "~a" v) 'product)))
-                (when pr
-                  (setf (parents pr) (list gr))
-                  (push pr (products gr)))))
-          product-list)
-  "done")
-
-(defun edit-marketing-filter (group key-suffix name func)
-  (let* ((key (format nil "~A-~A" (key group) key-suffix))
-         new-filter
-         (filter (aif (find key (filters group) :test #'equal :key #'key)
-                      it
-                      (progn
-                        (setf new-filter t)
-                        (setobj key (make-instance 'filter))))))
-    (setf (name filter) name)
-    (setf (func filter) func)
-    (setf (key filter) key)
-    (setf (parents filter) (list group))
-    (when new-filter
-      (push filter (filters group)))
-    filter))
-
-(defun create-sale-filter (group)
-  (edit-marketing-filter
-   group "sale" "Распродажа" #'groupd.is-groupd))
-
-(defun create-bestprice-filter (group)
-  (edit-marketing-filter
-   group "bestprice" "Горячий уик-энд скидок"
-   #'(lambda (object) (plusp (delta-price object)))))
-
-(defun create-ipad3-filter (group)
-  (edit-marketing-filter
-   group "ipad3" "IPad 3"
-   #'(lambda (p)
-       (with-option1 p "Общие характеристики" "Модель"
-                     (awhen (getf option :value)
-                       (string= (format nil "~(~A~)" it) "ipad new"))))))
-
-(defun create-man-sale-filter (group)
-  (edit-marketing-filter
-   group "23feb" "Подарки к 23 февраля" #'groupd.man.is-groupd))
-
-(defun create-woman-sale-filter (group)
-  (edit-marketing-filter
-   group "8mart" "Подарки к 8 марта" #'groupd.woman.is-groupd))
-
-(defun report.set-man-salefilter ()
-  (process-storage #'create-man-sale-filter 'group))
-
-(defun report.set-woman-salefilter ()
-  (process-storage #'create-woman-sale-filter 'group))
-
-
-(defun report.set-filters (groups filter-func name filter-key)
-  (mapcar #'(lambda (gr)
-              (edit-marketing-filter gr filter-key name filter-func))
-          groups))
-
-(defun report.create-marketing-filters ()
-	(create-ipad3-filter (getobj "planshetnie-komputery" 'group))
-	(report.set-filters (list (getobj "noutbuki" 'group))
-											#'(lambda (product)
-													(let ((opts))
-														(with-option1 product
-															"Общие характеристики" "Тип устройства"
-															(setf opts (getf option :value)))
-														(equal opts "Ультрабук")))
-											"Ультрабуки"
-											"ultrabooks")
-  ;; TODO: убрать костыль
-	(report.set-filters (process-and-collect-storage 'group)
-											#'groupd.holiday.is-groupd
-											"Для отдыха"
-											"holidays"))
-
-(defun report.set-salefilter ()
-  (mapcar #'(lambda (v)
-              (create-sale-filter (getobj (format nil "~a" v) 'group)))
-          (list "netbuki"
-                "noutbuki"
-                "planshetnie-komputery"
-                "cifrovye-fotoapparaty"
-                "lcd-televizory"
-                "monitory"
-                "printery"
-                "mfu"
-                "myshki"
-                "klaviatury")))
-
 (defun report.convert-name (input-string)
   (string-trim (list #\Space #\Tab #\Newline)
                (format nil "~:(~a~)" input-string)))
@@ -335,7 +242,7 @@
 
 (defun report.write-alias (&optional (stream *standard-output*))
   (format stream "имя группы; наличие алиасов; группа опций ; опция; имя алиаса; ед. измерения;")
-  (process-and-collect-storage
+  (collect-storage
    'group
    :func #'(lambda (gr)
              (if (null (catalog-keyoptions gr))
@@ -351,7 +258,7 @@
 
 (defun report.write-keyoptions (&optional (stream *standard-output*))
   (format stream "имя группы; наличие ключевых опций; группа опций ; опция;")
-  (process-and-collect-storage
+  (collect-storage
    'group
    :func #'(lambda (gr)
              (if (null (keyoptions gr))
@@ -375,27 +282,3 @@
     (let ((name (format nil "reports/keyoptions-report-~a.csv" (time.encode.backup-filename))))
       (create-report name #'report.write-keyoptions)
       "KEYOPTIONS REPORT DONE")))
-
-
-(defun report.write-pictures (&optional (stream *standard-output*))
-  (let ((num 0))
-    (format stream "артикул;имя;файл;ширина;высота;размер;")
-    (process-storage
-     #'(lambda (gr)
-         (mapcar #'(lambda (product)
-                     (let* ((articul (articul product))
-                            (path-art  (ppcre:regex-replace  "(\\d{1,3})(\\d{0,})"  (format nil "~a" articul) "\\1/\\1\\2")))
-                       (mapcar #'(lambda (pic)
-                                   (let ((src-pic-path
-                                          (format nil "~a/~a/~a/~a"
-                                                  (config.get-option "PATHS" "path-to-pics") "big" path-art pic)))
-                                     (with-open-file
-                                         (stream-file src-pic-path)
-
-                                       (when (zerop (file-length stream-file))
-                                         (incf num)
-                                         (format stream "~&~a;~a" articul (file-length stream-file))))))
-                               (get-pics articul))))
-                 (products gr)))
-     'group)
-    num))

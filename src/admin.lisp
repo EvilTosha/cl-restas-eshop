@@ -244,7 +244,7 @@
                                  (getobj group 'group)))
                             groups))
                 products)))
-    (let ((unparented-products (process-and-collect-storage
+    (let ((unparented-products (collect-storage
                                 'product
                                 :when-func #'(lambda (item)
                                                (null (parent item))))))
@@ -296,7 +296,7 @@
     (loop
        :for cnt :from 0
        :while (getf post-data
-                   (intern (string-upcase (format nil "keyoption-og-~a" cnt)) :keyword))
+                    (intern (string-upcase (format nil "keyoption-og-~a" cnt)) :keyword))
        :do (let ((optgroup (getf post-data
                                  (intern (string-upcase (format nil "keyoption-og-~a" cnt)) :keyword)))
                  (optname (getf post-data
@@ -304,7 +304,7 @@
                  (showname (getf post-data
                                  (intern (string-upcase (format nil "keyoption-sn-~a" cnt)) :keyword)))
                  (units (getf post-data
-                                (intern (string-upcase (format nil "keyoption-un-~a" cnt)) :keyword))))
+                              (intern (string-upcase (format nil "keyoption-un-~a" cnt)) :keyword))))
              (when (and (string/= "" optgroup) (string/= "" optname))
                (push (list :optgroup optgroup :optname optname :showname showname :units units) keyoptions))))
     (setf result (append result (list :keyoptions (nreverse keyoptions))))
@@ -312,7 +312,7 @@
     (loop
        :for cnt :from 0
        :while (getf post-data
-                   (intern (string-upcase (format nil "catalog-keyoption-og-~a" cnt)) :keyword))
+                    (intern (string-upcase (format nil "catalog-keyoption-og-~a" cnt)) :keyword))
        :do (let ((optgroup (getf post-data
                                  (intern (string-upcase (format nil "catalog-keyoption-og-~a" cnt)) :keyword)))
                  (optname (getf post-data
