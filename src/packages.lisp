@@ -50,7 +50,7 @@
 (defclass group-filter () ())
 ;; oneclickcart.lisp
 (defclass oneclickcart.answer () ())
-;; list-filters.lisp
+;; filters.lisp
 (defclass field-filter () ())
 ;; cartrige.lisp
 (defclass printer () ())

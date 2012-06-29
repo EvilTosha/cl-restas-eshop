@@ -2,129 +2,76 @@
 
 (in-package #:eshop)
 
-;;Возвращает длину списка активных продуктов-потомков подходящих под фильтр
-(defun get-filtered-product-list-len (object filter)
-  (length (remove-if-not (func filter)
-                         (remove-if-not #'active
-                                        (storage.get-recursive-products object)))))
+(defclass filter ()
+  (;; type of objects for filtering (won't for on others), if any type accepted, objtype is t
+   ;; type satisfying cheched via typep function
+   (objtype     :initarg :objtype     :initform t        :accessor objtype     :type symbol)
+   ;; filtering function for applying to object/slot/etc, func's signature should be (foo object value)
+   (func        :initarg :func                           :accessor func        :type function)
+   ;; if inclusive is nil, then only objects that not satisfy func are accepted
+   (inclusive   :initarg :inclusive   :initform t        :accessor inclusive   :type bool)
+   ;; additional info, that can be used in filter (like minimum price for product)
+   (value       :initarg :value       :initform nil      :accessor value))
+  (:documentation "Superclass for all filters, can be used itself for processing objects themselves"))
 
-(defun is-empty-filtered-list (object filter)
-  (zerop (get-filtered-product-list-len object filter)))
-
-
-;;Составление строки для представления фильтров в 1 клик на странице с fullfilter
-(defun filters.make-string-filter (filter num &optional itsme)
-  (if itsme
-      (format nil "<b>~a</b> (~a)<br/>"
-              (name filter)
-              num)
-      (format nil "<a class=\"rightfilter\" href=\"/~a/~a\">~a</a> (~a)<br/>"
-              (key (parent filter))
-              (key filter)
-              (name filter)
-              num)))
-
-;;количество непустых фильтров у группы
-(defun num-nonempty-filters (object)
-  (length (remove-if #'(lambda (fil) (is-empty-filtered-list object fil))
-                     (filters object))))
-
-(defmethod filters.get-filters ((group group) (products list))
-  "Возвращает список ненулевых фильтров на списке объектов и количество объесктов в выборке"
-  (filters.get-filters (filters group) products))
-
-(defmethod filters.get-filters ((filters list) (products list))
-  "Возвращает список ненулевых фильтров на списке объектов и количество объесктов в выборке"
-  (remove-if #'null (mapcar #'(lambda (filter)
-                                (let ((num (length
-                                            (remove-if-not (func filter) products))))
-                                  (when (plusp num)
-                                    (cons filter num))))
-                            filters)))
+(defclass slot-filter (filter)
+  (;; type of slot value (same conditions as for type of object in filter)
+   (slot-type   :initarg :slot-type   :initform t        :accessor slot-type   :type symbol)
+   ;; acccessor of the slot, which might be processed
+   (slot        :initarg :slot                           :accessor slot        :type function))
+  (:documentation "Filter for filtering objects by values of their specific slots"))
 
 
-;;; marketing filters
+(defgeneric filters.check (object filter)
+  (:documentation "Checks whether object satisfying filter, if it is, return object"))
 
-(defun edit-marketing-filter (group key-suffix name func)
-  (let* ((key (format nil "~A-~A" (key group) key-suffix))
-         new-filter
-         (filter (aif (find key (filters group) :test #'equal :key #'key)
-                      it
-                      (progn
-                        (setf new-filter t)
-                        (setobj key (make-instance 'filter))))))
-    (setf (name filter) name)
-    (setf (func filter) func)
-    (setf (key filter) key)
-    (setf (parents filter) (list group))
-    (when new-filter
-      (push filter (filters group)))
-    filter))
+(defmethod filters.check :around (object (filter filter))
+  "Checks whether object is of appropriate type"
+  (if (not (typep object (objtype filter)))
+      (log5:log-for warning "Attempt to filter object of unappropriate type ~A (filter type: ~A)"
+                    (type-of object) (type-of filter))
+      ;; else
+      (call-next-method)))
 
-(defun create-sale-filter (group)
-  (edit-marketing-filter
-   group "sale" "Распродажа" #'groupd.is-groupd))
+(defmethod filters.check (object (filter filter))
+  (when (funcall (filters.include-transform (func filter) (inclusive filter))
+                 object
+                 (value filter))
+    object))
 
-(defun create-bestprice-filter (group)
-  (edit-marketing-filter
-   group "bestprice" "Горячий уик-энд скидок"
-   #'(lambda (object) (plusp (delta-price object)))))
-
-(defun create-ipad3-filter (group)
-  (edit-marketing-filter
-   group "ipad3" "IPad 3"
-   #'(lambda (p)
-       (with-option1 p "Общие характеристики" "Модель"
-                     (awhen (getf option :value)
-                       (string= (format nil "~(~A~)" it) "ipad new"))))))
-
-(defun create-man-sale-filter (group)
-  (edit-marketing-filter
-   group "23feb" "Подарки к 23 февраля" #'groupd.man.is-groupd))
-
-(defun create-woman-sale-filter (group)
-  (edit-marketing-filter
-   group "8mart" "Подарки к 8 марта" #'groupd.woman.is-groupd))
-
-(defun report.set-man-salefilter ()
-  (process-storage #'create-man-sale-filter 'group))
-
-(defun report.set-woman-salefilter ()
-  (process-storage #'create-woman-sale-filter 'group))
+(defmethod filters.check :around (object (filter slot-filter))
+  "Checks whether object is of appropriate type"
+  (if (not (typep (funcall (slot filter) object) (slot-type filter)))
+      (log5:log-for warning "Attempt to filter object with slot of unappropriate type ~A (filter type: ~A)"
+                    (type-of (funcall (slot filter) object)) (type-of filter))
+      ;; else
+      (call-next-method)))
 
 
-(defun report.set-filters (groups filter-func name filter-key)
-  (mapcar #'(lambda (gr)
-              (edit-marketing-filter gr filter-key name filter-func))
-          groups))
+(defmethod filters.check (object (filter slot-filter))
+  (when (funcall (filters.include-transform (func filter) (inclusive filter))
+                 (funcall (slot filter) object)
+                 (value filter))
+    object))
 
-(defun report.create-marketing-filters ()
-	(create-ipad3-filter (getobj "planshetnie-komputery" 'group))
-	(report.set-filters (list (getobj "noutbuki" 'group))
-											#'(lambda (product)
-													(let ((opts))
-														(with-option1 product
-															"Общие характеристики" "Тип устройства"
-															(setf opts (getf option :value)))
-														(equal opts "Ультрабук")))
-											"Ультрабуки"
-											"ultrabooks")
-  ;; TODO: убрать костыль
-	(report.set-filters (collect-storage 'group)
-											#'groupd.holiday.is-groupd
-											"Для отдыха"
-											"holidays"))
+(defun filters.include-transform (func inclusive)
+  "If inclusive return func, else return negotiation of it"
+  (if inclusive func (complement func)))
 
-(defun report.set-salefilter ()
-  (mapcar #'(lambda (v)
-              (create-sale-filter (getobj (format nil "~a" v) 'group)))
-          (list "netbuki"
-                "noutbuki"
-                "planshetnie-komputery"
-                "cifrovye-fotoapparaty"
-                "lcd-televizory"
-                "monitory"
-                "printery"
-                "mfu"
-                "myshki"
-                "klaviatury")))
+(defun filters.limit-start (items start)
+  (nthcdr start items))
+
+(defun filters.limit-end (items end)
+  (if (> end (length items))
+      items
+      (subseq items 0 end)))
+
+(defun filters.limit-region (items start length)
+  (let ((end (+ start length)))
+    (if (> end (length items))
+        (filters.limit-start items start)
+        (subseq items start end))))
+
+(defun filters.limit-page (items page-size page-number)
+  ;; numbering from 1
+  (subseq items (* page-size (- page-number 1)) page-size))

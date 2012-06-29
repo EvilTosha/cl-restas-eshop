@@ -172,11 +172,11 @@
                                                               paginated)))))
                  :rightblock (soy.articles:r_b_articles
                               (list :articles (let ((arts (articles.sort (get-articles-by-tags (get-articles-list) "новости"))))
-                                                (articles-view-articles (list-filters.limit-end arts 5)))
+                                                (articles-view-articles (filters.limit-end arts 5)))
                                     :articles_1 (let ((arts (articles.sort (get-articles-by-tags (get-articles-list) "Акции"))))
-                                                  (articles-view-articles (list-filters.limit-end arts 5)))
+                                                  (articles-view-articles (filters.limit-end arts 5)))
                                     :articles_2 (let ((arts (articles.sort (get-articles-by-tags (get-articles-list) "обзоры"))))
-                                                  (articles-view-articles (list-filters.limit-end arts 5)))))))))))
+                                                  (articles-view-articles (filters.limit-end arts 5)))))))))))
 
 (defun get-article-breadcrumbs (article)
   (format nil "<a href=\"/\">Главная</a> /
@@ -230,15 +230,15 @@
                                                      (list :articles (let ((arts (articles.sort
                                                                                   (remove-if #'(lambda(v)(equal v object))
                                                                                              (get-articles-by-tags (get-articles-list) "новости")))))
-                                                                       (articles-view-articles (list-filters.limit-end arts 5)))
+                                                                       (articles-view-articles (filters.limit-end arts 5)))
                                                            :articles_1 (let ((arts (articles.sort
                                                                                     (remove-if #'(lambda(v)(equal v object))
                                                                                                (get-articles-by-tags (get-articles-list) "Акции")))))
-                                                                         (articles-view-articles (list-filters.limit-end arts 5)))
+                                                                         (articles-view-articles (filters.limit-end arts 5)))
                                                            :articles_2 (let ((arts (articles.sort
                                                                                     (remove-if #'(lambda(v)(equal v object))
                                                                                                (get-articles-by-tags (get-articles-list) "обзоры")))))
-                                                                         (articles-view-articles (list-filters.limit-end arts 5))))))))))
+                                                                         (articles-view-articles (filters.limit-end arts 5))))))))))
 
 (defmethod articles.show-landscape  ((object article))
 	(soy.index:main-landscape (list :keywords "" ;;keywords

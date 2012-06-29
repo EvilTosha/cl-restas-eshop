@@ -3,6 +3,7 @@ Code and working process conventions for CL-eshop project.
 Firstly look at standard naming/coding conventions for Common Lisp:
 http://www.cliki.net/naming%20conventions
 http://www.cs.umd.edu/~nau/cmsc421/norvig-lisp-style.pdf
+http://people.ace.ed.ac.uk/staff/medward2/class/moz/cm/doc/contrib/lispstyle.html
 
 Project specific conventions:
 
@@ -16,6 +17,8 @@ Project specific conventions:
    ...)
 
 - For creating pathnames use 'merge-pathnames function
+
+- If you implement a function that returns more than one result, uses values rather than returning the results in a list. If your function returns no results (like a void in C), use (values) to return no values
 
 - All the pathnames should be in config files
 

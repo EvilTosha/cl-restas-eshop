@@ -463,10 +463,8 @@
                                                    (delta-price object)))
                              :equalprice (zerop (delta-price object))
                              :diffprice (delta-price object)
-                             ;;test
                              :upsaleinfo (when (and group (upsale-links group))
                                            (soy.product:upsale (render.prepare-upsale-full group)))
-                             ;;end test
                              :procent diff-percent
                              :subst (format nil "/~a" (articul object))
                              :pics (cdr pics)
@@ -493,7 +491,12 @@
                                                                           :siteprice "0" :subst ""
                                                                           :firstpic "/img/temp/i6.jpg")))
                                                             (render.relink object))))
-                             :keyoptions (list-filters.limit-end (remove-if #'(lambda (v) (equal (getf v :optvalue) "")) (render.get-keyoptions object)) 6)
+                             :keyoptions (filters.limit-end
+                                          (remove-if-not #'(lambda (v)
+                                                             (servo.valid-string-p
+                                                              (getf v :optvalue)))
+                                                         (render.get-keyoptions object))
+                                          6)
                              :active (active object)
                              :vintage is-vintage
                              :shortdescr (seo-text object)
@@ -501,7 +504,7 @@
                                             (list :products (mapcar #'(lambda (prod)
                                                                         (soy.catalog:product
                                                                          (render.view prod)))
-                                                                    (list-filters.limit-end (servo.find-relative-product-list object) 4))))
+                                                                    (filters.limit-end (servo.find-relative-product-list object) 4))))
                              :seotextflag (and (not (null (seo-text object)))
                                                (string/= (seo-text object) ""))
                              :predzakaz (preorder object)
