@@ -183,6 +183,7 @@
                   (setobj v p)
                   (setf (gethash v *special-products*) p))))
           (list
+           "666616"
            "999888"
            "711265"
            "834786"
@@ -255,9 +256,10 @@
   (edit-marketing-filter
    group "ipad3" "IPad 3"
    #'(lambda (p)
-       (with-option1 p "Общие характеристики" "Модель"
-                     (awhen (getf option :value)
-                       (string= (format nil "~(~A~)" it) "ipad new"))))))
+       (let (opts)
+         (with-option1 p "Общие характеристики" "Модель"
+                       (setf opts (getf option :value)))
+         (string= (format nil "~(~A~)" opts) "ipad new")))))
 
 (defun create-man-sale-filter (group)
   (edit-marketing-filter
