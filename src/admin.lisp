@@ -98,18 +98,18 @@
                :target "edit"))
         "not found")))
 
-(defun admin.make-content (new-post-data)
+(defun admin.make-content (post-data)
   (let* ((key (getf (request-get-plist) :key))
          (type (getf (request-get-plist) :type))
-         (item (getobj key))
-         (post-data new-post-data))
+         (item (getobj key)))
     (if item
-        ;;if item exist in storage, redirect to edit page (but url will be .../make?...)
-        (admin.edit-content new-post-data)
+        ;;if item exist in storage, redirect to edit page (but url still .../make?...)
+        (admin.edit-content post-data)
         ;;else
         (if post-data
             (progn
               (cond
+                ;; TODO: fix for all classes
                 ((equal "product" type)
                  (setf item (make-instance 'product
                                            :articul (parse-integer key))))
@@ -124,9 +124,9 @@
                         (date-modified item) (get-universal-time)))
               (setf post-data (admin.post-data-preprocessing (servo.plist-to-unique post-data)))
               (class-core.edit-fields item post-data)
-              ;;don't work with filters
+              ;;doesn't work with filters
               (object-fields.product-groups-fix item)
-              (setobj item) ;;adding item into storage
+              (setobj (key item) item) ;;adding item into storage
               (admin.edit-content))
             ;;else (post-data is nil)
             (let ((empty-item (get-instance type)))
