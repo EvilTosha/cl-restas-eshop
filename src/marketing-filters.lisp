@@ -4,9 +4,9 @@
 
 ;;Возвращает длину списка активных продуктов-потомков подходящих под фильтр
 (defun get-filtered-product-list-len (object filter)
-  (length (remove-if-not (func filter)
-                         (remove-if-not #'active
-                                        (storage.get-recursive-products object)))))
+  (count-if (func filter)
+            (remove-if-not #'active
+                           (storage.get-recursive-products object))))
 
 (defun is-empty-filtered-list (object filter)
   (zerop (get-filtered-product-list-len object filter)))
@@ -36,8 +36,7 @@
 (defmethod filters.get-filters ((filters list) (products list))
   "Возвращает список ненулевых фильтров на списке объектов и количество объесктов в выборке"
   (remove-if #'null (mapcar #'(lambda (filter)
-                                (let ((num (length
-                                            (remove-if-not (func filter) products))))
+                                (let ((num (count-if (func filter) products)))
                                   (when (plusp num)
                                     (cons filter num))))
                             filters)))
@@ -74,9 +73,9 @@
   (edit-marketing-filter
    group "ipad3" "IPad 3"
    #'(lambda (p)
-       (with-option1 p "Общие характеристики" "Модель"
-                     (awhen (getf option :value)
-                       (string= (format nil "~(~A~)" it) "ipad new"))))))
+       (string= "ipad new"
+                (format nil "~(~A~)"
+                        (get-option p "Общие характеристики" "Модель"))))))
 
 (defun create-man-sale-filter (group)
   (edit-marketing-filter
@@ -102,11 +101,10 @@
 	(create-ipad3-filter (getobj "planshetnie-komputery" 'group))
 	(report.set-filters (list (getobj "noutbuki" 'group))
 											#'(lambda (product)
-													(let ((opts))
-														(with-option1 product
-															"Общие характеристики" "Тип устройства"
-															(setf opts (getf option :value)))
-														(equal opts "Ультрабук")))
+                          (equal (get-option product
+                                             "Общие характеристики"
+                                             "Тип устройства")
+                                 "Ультрабук"))
 											"Ультрабуки"
 											"ultrabooks")
   ;; TODO: убрать костыль

@@ -85,7 +85,7 @@ Note: processed element can't be changed during processing"
   (declare (function func) (symbol type))
   (maphash func (get-storage type)))
 
-(defun process-and-collect-storage (type &key (func #'identity) (when-func #'identity))
+(defun collect-storage (type &key (func #'identity) (when-func #'identity))
   "Process storage of given type checking via when-func, applying func to
 each element and collecting its results"
   (loop
@@ -107,7 +107,7 @@ each element and collecting its results"
 (defun get-root-groups ()
   "Return list of root groups sorted by order"
   (stable-sort
-   (process-and-collect-storage 'group :when-func (complement #'parents))
+   (collect-storage 'group :when-func (complement #'parents))
    #'menu-sort))
 
 (defun storage.alphabet-group-sorter (a b)

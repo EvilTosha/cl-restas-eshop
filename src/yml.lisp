@@ -31,9 +31,7 @@
        (price product)
        (plusp (price product))
        ;;для селективного исключения товаров по значению специальной опции
-       (let ((yml-show))
-         (with-option1 product "Secret" "YML"
-                       (setf yml-show (getf option :value)))
+       (let ((yml-show (get-option product "Secret" "YML")))
          (not (and yml-show
                    (string= "No" (stripper yml-show)))))))
 
@@ -85,9 +83,7 @@
               (equal key "holodilniki-i-morozilniki")
               (equal key "duhovki")
 							(equal key "kondicioneri")
-              (let ((diagonal))
-                (with-option1 product "Экран" "Диагональ экрана, дюйм"
-                              (setf diagonal (getf option :value)))
+              (let ((diagonal (get-option product "Экран" "Диагональ экрана, дюйм")))
                 (if (equal diagonal "")
                     (setf diagonal nil))
                 (setf diagonal (ceiling (arnesi:parse-float diagonal)))
@@ -179,9 +175,7 @@
                                                                                (articul product))))
                                                                     (when pics
                                                                       (encode-uri (car pics))))
-                                                         :name (let ((yml-name))
-                                                                 (with-option1 product "Secret" "Yandex"
-                                                                               (setf yml-name (getf option :value)))
+                                                         :name (let ((yml-name (get-option product "Secret" "Yandex")))
                                                                  (if (or (null yml-name)
                                                                          (string= ""
                                                                                   (stripper yml-name))
@@ -227,14 +221,11 @@
                                                                                (articul product))))
                                                                     (when pics
                                                                       (encode-uri (car pics))))
-                                                         :name (let ((yml-name)
-                                                                     (parser-name))
-                                                                 (with-option1 product "Secret" "Yandex"
-                                                                               (setf yml-name (getf option :value)))
-                                                                 (with-option1 product "Secret" "Parser"
-                                                                               (setf parser-name (getf option :value)))
-                                                                 (if (or (null parser-name)
-                                                                         (string= "" parser-name))
+                                                         :name (let ((yml-name (get-option
+                                                                                product "Secret" "Yandex"))
+                                                                     (parser-name (get-option
+                                                                                   product "Secret" "Parser")))
+                                                                 (if (not (servo.valid-string-p parser-name))
                                                                      (if (or (null yml-name)
                                                                              (string= ""
                                                                                       (stripper yml-name))
@@ -277,9 +268,7 @@
                                                          (articul product))))
                                               (when pics
                                                 (encode-uri (car pics))))
-                                  :name   (let ((yml-name))
-                                            (with-option1 product "Secret" "Yandex"
-                                                          (setf yml-name (getf option :value)))
+                                  :name   (let ((yml-name (get-option product "Secret" "Yandex")))
                                             (if (or (null yml-name)
                                                     (string= ""
                                                              (stripper yml-name))

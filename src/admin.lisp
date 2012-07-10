@@ -77,18 +77,17 @@
         (regex-replace-all "\\n" (with-output-to-string (*standard-output*) (room)) "<br>")))
 
 
-(defun admin.edit-content (&optional new-post-data)
+(defun admin.edit-content (&optional post-data)
   (let* ((key (getf (request-get-plist) :key))
          (item (getobj key))
-         (item-fields (when item (class-core.make-fields item)))
-         (post-data new-post-data))
+         (item-fields (when item (class-core.make-fields item))))
     (when (and item post-data)
       (setf post-data (admin.post-data-preprocessing (servo.plist-to-unique post-data)))
       (class-core.edit-fields item post-data)
       ;; need to fix
       (when (and (groupp item) (getf post-data :fullfilter))
         (setf (fullfilter item) (getf post-data :fullfilter)))
-      (object-fields.product-groups-fix item)
+      (slots.product-groups-fix item)
       (setf item-fields (class-core.make-fields item)))
     (if item
         (soy.class_forms:formwindow
@@ -98,18 +97,18 @@
                :target "edit"))
         "not found")))
 
-(defun admin.make-content (new-post-data)
+(defun admin.make-content (post-data)
   (let* ((key (getf (request-get-plist) :key))
          (type (getf (request-get-plist) :type))
-         (item (getobj key))
-         (post-data new-post-data))
+         (item (getobj key)))
     (if item
-        ;;if item exist in storage, redirect to edit page (but url will be .../make?...)
-        (admin.edit-content new-post-data)
+        ;;if item exist in storage, redirect to edit page (but url still .../make?...)
+        (admin.edit-content post-data)
         ;;else
         (if post-data
             (progn
               (cond
+                ;; TODO: fix for all classes
                 ((equal "product" type)
                  (setf item (make-instance 'product
                                            :articul (parse-integer key))))
@@ -124,9 +123,9 @@
                         (date-modified item) (get-universal-time)))
               (setf post-data (admin.post-data-preprocessing (servo.plist-to-unique post-data)))
               (class-core.edit-fields item post-data)
-              ;;don't work with filters
-              (object-fields.product-groups-fix item)
-              (setobj item) ;;adding item into storage
+              ;;doesn't work with filters
+              (slots.product-groups-fix item)
+              (setobj (key item) item) ;;adding item into storage
               (admin.edit-content))
             ;;else (post-data is nil)
             (let ((empty-item (get-instance type)))
@@ -139,8 +138,8 @@
                      :fields (class-core.make-fields empty-item)
                      :target "make")))))))
 
-(defun admin.pics-deleting (new-post-data)
-  (let* ((key (getf new-post-data :key))
+(defun admin.pics-deleting (post-data)
+  (let* ((key (getf post-data :key))
          (p (getobj key 'product))
          (output (format nil "Product with key ~a not found" key)))
     (when p
@@ -148,32 +147,32 @@
       (setf output (format nil "Successfully deleted ~a's pics" key)))
     (soy.admin:pics-deleting (list :output output))))
 
-(defun admin.compile-template (new-post-data)
-  (let ((name (getf new-post-data :name))
+(defun admin.compile-template (post-data)
+  (let ((name (getf post-data :name))
         (output))
-    (if new-post-data
-        (setf output
-              (if (file-exists-p (pathname (merge-pathnames
-                                            (pathname name)
-                                            (config.get-option "PATHS" "path-to-templates"))))
-                  (handler-case
-                      (progn
-                        (servo.compile-soy name)
-                        (format nil "Successfully compiled ~a" name))
-                    (error (e) (format  nil "ERROR:~%~a" e)))
-                  (format nil "File ~a not found" name))))
+    (when post-data
+      (setf output
+            (if (file-exists-p (pathname (merge-pathnames
+                                          (pathname name)
+                                          (config.get-option "PATHS" "path-to-templates"))))
+                (handler-case
+                    (progn
+                      (servo.compile-soy name)
+                      (format nil "Successfully compiled ~a" name))
+                  (error (e) (format  nil "ERROR:~%~a" e)))
+                (format nil "File ~a not found" name))))
     (soy.admin:compile-template (list :output output))))
 
-(defun admin.make-backup (new-post-data)
-  (let ((dobackup (getf new-post-data :dobackup))
+(defun admin.make-backup (post-data)
+  (let ((dobackup (getf post-data :dobackup))
         (output))
-    (if (and new-post-data (string= dobackup "dobackup"))
-        (setf output
-              (handler-case
-                  (progn
-                    (backup.serialize-all)
-                    (format nil "Successfully made backup"))
-                (error (e) (format  nil "ERROR:~%~a" e)))))
+    (when (and post-data (string= dobackup "dobackup"))
+      (setf output
+            (handler-case
+                (progn
+                  (backup.serialize-all)
+                  (format nil "Successfully made backup"))
+              (error (e) (format  nil "ERROR:~%~a" e)))))
     (soy.admin:make-backup (list :output output))))
 
 (defun admin.do-action (action)
@@ -231,34 +230,35 @@
             (t (format nil "DON't know action ~a" action))))
     (error (e) (format  nil "ERROR:~%~a" e))))
 
-(defun admin.parenting-content (new-post-data)
-  (let ((post-data new-post-data))
-    (when post-data
-      (setf post-data (servo.plist-to-unique post-data))
-      (let ((products (ensure-list (getf post-data :products)))
-            (groups (ensure-list (getf post-data :groups))))
-        (mapcar #'(lambda (product)
-                    (mapcar #'(lambda (group)
-                                (class-core.bind-product-to-group
-                                 (getobj product 'product)
-                                 (getobj group 'group)))
-                            groups))
-                products)))
-    (let ((unparented-products (collect-storage
-                                'product
-                                :when-func #'(lambda (item)
-                                               (null (parent item))))))
-      (soy.class_forms:parenting-page
-       (list :products (mapcar #'(lambda (product)
-                                   (soy.class_forms:unparented-product-checkbox
-                                    (list :key (key product)
-                                          :name (name-seo product))))
-                               unparented-products)
-             :length (length unparented-products)
-             :groups (object-fields.group-list-field-view nil "GROUPS" nil))))))
+(defun admin.parenting-content (post-data)
+  (when post-data
+    (setf post-data (servo.plist-to-unique post-data))
+    (let ((products (ensure-list (getf post-data :products)))
+          (groups (ensure-list (getf post-data :groups))))
+      (mapcar #'(lambda (product)
+                  (mapcar #'(lambda (group)
+                              (class-core.bind-product-to-group
+                               (getobj product 'product)
+                               (getobj group 'group)))
+                          groups))
+              products)))
+  (let ((unparented-products (collect-storage
+                              'product
+                              :when-func
+                              #'(lambda (item)
+                                  (and (null (parent item))
+                                       (not (gethash (key item) *special-products*)))))))
+    (soy.class_forms:parenting-page
+     (list :products (mapcar #'(lambda (product)
+                                 (soy.class_forms:unparented-product-checkbox
+                                  (list :key (key product)
+                                        :name (name-seo product))))
+                             unparented-products)
+           :length (length unparented-products)
+           :groups (slots.%view 'group-list nil "GROUPS" nil)))))
 
 (defun show-admin-page (&optional (key nil))
-  (let ((new-post-data (servo.alist-to-plist (hunchentoot:post-parameters hunchentoot:*request*))))
+  (let ((post-data (servo.alist-to-plist (hunchentoot:post-parameters hunchentoot:*request*))))
     (soy.admin:main
      (list :content
            (cond
@@ -267,22 +267,22 @@
              ((string= key "info")
               (soy.admin:info (list :info (admin.get-info))))
              ((string= key "actions")
-              (soy.admin:action-buttons (list :post new-post-data
-                                              :info (admin.do-action (getf new-post-data :action)))))
+              (soy.admin:action-buttons (list :post post-data
+                                              :info (admin.do-action (getf post-data :action)))))
              ((string= key "edit")
-              (admin.edit-content new-post-data))
+              (admin.edit-content post-data))
              ((string= key "make")
-              (admin.make-content new-post-data))
+              (admin.make-content post-data))
              ((string= key "parenting")
-              (admin.parenting-content new-post-data))
+              (admin.parenting-content post-data))
              ((string= key "pics")
-              (admin.pics-deleting new-post-data))
+              (admin.pics-deleting post-data))
              ((string= key "templates")
-              (admin.compile-template new-post-data))
+              (admin.compile-template post-data))
              ((string= key "backup")
-              (admin.make-backup new-post-data))
+              (admin.make-backup post-data))
              ((string= key "cron-jobs")
-              (cron.html-print-job-list new-post-data))
+              (cron.html-print-job-list post-data))
              (t (format nil "~a" key)))))))
 
 

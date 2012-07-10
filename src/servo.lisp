@@ -41,19 +41,9 @@
             ""
             (soy.catalog:seotext
              (list :text
-                   (class-core.get-group-seo-text
+                   (classes.get-group-seo-text
                     object
                     (getf parameters :vendor)))))))
-
-(defmacro with-option1 (product optgroup-name option-name body)
-  `(mapcar #'(lambda (optgroup)
-               (when (string= (getf optgroup :name) ,optgroup-name)
-                 (let ((options (getf optgroup :options)))
-                   (mapcar #'(lambda (option)
-                               (if (string= (getf option :name) ,option-name)
-                                   ,body))
-                           options))))
-           (optgroups ,product)))
 
 (defmacro f-price ()
   `(lambda (product request-plist filter-options)
@@ -74,9 +64,9 @@
      (let ((value-f (getf request-plist (intern (string-upcase (format nil "~a-f" (symbol-name ,key))) :keyword)))
            (value-t (getf request-plist (intern (string-upcase (format nil "~a-t" (symbol-name ,key))) :keyword)))
            (value-x 0))
-       (with-option1 product
-         ,optgroup-name ,option-name
-         (setf value-x (getf option :value)))
+       ;; TOCHECK
+       (setf value-x (get-option product
+                                 ,optgroup-name ,option-name))
        (when (null value-x)
          (setf value-x "0"))
        (when (null value-f)
@@ -571,7 +561,7 @@
         ;; else
         breadcrumbs)))
 
-(defun string-convertion-for-title (title)
+(defun string-titlecase (title)
   "Make string starting with capital letter"
   (if title
       (format nil "~@(~A~)" title)
@@ -641,28 +631,21 @@
       ;; else infinity
       999999))
 
-(defun servo.get-option (product opgroup optname)
-  (let ((res))
-    (with-option1 product
-      opgroup optname
-      (setf res (getf option :value)))
-    res))
-
 (defun servo.get-product-vendor (product)
-  (servo.get-option product
-                    "Общие характеристики"
-                    "Производитель"))
+  (get-option product
+              "Общие характеристики"
+              "Производитель"))
 
 (defun servo.find-relative-product-list (product &optional (coef 2))
   "Returns list of products from same group with similar vendor"
   (when (parent product)
-    (let* ((vendor (servo.get-product-vendor product))
+    (let* ((vendor (vendor product))
            (diff-list
             (remove-if #'(lambda (v) (or (equal 0 (siteprice (cdr v)))
                                          (not (active (cdr v)))))
                        (mapcar #'(lambda (a)
                                    (let ((diff
-                                          (if (equal (servo.get-product-vendor a) vendor)
+                                          (if (equal (vendor a) vendor)
                                               1
                                               coef)))
                                      (cons (* diff (servo.diff-price product a))

@@ -6,6 +6,24 @@
 
 (setf *default-render-method* (make-instance 'eshop-render))
 
+(defun render.breadcrumbs (in &optional out)
+  "Processing parents until nil, creating breadcrumbs"
+  (if in
+      (progn
+        (if (productp in)
+            (push (list :key (articul in) :val (name-seo in)) out)
+            (push (list :key (key in) :val (name in)) out))
+        (render.breadcrumbs (parent in) out))
+      ;; else -  end of recursion
+      (list :breadcrumbelts (butlast out)
+            :breadcrumbtail (car (last out)))))
+
+(defun menu-sort (a b)
+  "Function for sorting groups by order field"
+  (when (and (order a) (order b))
+    (< (order a)
+       (order b))))
+
 ;;TODO временно убрана проверка на пустые группы, тк это поле невалидно
 (defun render.menu (&optional current-object)
   "Creating left menu"
@@ -75,7 +93,7 @@
 (defmethod render.get-title ((object group) &optional (parameters (request-get-plist)))
   (let ((name (name object))
         (vendor (vendor-transform-from-alias (getf parameters :vendor))))
-    (string-convertion-for-title
+    (string-titlecase
      (if vendor
          (format nil "~a ~a - купить ~a ~a по низкой цене, продажа ~a ~a с доставкой и гарантией в ЦиFры 320-8080"
                  (sklonenie name 1)
@@ -92,7 +110,7 @@
 (defmethod render.get-description ((object group) &optional (parameters (request-get-plist)))
   (let ((name (name object))
         (vendor (getf parameters :vendor)))
-    (string-convertion-for-title
+    (string-titlecase
      (if vendor
          (format nil "Купить ~a ~a по низкой цене, продажа ~a ~a с доставкой и гарантией в ЦиFры 320-8080"
                  (sklonenie name 2)
@@ -110,7 +128,7 @@
     (default-page
         (soy.catalog:content
          (list :name name
-               :breadcrumbs (soy.catalog:breadcrumbs (breadcrumbs-add-vendor1 (class-core.breadcrumbs object) parameters))
+               :breadcrumbs (soy.catalog:breadcrumbs (breadcrumbs-add-vendor1 (render.breadcrumbs object) parameters))
                :menu (render.menu object)
                :rightblocks (append
                              (render.get-oneclick-filters object showall)
@@ -300,10 +318,7 @@
             :groupd_holiday (groupd.holiday.is-groupd object)
             :firstpic (car pics)
             :promotiontext (concatenate 'string
-                                        (let ((value))
-                                          (with-option1 object "Secret" "Продающий текст"
-                                                        (setf value (getf option :value)))
-                                          value)
+                                        (get-option object "Secret" "Продающий текст")
                                         " "
                                         (if (zerop (yml.get-product-delivery-price1 object))
                                             " Акция: доставим бесплатно!"
@@ -374,23 +389,16 @@
 
 
 
-(defmethod render.get-keyoptions ((object product))
-  (let ((parent (parent object)))
+(defun render.get-keyoptions (product)
+  (declare (product product))
+  (let ((parent (parent product)))
     (when parent
       (mapcar #'(lambda (pair)
-                  (let ((key-optgroup (getf pair :optgroup))
-                        (key-optname  (getf pair :optname))
-                        (key-alias  (getf pair :showname))
-                        (key-units  (getf pair :units))
-                        (optvalue))
-                    (mapcar #'(lambda (optgroup)
-                                (when (string= (getf optgroup :name) key-optgroup)
-                                  (let ((options (getf optgroup :options)))
-                                    (mapcar #'(lambda (option)
-                                                (if (string= (getf option :name) key-optname)
-                                                    (setf optvalue (getf option :value))))
-                                            options))))
-                            (optgroups object))
+                  (let* ((key-optgroup (getf pair :optgroup))
+                         (key-optname  (getf pair :optname))
+                         (key-alias  (getf pair :showname))
+                         (key-units  (getf pair :units))
+                         (optvalue (get-option product key-optgroup key-optname)))
                     (list :optgroup key-optgroup
                           :optname (if (servo.valid-string-p key-alias)
                                        key-alias
@@ -406,17 +414,12 @@
     (setf temp-rs1 (get-randoms-from-list
                     ;; список активных товаров той же группы и того же производителя
                     ;; кроме его самого
-                    (let* ((base-vendor))
-                      (with-option1 object "Общие характеристики" "Производитель"
-                                    (setf base-vendor (getf option :value)))
+                    (let ((base-vendor (vendor object)))
                       (remove-if-not
                        #'(lambda (x)
                            (and (not (equal x object))
                                 (active x)
-                                (let ((vendor))
-                                  (with-option1 x "Общие характеристики" "Производитель"
-                                                (setf vendor (getf option :value)))
-                                  (equal vendor base-vendor))))
+                                (equal (vendor object) base-vendor)))
                        (storage.get-filtered-products (parent object))))
                     2))
     ;;4 случайных товара из списка
@@ -444,7 +447,7 @@
          (product-view)
          (group (parent object)))
     (setf product-view (list :menu (render.menu object)
-                             :breadcrumbs (soy.product:breadcrumbs (class-core.breadcrumbs object))
+                             :breadcrumbs (soy.product:breadcrumbs (render.breadcrumbs object))
                              :articul (articul object)
                              :name (name-seo object)
                              :siteprice (siteprice object)
@@ -471,10 +474,7 @@
                              :firstpic (when pics (car pics))
                              :optlist (render.render-optgroups (optgroups object))
                              :slogan (concatenate 'string
-                                                  (let ((value))
-                                                    (with-option1 object "Secret" "Продающий текст"
-                                                                  (setf value (getf option :value)))
-                                                    value)
+                                                  (get-option object "Secret" "Продающий текст")
                                                   " "
                                                   (if (zerop (yml.get-product-delivery-price1 object))
                                                       " Акция: доставим бесплатно!"
@@ -505,8 +505,7 @@
                                                                         (soy.catalog:product
                                                                          (render.view prod)))
                                                                     (filters.limit-end (servo.find-relative-product-list object) 4))))
-                             :seotextflag (and (not (null (seo-text object)))
-                                               (string/= (seo-text object) ""))
+                             :seotextflag (servo.valid-string-p (seo-text object))
                              :predzakaz (preorder object)
                              :addproductcart (if (preorder object)
                                                  (soy.buttons:add-predzakaz (list :articul (articul object)))
@@ -523,7 +522,7 @@
         :keywords (render.get-keywords object nil)
         :description (format nil "купить ~a в ЦиFры 320-8080 по лучшей цене с доставкой по Санкт-Петербургу"
                              (name-seo object))
-        :title (string-convertion-for-title
+        :title (string-titlecase
                 (format nil "~a купить в ЦиFры - цена, фотография и описание, продажа ~a с гарантией и доставкой в ЦиFры 320-8080"
                         (name-seo object)
                         (name-seo object))))))
@@ -595,7 +594,7 @@
       (default-page
           (soy.catalog:content
            (list :name (name object)
-                 :breadcrumbs (soy.catalog:breadcrumbs (class-core.breadcrumbs object))
+                 :breadcrumbs (soy.catalog:breadcrumbs (render.breadcrumbs object))
                  :menu (render.menu object)
                  :rightblocks (append
                                (render.get-oneclick-filters (parent object)
@@ -620,7 +619,7 @@
                        (grname-1 (sklonenie grname 1))
                        (grname-2 (sklonenie grname 2))
                        (grname-3 (sklonenie grname 3)))
-                   (string-convertion-for-title
+                   (string-titlecase
                     (if vendor
                         (format nil "~a ~a ~a - купить ~a ~a ~a по низкой цене, продажа ~a ~a ~a с доставкой и гарантией в ЦиFры 320-8080"
                                 grname-1

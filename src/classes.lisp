@@ -45,7 +45,7 @@
   (:name filters             :initform nil                             :disabled t     :type string                    :serialize nil)
   (:name fullfilter          :initform nil                             :disabled t     :type string                    :serialize nil)
   (:name raw-fullfilter      :initform nil                             :disabled nil   :type textedit-raw              :serialize t)
-  (:name vendors             :initform (make-hash-table :test #'equal) :disabled t     :type textedit-hashtable        :serialize nil)
+  (:name vendors             :initform (make-hash-table :test #'equal) :disabled t     :type string #||hash-table||#   :serialize nil)
   (:name seo-text            :initform nil                             :disabled nil   :type textedit                  :serialize t)
   (:name upsale-links        :initform nil                             :disabled nil   :type group-list                :serialize t)
   (:name keyoptions          :initform nil                             :disabled nil   :type keyoptions                :serialize t)
@@ -75,3 +75,54 @@
   ((name              :initarg :name            :initform nil       :accessor name)
    (base              :initarg :base            :initform nil       :accessor base)
    (advanced          :initarg :advanced        :initform nil       :accessor advanced)))
+
+
+
+;; TODO: rewrite options store mechanism (with using string literal -> id convertion)
+(defmacro with-option1 (product optgroup-name option-name body)
+  `(mapcar #'(lambda (optgroup)
+               (when (string= (getf optgroup :name) ,optgroup-name)
+                 (let ((options (getf optgroup :options)))
+                   (mapcar #'(lambda (option)
+                               (if (string= (getf option :name) ,option-name)
+                                   ,body))
+                           options))))
+           (optgroups ,product)))
+
+;; Beware of names! (dumb-written macro with-option1)
+(defun get-option (product opgroup optname)
+  (declare (product product) (string opgroup optname))
+  (let (res)
+    (with-option1 product
+      opgroup optname
+      (setf res (getf option :value)))
+    res))
+
+;; TODO: handle case when no option found
+(defun set-option (product opgroup optname value)
+  (declare (product product) (string opgroup optname))
+  (with-option1 product
+    opgroup optname
+    (setf (getf option :value) value)))
+
+(defun price (product)
+  (declare (product product))
+  (+ (siteprice product) (delta-price product)))
+
+(defun classes.has-vendor-seo-text (group vendor-key)
+  "Chech whether there is vendor's seo-text for given group"
+  (and group (servo.valid-string-p vendor-key)
+       (let ((vendor-obj (gethash (string-downcase vendor-key) (vendors group))))
+         (and vendor-obj (gethash (key group) (seo-texts vendor-obj))))
+       t))
+
+(defun classes.get-group-seo-text (group &optional vendor-key)
+  "If vendor passed, try to return corresponding seo-text for group,
+if there is not one, or no vendor passed, return group's seo-text"
+  (declare (group group))
+  (let ((vendor-object (when (servo.valid-string-p vendor-key)
+                         (gethash (string-downcase vendor-key) (vendors group)))))
+    (aif (and vendor-object (gethash (key group) (seo-texts vendor-object)))
+         it             ; if condition non-nil, it is required seo-text
+         ;; else
+         (seo-text group))))

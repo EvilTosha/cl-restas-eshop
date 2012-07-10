@@ -70,4 +70,6 @@
     (eshop::report.create-marketing-filters)
     (eshop::report.set-salefilter)))
 
-(print (format nil "ESHOP load finished. Time : ~a" (eshop::time.msecs-to-hms (get-internal-real-time))))
+(print (format nil "ESHOP load finished. Time : ~A" (eshop::time.msecs-to-hms (get-internal-real-time))))
+(print "Server info: ")
+(room)

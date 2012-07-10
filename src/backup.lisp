@@ -4,28 +4,31 @@
 
 ;;; Backup functions and macros
 
-(defmacro backup.define-serialize-method (name class-fields)
+(defmacro backup.define-serialize-method (name class-slots)
   "Macros for creating serialize method"
   `(defmethod backup.serialize-entity ((object ,name))
      (format nil "{~{~a~^,~}}"
              (remove-if #'null
                         (list
-                         ,@(mapcar #'(lambda (field)
-                                       `(let* ((field-value (,(getf field :name) object))
-                                               (encoded-value (when field-value
-                                                                (,(intern (string-upcase
-                                                                           (format nil "object-fields.~a-field-serialize" (getf field :type))))
-                                                                 field-value))))
-                                          (when (and field-value
-                                                     (string/= (format nil "~a" field-value) "")
-                                                     (not (equal field-value ,(getf field :initform)))
+                         ,@(mapcar #'(lambda (slot)
+                                       `(let* ((slot-value (,(getf slot :name) object))
+                                               (encoded-value (when slot-value
+                                                                (slots.%encode-to-string
+                                                                 ',(getf slot :type)
+                                                                 slot-value))))
+                                          (when (and slot-value
+                                                     (string/= (format nil "~a" slot-value) "")
+                                                     ;; FIXME: it's not correct to use such getter
+                                                     ;; for initform here
+                                                     (not (equal slot-value ,(getf slot :initform)))
                                                      encoded-value)
                                             (format nil "~a:~a"
-                                                    (encode-json-to-string ',(getf field :name))
-                                                    encoded-value))))
-                                   (remove-if-not #'(lambda (field)
-                                                      (getf field :serialize))
-                                                  class-fields)))))))
+                                                    (encode-json-to-string ',(getf slot :name))
+                                                    (encode-json-to-string encoded-value)))))
+                                   (remove-if-not #'(lambda (slot)
+                                                      (getf slot :serialize))
+                                                  class-slots)))))))
+
 
 (defun backup.serialize-storage-to-file (type filepath)
   "Serialize storage of given type to file."

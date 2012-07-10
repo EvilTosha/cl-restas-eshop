@@ -172,7 +172,7 @@
                           :if-does-not-exist :create
                           :external-format :utf-8)
       (mapcar #'(lambda (data)
-                  (format file "~&~a" (object-fields.string-delete-newlines (sb-ext:octets-to-string data :external-format :cp1251))))
+                  (format file "~&~a" (slots.string-delete-newlines (sb-ext:octets-to-string data :external-format :cp1251))))
               (reverse raws)))))
 
 (defun gateway.store-history (history)
@@ -296,5 +296,5 @@
 
 (defun gateway.store-singles (history)
   (mapcar #'(lambda (v)
-              (gateway.store-single-gateway (object-fields.string-delete-newlines (sb-ext:octets-to-string (third v) :external-format :cp1251)) (time.decode.backup (car v))))
+              (gateway.store-single-gateway (slots.string-delete-newlines (sb-ext:octets-to-string (third v) :external-format :cp1251)) (time.decode.backup (car v))))
           history))

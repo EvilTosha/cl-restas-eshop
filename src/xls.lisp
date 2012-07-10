@@ -142,12 +142,14 @@
                 ;; else
                 (setf (gethash articul *xls.product-table*) file))
             (if (null product)
-                (format nil "warn: product ~a (articul ~a) not found, ignore (file: ~a)" realname articul file)
+                (log5:log-for warning
+                              "product ~a (articul ~a) not found, ignore (file: ~a)"
+                              realname articul file)
                 ;; else
                 (progn
                   (setf (optgroups product) optgroups)
-                  (with-option1 product "Общие характеристики" "Производитель"
-                                (setf (vendor product) (getf option :value)))
+                  (setf (vendor product)
+                        (get-option product "Общие характеристики" "Производитель"))
                   ;; Если есть значимое realname - перезаписать в продукте
                   (when (servo.valid-string-p realname)
                     (setf (name-seo product) realname)))))))

@@ -23,7 +23,7 @@
            (setf name (stripper (name-provider v)))
            (setf name-real (stripper (name-seo v)))
            (with-option1 v "Secret" "Yandex"
-                         (setf name-yml (stripper (getf option :value))))
+                        (setf name-yml (stripper (getf option :value))))
            (setf desc (if (and (not (null (seo-text v)))
                                (not (string= "" (stripper (seo-text v)))))
                           "есть"
@@ -44,9 +44,9 @@
                                 (stripper (name (get-2-lvl-group v)))))
            (setf secret "Нет")
            (with-option1 v "Secret" "Checked"
-                         (setf secret (getf option :value)))
+                        (setf secret (getf option :value)))
            (with-option1 v "Общие характеристики" "Серия"
-                         (setf seria (getf option :value)))
+                        (setf seria (getf option :value)))
            (format stream "~a;~a;~a;\"~a\";\"~a\";\"~a\";~a;~a;~a;~a;~a;\"~a\";\"~a\";\"~a\";~a;~a;~a;~a;\"~a\"~%"
                    id (price v) (siteprice v) name name-real
                    name-yml (yml.yml-show-p v) desc img options active group-name
@@ -88,7 +88,7 @@
                    "yes"
                    "no")
                (length (products v))
-               (length (remove-if-not #'active (products v)))))
+               (count-if #'active (products v))))
    'group))
 
 (defun write-groups-active-product-num (stream)
@@ -169,7 +169,7 @@
                                     "yes"
                                     "no")
                                 (length products)
-                                (length (remove-if-not #'active products)))))
+                                (count-if #'active products))))
                   (storage.get-vendors (storage.get-filtered-products v #'atom)))))
    'group))
 

@@ -12,18 +12,46 @@
                      :accessor ,(getf field :name)))
               slot-list)))
 
+(defmacro class-core.define-serializer (name class-slots)
+  "Macros for creating printing method"
+  `(defmethod serialize-object ((object ,name) stream)
+     (format stream "{~{~a~^,~}}"
+             (remove-if #'null
+                        (list
+                         ,@(mapcar #'(lambda (slot)
+                                       `(let* ((slot-value (,(getf slot :name) object))
+                                               (encoded-value (when slot-value
+                                                                (slots.%encode-to-string
+                                                                 ',(getf slot :type)
+                                                                 slot-value))))
+                                          (when (and slot-value
+                                                     (string/= (format nil "~a" slot-value) "")
+                                                     ;; FIXME: it's not correct to use such getter
+                                                     ;; for initform here
+                                                     (not (equal slot-value ,(getf slot :initform)))
+                                                     encoded-value)
+                                            (format nil "~a:~a"
+                                                    (encode-json-to-string ',(getf slot :name))
+                                                    (encode-json-to-string encoded-value)))))
+                                   (remove-if-not #'(lambda (slot)
+                                                      (getf slot :serialize))
+                                                  class-slots)))))))
+
+(defgeneric class-core.make-fields (object)
+  (:documentation "Method for viewing slots of item by its obejct-field.*-field-view function"))
 
 (defmacro class-core.define-view-method (name slot-list)
   `(defmethod class-core.make-fields ((object ,name))
      (list
       ,@(mapcar #'(lambda (field)
-                    `(,(intern
-                        (format nil "~:@(object-fields.~A-field-view~)"
-                                (getf field :type)))
-                       (,(getf field :name)  object)
-                       ,(format nil "~a" (getf field :name))
-                       ,(getf field :disabled)))
+                    `(slots.%view ',(getf field :type)
+                                  (,(getf field :name) object)
+                                  ,(format nil "~A" (getf field :name))
+                                  ,(getf field :disabled)))
                 slot-list))))
+
+(defgeneric class-core.edit-fields (object post-data-plist)
+  (:documentation "Method for edit slot values of object according to post-data"))
 
 (defmacro class-core.define-edit-method (name slot-list)
   `(defmethod class-core.edit-fields ((object ,name) post-data-plist)
@@ -31,13 +59,11 @@
        ,@(mapcan #'(lambda (field)
                      (unless (getf field :disabled)
                        `((,(getf field :name) object)
-                         (,(intern
-                            (format nil "~:@(object-fields.~A-field-get-data~)"
-                                    (getf field :type)))
-                           (getf post-data-plist
-                                 ,(intern (format nil "~:@(~A~)"
-                                                 (getf field :name))
-                                         :keyword))))))
+                         (slots.%get-data ',(getf field :type)
+                                          (getf post-data-plist
+                                                ,(intern (format nil "~:@(~A~)"
+                                                                 (getf field :name))
+                                                         :keyword))))))
                  slot-list))))
 
 (defmethod class-core.decode (in-string (dummy group-filter))
@@ -64,7 +90,7 @@
                  `(,name
                    (let ((val (cdr (assoc ,name raw))))
                      (if val
-                         val
+                         (slots.%decode-from-string val)
                          ,initform)))))
            slot-list)))
      (defmethod %unserialize-from-file (filepath (dummy ,name) storage)
@@ -84,17 +110,6 @@
                   (when (zerop (mod percent 10))
                     (log5:log-for info-console "Done percent: ~a%" percent)))
                 (setf (gethash (key item) storage) item))))))))
-
-(defun class-core.get-transform-optgroups (item)
-  (declare (product item))
-  ;;преобразуем значение :options в plist (2 уровень)
-  (mapcar #'(lambda (optgroup)
-              (let ((optgroup-plist
-                     (mapcar #'servo.alist-to-plist (getf optgroup :options))))
-                (list :name (getf optgroup :name) :options optgroup-plist)))
-          ;; преобразуем optgroups (1 уровень)
-          (mapcar #'servo.alist-to-plist (optgroups item))))
-
 
 (defun class-core.bind-product-to-group (product group)
   "Bind product to group, and push product to group's children"
@@ -127,15 +142,13 @@ Reload this method if more actions required"
 ;;вызывается после десереализации продукта
 (defmethod %post-unserialize-item ((item product))
   ;; после десериализации в parent лежит список key родительских групп
+  ;; TODO: make checks for existance
   (setf (parents item)
-        (mapcar #'(lambda (parent-key)
-                    (when parent-key
-                      (let ((parent (getobj parent-key 'group)))
-                        ;; if parent group exists, bind that group with product
-                        (when parent
-                          (push item (products parent))
-                          parent))))
-                (parents item)))
+        (keys-to-objects (parents item) :type 'group))
+  ;; проставление ссылок у родителей на данный продукт
+  (mapcar #'(lambda (parent)
+              (push item (products parent)))
+          (parents item))
   ;; проверка цены, если цена в ИМ ноль, а дельта положительная нужно изменить цену
   ;; TODO: вынести эту проверку в отдельный метод (использовать не только на старте)
   (when (and (zerop (siteprice item))
@@ -144,19 +157,11 @@ Reload this method if more actions required"
     (setf (delta-price item) 0))
   ;;active - если имеется в наличии и цена > 0
   (setf (active item) (and (plusp (count-total item)) (plusp (siteprice item))))
-  ;;adding newlines instead of #Newline
-  (setf (seo-text item) (object-fields.string-add-newlines (seo-text item)))
-  ;;преобразуем optgroups из списка alist в список plist
-  (setf (optgroups item) (class-core.get-transform-optgroups item))
   ;; setting product vendor
-  (with-option1 item "Общие характеристики" "Производитель"
-                (setf (vendor item) (getf option :value))))
+  (setf (vendor item) (get-option item "Общие характеристики" "Производитель")))
 
 
 (defmethod %post-unserialize-item ((item group))
-  ;;adding newlines instead of #Newline
-  (when (seo-text item)
-    (setf (seo-text item) (object-fields.string-add-newlines (seo-text item))))
   ;; upsale
   (setf (upsale-links item)
         (mapcar #'(lambda (group-key)
@@ -170,7 +175,7 @@ Reload this method if more actions required"
   (mapcar #'(lambda (parent)
               (push item (groups parent)))
           (parents item))
-  (setf (empty item) (some #'active (products item)))
+  (setf (empty item) (notany #'active (products item)))
   (setf (keyoptions item) (mapcar #'(lambda (pair)
                                       (list :optgroup (cdr (assoc :optgroup pair))
                                             :optname (cdr (assoc :optname pair))
@@ -187,25 +192,18 @@ Reload this method if more actions required"
                 (catalog-keyoptions item)))
   (when (and (raw-fullfilter item)
              (null (fullfilter item)))
-    (setf (raw-fullfilter item) (object-fields.string-add-newlines (raw-fullfilter item)))
     (setf (fullfilter item) (class-core.decode (raw-fullfilter item) (make-instance 'group-filter)))))
 
 (defmethod %post-unserialize-item ((item filter))
-  ;; add newlines instead of #Newline
-  (setf (func-string item) (object-fields.string-add-newlines (func-string item)))
   ;; eval func-string to func
   (setf (func item) (eval (read-from-string (func-string item))))
   ;; после десериализации в parent лежит список key родительских групп
   (setf (parents item)
-        (remove-if #'null
-                   (mapcar #'(lambda (parent-key)
-                               (when parent-key
-                                 (let ((parent (getobj parent-key 'group)))
-                                   ;; if parent (group) exists, bind him with filter
-                                   (when parent
-                                     (push item (filters parent))
-                                     parent))))
-                           (parents item)))))
+        (keys-to-objects (parents item) :type 'group))
+  ;; проставление ссылок у родителей на данную группу
+  (mapcar #'(lambda (parent)
+              (push item (filters parent)))
+          (parents item)))
 
 
 (defmethod %post-unserialize-item ((item vendor))
@@ -214,9 +212,6 @@ Reload this method if more actions required"
   (when (listp (seo-texts item))
     (setf (seo-texts item) (servo.list-to-hashtasble
                             (copy-list (seo-texts item)))))
-  (loop :for k :being :the hash-keys :in (seo-texts item)
-     :do (setf (gethash k (seo-texts item))
-               (object-fields.string-add-newlines (gethash k (seo-texts item)))))
   ;; make pointers to vendor in group's hashtable of vendors
   (let ((vendor-key (key item)))
     (maphash #'(lambda (k v)
@@ -227,7 +222,7 @@ Reload this method if more actions required"
 
 (defmethod %post-unserialize ((dummy vendor))
   "Do post-unserialize actions with vendor storage.
-Reloaded sandard method %post-unserialize"
+Reloaded standard method %post-unserialize"
   (let ((storage (get-storage 'vendor)))
     (maphash #'(lambda (k v)
                  (declare (ignore k))
@@ -287,9 +282,9 @@ such as pointer to storage, serialize flag, etc.")
 
 (defmacro class-core.define-class-checker (name)
   "Macro for defining type-checking functions such as productp, groupp, etc"
-  `(defun ,(intern (format nil "~:@(~Ap~)" name)) (obj)
-     ,(format nil "Checks if the object is of type ~A" name)
-     (typep obj ',name)))
+  `(defun ,(intern (format nil "~:@(~Ap~)" name)) (object)
+     ,(format nil "Return T if OBJECT is a ~A, and NIL otherwise." name)
+     (typep object ',name)))
 
 (defmacro class-core.make-class-and-methods (name slot-list &key (serialize t)
                                              (make-storage t) storage-size)
@@ -320,6 +315,7 @@ such as pointer to storage, serialize flag, etc.")
 If parameter type is given, use this type, otherwise doesnt check types.
 Remove elements from result list corresponding to remove-func"
   ;;; TODO: make as method not only on lists
+  ;;; TODO: allow null type
   (declare (symbol type))
   (let ((key (sequence:canonize-key key)))
     (remove-if remove-func
@@ -327,25 +323,9 @@ Remove elements from result list corresponding to remove-func"
                            (getobj (funcall key key-obj) type default))
                        key-list))))
 
-;; для того чтобы работали фильтры
-(defmethod price ((object product))
-  (+ (siteprice object) (delta-price object)))
-
 (defun parent (item)
   "Returns main parent of item"
   (car (parents item)))
-
-(defun class-core.breadcrumbs (in &optional out)
-  "Processing parents until nil, creating breadcrumbs"
-  (if in
-      (progn
-        (if (productp in)
-            (push (list :key (articul in) :val (name-seo in)) out)
-            (push (list :key (key in) :val (name in)) out))
-        (class-core.breadcrumbs (parent in) out))
-      ;; else -  end of recursion
-      (list :breadcrumbelts (butlast out)
-            :breadcrumbtail (car (last out)))))
 
 (defun class-core.get-root-parent (item)
   (when item
@@ -353,29 +333,3 @@ Remove elements from result list corresponding to remove-func"
       (if (null parent)
           item
           (class-core.get-root-parent parent)))))
-
-
-(defun menu-sort (a b)
-  "Function for sorting groups by order field"
-  (when (and (order a) (order b))
-    (< (order a)
-       (order b))))
-
-
-(defun class-core.has-vendor-seo-text (group vendor-key)
-  "Chech whether there is vendor's seo-text for given group"
-  (and group (servo.valid-string-p vendor-key)
-       (let ((vendor-obj (gethash (string-downcase vendor-key) (vendors group))))
-         (and vendor-obj (gethash (key group) (seo-texts vendor-obj))))
-       t))
-
-(defun class-core.get-group-seo-text (group &optional vendor-key)
-  "If vendor passed, try to return corresponding seo-text for group,
-if there is not one, or no vendor passed, return group's seo-text"
-  (declare (group group))
-  (let ((vendor-object (when (servo.valid-string-p vendor-key)
-                         (gethash (string-downcase vendor-key) (vendors group)))))
-    (aif (and vendor-object (gethash (key group) (seo-texts vendor-object)))
-         it             ; if condition non-nil, it is required seo-text
-         ;; else
-         (seo-text group))))
