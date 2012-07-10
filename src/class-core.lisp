@@ -12,31 +12,6 @@
                      :accessor ,(getf field :name)))
               slot-list)))
 
-(defmacro class-core.define-serializer (name class-slots)
-  "Macros for creating printing method"
-  `(defmethod serialize-object ((object ,name) stream)
-     (format stream "{~{~a~^,~}}"
-             (remove-if #'null
-                        (list
-                         ,@(mapcar #'(lambda (slot)
-                                       `(let* ((slot-value (,(getf slot :name) object))
-                                               (encoded-value (when slot-value
-                                                                (slots.%encode-to-string
-                                                                 ',(getf slot :type)
-                                                                 slot-value))))
-                                          (when (and slot-value
-                                                     (string/= (format nil "~a" slot-value) "")
-                                                     ;; FIXME: it's not correct to use such getter
-                                                     ;; for initform here
-                                                     (not (equal slot-value ,(getf slot :initform)))
-                                                     encoded-value)
-                                            (format nil "~a:~a"
-                                                    (encode-json-to-string ',(getf slot :name))
-                                                    (encode-json-to-string encoded-value)))))
-                                   (remove-if-not #'(lambda (slot)
-                                                      (getf slot :serialize))
-                                                  class-slots)))))))
-
 (defgeneric class-core.make-fields (object)
   (:documentation "Method for viewing slots of item by its obejct-field.*-field-view function"))
 
@@ -90,7 +65,7 @@
                  `(,name
                    (let ((val (cdr (assoc ,name raw))))
                      (if val
-                         (slots.%decode-from-string val)
+                         (slots.%decode-from-string ',(getf field :type) val)
                          ,initform)))))
            slot-list)))
      (defmethod %unserialize-from-file (filepath (dummy ,name) storage)
@@ -302,13 +277,13 @@ such as pointer to storage, serialize flag, etc.")
      (class-core.define-view-method ,name ,slot-list)
      (class-core.define-edit-method ,name ,slot-list)
      ,@(when make-storage
-         `(;; set :storage property if class as pointer to real storage
-           (setf (getf (gethash ',name *classes*) :storage)
-                 (make-hash-table :test #'equal ,@(awhen storage-size
-                                                         (list :size it))))
-           (class-core.define-unserialize-method ,name ,slot-list)
-           ,@(when serialize
-               `((backup.define-serialize-method ,name ,slot-list)))))))
+             `(;; set :storage property if class as pointer to real storage
+               (setf (getf (gethash ',name *classes*) :storage)
+                     (make-hash-table :test #'equal ,@(awhen storage-size
+                                                             (list :size it))))
+               (class-core.define-unserialize-method ,name ,slot-list)
+               ,@(when serialize
+                       `((backup.define-serialize-method ,name ,slot-list)))))))
 
 (defun keys-to-objects (key-list &key type (remove-func #'null) default key)
   "Returns list of objects corresponding to given list of keys.
