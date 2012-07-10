@@ -134,6 +134,31 @@ Type: ~A" type))
   (declare (string string))
   (slots.%decode-from-string 'textedit string))
 
+;;textedit-hashtable, string-string hashtable
+(defmethod slots.%view ((type (eql 'textedit-hashtable)) value name disabled)
+  (object-fields.string-field-view value name disabled))
+
+(defmethod slots.%get-data ((type (eql 'textedit-hashtable)) string)
+  (declare (string string))
+  (object-fields.string-field-get-data string))
+
+(defmethod slots.%encode-to-string ((type (eql 'textedit-hashtable)) hashtable)
+  (let ((res-list))
+    (maphash #'(lambda (vendor seo-text)
+                 (push
+                  (format nil "~A,~A"
+                          (encode-json-to-string vendor)
+                          (encode-json-to-string
+                           (slots.%encode-to-string 'textedit seo-text)))
+                  res-list))
+             hashtable)
+    (when res-list
+      (format nil "[~{~a~^,~}]" res-list))))
+
+(defmethod slots.%decode-from-string ((type (eql 'textedit-hashtable)) string)
+  (declare (string string))
+  (servo.list-to-hashtasble (decode-json-from-string string)))
+
 ;;time, человекопонятное время
 (defmethod slots.%view ((type (eql 'time)) value name disabled)
   (slots.%view 'string (time.decode-date-time value) name disabled))

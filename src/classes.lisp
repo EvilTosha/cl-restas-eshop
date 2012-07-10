@@ -105,8 +105,7 @@
     opgroup optname
     (setf (getf option :value) value)))
 
-(defun price (product)
-  (declare (product product))
+(defmethod price ((product product))
   (+ (siteprice product) (delta-price product)))
 
 (defun classes.has-vendor-seo-text (group vendor-key)

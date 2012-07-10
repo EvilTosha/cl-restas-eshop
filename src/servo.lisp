@@ -112,10 +112,9 @@
   (let ((number 0)
         (result-flag nil)
         (request-flag t)
-        (value-x nil))
-    (with-option1 product
-      option-group-name option-name
-      (setf value-x (getf option :value)))
+        (value-x
+         (get-option product
+                     option-group-name option-name)))
     (mapcar #'(lambda (option-value)
                 (let ((value-p (getf request-plist
                                      (intern (string-upcase
