@@ -173,7 +173,9 @@ Reload this method if more actions required"
   (setf (empty item) (some #'active (products item)))
   (setf (keyoptions item) (mapcar #'(lambda (pair)
                                       (list :optgroup (cdr (assoc :optgroup pair))
-                                            :optname (cdr (assoc :optname pair))))
+                                            :optname (cdr (assoc :optname pair))
+                                            :showname (cdr (assoc :showname item))
+                                            :units (cdr (assoc :units item))))
                                   (keyoptions item)))
   ;;catalog-keyoptions
   (setf (catalog-keyoptions item)
