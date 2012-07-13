@@ -274,7 +274,11 @@
                                         (if (zerop (yml.get-product-delivery-price1 object))
                                             " Акция: доставим бесплатно!"
                                             (if (= 100 (yml.get-product-delivery-price1 object))
-                                                " Акция: только в апреле доставим со скидкой 70%.")))
+                                                " Акция: скидка на доставку 70%. Закажи сейчас!"
+                                                (if (= 200 (yml.get-product-delivery-price1 object))
+                                                    " Акция: скидка на доставку 30%. Закажи сейчас!"
+                                                    (if (= 400 (yml.get-product-delivery-price1 object))
+                                                        " Акция: скидка на доставку 20. Закажи сейчас!")))))
             :keyopts (render.get-catalog-keyoptions object)
             :oneclickbutton  (unless (preorder object)
                                (soy.buttons:add-one-click (list :articul (articul object))))
@@ -447,7 +451,11 @@
                                                   (if (zerop (yml.get-product-delivery-price1 object))
                                                       " Акция: доставим бесплатно!"
                                                       (if (= 100 (yml.get-product-delivery-price1 object))
-                                                          " Акция: только в апреле доставим со скидкой 70%.")))
+                                                          " Акция: скидка на доставку 70%. Закажи сейчас!"
+                                                          (if (= 200 (yml.get-product-delivery-price1 object))
+                                                              " Акция: скидка на доставку 30%. Закажи сейчас!"
+                                                              (if (= 400 (yml.get-product-delivery-price1 object))
+                                                                  " Акция: скидка на доставку 20%. Закажи сейчас!")))))
                              :others (soy.product:others
                                       (list :others (mapcar #'(lambda (x)
                                                                 (if (productp x)
