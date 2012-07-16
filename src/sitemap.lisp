@@ -25,14 +25,14 @@
 (defun sitemap.get-groups-routes ()
   (collect-storage
    'group :func #'sitemap.get-item-route
-   :when-func #'(lambda (group)
+   :when-fn #'(lambda (group)
                   (and group (active group)
                        (not (empty group))))))
 
 (defun sitemap.get-products-routes ()
   (collect-storage
    'product :func #'sitemap.get-item-route
-   :when-func #'active))
+   :when-fn #'active))
 
 (defun sitemap.get-filters-routes ()
   (collect-storage 'filter :func #'sitemap.get-item-route))

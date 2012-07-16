@@ -157,7 +157,8 @@ Reload this method if more actions required"
 
 (defmethod %post-unserialize-item ((item filter))
   ;; eval func-string to func
-  (setf (func item) (eval (read-from-string (func-string item))))
+  (when (servo.valid-string-p (func-string item))
+    (setf (func item) (eval (read-from-string (func-string item)))))
   ;; после десериализации в parent лежит список key родительских групп
   (setf (parents item)
         (keys-to-objects (parents item) :type 'group))

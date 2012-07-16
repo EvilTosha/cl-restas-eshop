@@ -85,12 +85,12 @@ Note: processed element can't be changed during processing"
   (declare (function func) (symbol type))
   (maphash func (get-storage type)))
 
-(defun collect-storage (type &key (func #'identity) (when-func #'identity))
-  "Process storage of given type checking via when-func, applying func to
+(defun collect-storage (type &key (func #'identity) (when-fn #'identity))
+  "Process storage of given type checking via when-fn, applying func to
 each element and collecting its results"
   (loop
      :for elt :being :the hash-values :in (get-storage type)
-     :when (funcall when-func elt)
+     :when (funcall when-fn elt)
      :collect (funcall func elt)))
 
 (defun count-storage (type &key (when-fn #'identity when-fn-supplied-p))
@@ -107,7 +107,7 @@ each element and collecting its results"
 (defun get-root-groups ()
   "Return list of root groups sorted by order"
   (stable-sort
-   (collect-storage 'group :when-func (complement #'parents))
+   (collect-storage 'group :when-fn (complement #'parents))
    #'menu-sort))
 
 (defun storage.alphabet-group-sorter (a b)

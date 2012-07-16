@@ -244,7 +244,7 @@
               products)))
   (let ((unparented-products (collect-storage
                               'product
-                              :when-func
+                              :when-fn
                               #'(lambda (item)
                                   (and (null (parent item))
                                        (not (gethash (key item) *special-products*)))))))

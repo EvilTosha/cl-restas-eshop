@@ -164,7 +164,7 @@
                           'product
                           ;;продукт должен находиться в группе маркированной как ymlshow
                           ;;быть активным и иметь не нулевую цену
-                          :when-func #'yml.yml-show-p
+                          :when-fn #'yml.yml-show-p
                           :func #'(lambda (product)
                                     (soy.yml:offer (list :articul (articul product)
                                                          :available (active product) ; если не active, то прошел available-for-order
@@ -210,7 +210,7 @@
                           'product
                           ;;продукт должен находиться в группе маркированной как ymlshow
                           ;;быть активным и иметь не нулевую цену
-                          :when-func #'yml.yml-show-p
+                          :when-fn #'yml.yml-show-p
                           :func #'(lambda (product)
                                     (soy.yml:offer (list :articul (articul product)
                                                          :price (siteprice product)
@@ -256,7 +256,7 @@
    'product
    ;;продукт должен находиться в группе маркированной как ymlshow
    ;;быть активным и иметь не нулевую цену
-   :when-func #'yml.yml-show-p
+   :when-fn #'yml.yml-show-p
    :func #'(lambda (product)
              (soy.yml:offer (list :articul (articul product)
                                   :deliveryprice (yml.get-product-delivery-price1 product)
@@ -329,7 +329,7 @@
   (declare ((or group null) group))
   (let ((products (if group
                       (storage.get-recursive-products group (complement #'active))
-                      (collect-storage 'product :when-func (complement #'active)))))
+                      (collect-storage 'product :when-fn (complement #'active)))))
     (count-if #'yml.available-for-order-p products)))
 
 (defun yml.pretty-count-products-for-order ()
@@ -341,7 +341,7 @@
                               (yml.count-products-for-order gr)))
                   (sort
                    (collect-storage 'group
-                                    :when-func
+                                    :when-fn
                                     #'(lambda (gr)
                                         (plusp (yml.count-products-for-order gr))))
                    #'< :key #'yml.count-products-for-order))))
