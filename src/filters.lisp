@@ -2,18 +2,21 @@
 
 (in-package #:eshop)
 
-(class-core.make-class-and-methods
- filter
- ((:name key             :initform ""         :disabled t       :type string        :serialize t)
-  ;; filtering function for applying to object/slot/etc, func's signature should be (foo object-list values-plist)
-  (:name func            :initform nil        :disabled t       :type undefined     :serialize nil)
-  (:name func-string     :initform ""         :disabled nil     :type string        :serialize t)
-  ;; should be plist of strings (in fact it could be not only string, but any object that has
-  ;; read/write methods)
-  (:name data            :initform nil        :disabled nil     :type string-plist    :serialize t)
-  ;; value, that will be used when no initial list/... supplied. Can be collection of objects,
-  ;; another filter (will use its default-set) or type (will use storage of that type as collection))
-  (:name default-set     :initform nil        :disabled nil     :type default-set   :serialize t)))
+;; (class-core.make-class-and-methods
+;;  filter
+;;  ((:name key          :initform ""                                     :disabled t    :type string        :serialize t)
+;;   ;; filtering function for applying to object/slot/etc, func's signature should be (foo object-list values-plist)
+;;   (:name func         :initform nil                                    :disabled t    :type undefined     :serialize nil)
+;;   (:name func-string  :initform ""                                     :disabled nil  :type string        :serialize t)
+;;   ;; should be plist of strings (in fact it could be not only string, but any object that has
+;;   ;; read/write methods)
+;;   (:name data         :initform nil                                    :disabled nil  :type string-plist  :serialize t)
+;;   ;; type of objects, to which filter can be applied to;
+;;   ;; should be correct type that has own storage
+;;   (:name objtype      :initform (error "Objtype should be specified")  :disabled nil  :type symbol        :serialize t)
+;;   ;; value, that will be used when no initial list/... supplied. Can be collection of objects,
+;;   ;; another filter (will use its own default-set) or type (will use storage of that type as collection))
+;;   (:name default-set  :initform nil                                    :disabled nil  :type default-set   :serialize t)))
 
 
 (defun filters.limit-start (items start)

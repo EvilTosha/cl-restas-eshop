@@ -574,18 +574,23 @@
                 (closure-template:compile-template :common-lisp-backend pathname)))
           tmpl-name))
 
+(defun anything-to-keyword (anything)
+  "Convert anything that has print method to keyword; Case insensitive"
+  (intern (format nil "~:@(~A~)" anything) :keyword))
 
-(defun servo.anything-to-keyword (item)
-  (intern (format nil "~:@(~A~)" item) :keyword))
+(defun anything-to-symbol (anything)
+  "Convert anything that has print method to symbol; Case insensitive"
+  (intern (format nil "~:@(~A~)" anything)))
 
 (defun servo.alist-to-plist (alist)
-  (if (not (consp alist))
-      alist
+  (if (not (listp alist))
+      (error "Attempt to convert something that isn't alist to plist")
       ;;else
       (loop
          :for (key . value)
          :in alist
-         :nconc (list (servo.anything-to-keyword key) value))))
+         :collect (anything-to-keyword key)
+         :collect value)))
 
 
 (defun servo.plist-to-unique (plist)
@@ -710,4 +715,3 @@
 (defmacro case-test (test-func keyform &body cases)
   "Works like usual case, but accepts function for test"
   (sb-impl::case-body 'case-body keyform cases t test-func nil nil nil))
-

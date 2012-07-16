@@ -37,6 +37,8 @@ Bad:
 result)
 ))
 
+- Don't start any symbol or name with digit. Such symbols have problems with convertion to string and vise-versa
+
 - One-line format strings should start with ~& and end with ~%; Example: (format nil "~&Test line~%")
 
 - Write format directives in uppercase for make them stand out from lowercase text surrounding. Example: (format nil "~&Number ~D~%" num)

@@ -296,15 +296,15 @@
     (loop
        :for cnt :from 0
        :while (getf post-data
-                    (intern (string-upcase (format nil "keyoption-og-~a" cnt)) :keyword))
+                    (anything-to-keyword (format nil "keyoption-og-~a" cnt)))
        :do (let ((optgroup (getf post-data
-                                 (intern (string-upcase (format nil "keyoption-og-~a" cnt)) :keyword)))
+                                 (anything-to-keyword (format nil "keyoption-og-~a" cnt))))
                  (optname (getf post-data
-                                (intern (string-upcase (format nil "keyoption-on-~a" cnt)) :keyword)))
+                                (anything-to-keyword (format nil "keyoption-on-~a" cnt))))
                  (showname (getf post-data
-                                 (intern (string-upcase (format nil "keyoption-sn-~a" cnt)) :keyword)))
+                                 (anything-to-keyword (format nil "keyoption-sn-~a" cnt))))
                  (units (getf post-data
-                              (intern (string-upcase (format nil "keyoption-un-~a" cnt)) :keyword))))
+                              (anything-to-keyword (format nil "keyoption-un-~a" cnt)))))
              (when (and (string/= "" optgroup) (string/= "" optname))
                (push (list :optgroup optgroup :optname optname :showname showname :units units) keyoptions))))
     (setf result (append result (list :keyoptions (nreverse keyoptions))))
@@ -312,15 +312,15 @@
     (loop
        :for cnt :from 0
        :while (getf post-data
-                    (intern (string-upcase (format nil "catalog-keyoption-og-~a" cnt)) :keyword))
+                    (anything-to-keyword (format nil "catalog-keyoption-og-~a" cnt)))
        :do (let ((optgroup (getf post-data
-                                 (intern (string-upcase (format nil "catalog-keyoption-og-~a" cnt)) :keyword)))
+                                 (anything-to-keyword (format nil "catalog-keyoption-og-~a" cnt))))
                  (optname (getf post-data
-                                (intern (string-upcase (format nil "catalog-keyoption-on-~a" cnt)) :keyword)))
+                                (anything-to-keyword (format nil "catalog-keyoption-on-~a" cnt))))
                  (showname (getf post-data
-                                 (intern (string-upcase (format nil "catalog-keyoption-sn-~a" cnt)) :keyword)))
+                                 (anything-to-keyword (format nil "catalog-keyoption-sn-~a" cnt))))
                  (units (getf post-data
-                              (intern (string-upcase (format nil "catalog-keyoption-un-~a" cnt)) :keyword))))
+                              (anything-to-keyword (format nil "catalog-keyoption-un-~a" cnt)))))
              (when (and (string/= "" optgroup) (string/= "" optname) (string/= "" showname))
                (push (list :optgroup optgroup :optname optname :showname showname :units units) catalog-keyoptions))))
     (setf result (append result (list :catalog-keyoptions (nreverse catalog-keyoptions))))

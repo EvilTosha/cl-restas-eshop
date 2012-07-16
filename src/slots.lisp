@@ -56,6 +56,11 @@ add it to all parents' lists"
   (:documentation "Decoding slot value from string (not json string).
 Usually used for unserializing from backup entry"))
 
+;;; Standard error methods, used when no more specific method defined
+(defmethod slots.%get-data (type post-data-string)
+  (declare (string post-data-string))
+  (error "Attempt to get data for slot that couldn't be represented in admin-table"))
+
 (defmethod slots.%encode-to-string (type value)
   (declare (ignore value))
   (error "Attempt to encode to string value of type, that hasn't string represenatation.
@@ -66,7 +71,7 @@ Type: ~A" type))
   (error "Attempt to decode from string slot, that hasn't string reperesentation.
 Type: ~A" type))
 
-;;string - универсальный тип, так же используется как undefined
+;;string - строковый тип
 (defmethod slots.%view ((type (eql 'string)) value name disabled)
   (soy.class_forms:string-field
    (list :name name :disabled disabled :value value)))
@@ -81,6 +86,16 @@ Type: ~A" type))
 (defmethod slots.%decode-from-string ((type (eql 'string)) string)
   (declare (string string))
   string)
+
+
+;; undefined - used for types that couldn't be edited from admin-table and
+;; dont have string representation
+(defmethod slots.%view ((type (eql 'undefined)) value name disabled)
+  ;; always disabled
+  (if disabled
+      (slots.%view 'string value name t)
+      ;; else
+      (error "Slot of type undefined, but isn't disabled. Name: ~A" name)))
 
 ;;int
 (defmethod slots.%view ((type (eql 'int)) value name disabled)
@@ -98,6 +113,44 @@ Type: ~A" type))
 (defmethod slots.%decode-from-string ((type (eql 'int)) string)
   (declare (string string))
   (parse-integer string))
+
+;; string-plist, property list of strings
+;; Note: all digits in keys should be separated by hyphens:
+;; (list :foo1 "bar" :foo2bar "baz") - Bad
+;; (list :foo-1 "bar" :foo-2-bar "baz") - Good
+(defmethod slots.%view ((type (eql 'string-plist)) value name disabled)
+  ;; TODO: write appropriate realization
+  (slots.%view 'undefined value name t))
+
+(defmethod slots.%get-data ((type (eql 'string-plist)) post-data-string)
+  (declare (string post-data-string))
+  ;; TODO: write appropriate realization
+  post-data-string)
+
+(defmethod slots.%encode-to-string ((type (eql 'string-plist)) value)
+  (encode-json-plist-to-string value))
+
+(defmethod slots.%decode-from-string ((type (eql 'string-plist)) string)
+  (declare (string string))
+  (servo.alist-to-plist
+   (decode-json-from-string string)))
+
+;; symbol, standard symbol
+(defmethod slots.%view ((type (eql 'symbol)) value name disabled)
+  (slots.%view 'string (string value) name disabled))
+
+(defmethod slots.%get-value ((type (eql 'symbol)) post-data-string)
+  (declare (string post-data-string))
+  (anything-to-symbol (slots.%get-data 'string post-data-string)))
+
+(defmethod slots.%encode-to-string ((type (eql 'symbol)) value)
+  ;; doesn't work with symbols starting with digits
+  (declare (symbol value))
+  (string value))
+
+(defmethod slots.%decode-from-string ((type (eql 'symbol)) string)
+  (declare (string string))
+  (anything-to-symbol string))
 
 ;;textedit, онлайновый WYSIWYG редактор текста
 (defmethod slots.%view ((type (eql 'textedit)) value name disabled)

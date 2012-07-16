@@ -7,7 +7,7 @@
   `(defclass ,name ()
      ,(mapcar #'(lambda (field)
                   `(,(getf field :name)
-                     :initarg ,(intern (format nil "~A" (getf field :name)) :keyword)
+                     :initarg ,(anything-to-keyword (getf field :name))
                      :initform ,(getf field :initform)
                      :accessor ,(getf field :name)))
               slot-list)))
@@ -36,9 +36,8 @@
                        `((,(getf field :name) object)
                          (slots.%get-data ',(getf field :type)
                                           (getf post-data-plist
-                                                ,(intern (format nil "~:@(~A~)"
-                                                                 (getf field :name))
-                                                         :keyword))))))
+                                                ,(anything-to-keyword
+                                                  (getf field :name)))))))
                  slot-list))))
 
 (defmethod class-core.decode (in-string (dummy group-filter))
@@ -60,7 +59,7 @@
         ',name
         ,@(mapcan
            #'(lambda (field)
-               (let ((name (intern (format nil "~:@(~A~)" (getf field :name)) :keyword))
+               (let ((name (anything-to-keyword (getf field :name)))
                      (initform (getf field :initform)))
                  `(,name
                    (let ((val (cdr (assoc ,name raw))))
@@ -231,7 +230,7 @@ such as pointer to storage, serialize flag, etc.")
   (getf (gethash type *classes*) :instance))
 
 (defmethod get-instance ((type string))
-  (get-instance (intern (format nil "~:@(~A~)" type))))
+  (get-instance (string-to-symbol type)))
 
 (defun get-last-bakup-pathname (type)
   "Return pathname for file of last backup objects of given type"
