@@ -150,10 +150,9 @@
     ;; отображать разницу
     (when (and (groupd.is-groupd product)
              raw-oldprice
-             (= (delta-price product) 0)
-             (/= oldprice 0))
-        (setf (delta-price product) (- oldprice (siteprice product)))
-        (format t "~&~a:~a | ~a ~a ~a" articul name price oldprice raw-oldprice))
+             (zerop (delta-price product))
+             (plusp oldprice))
+        (setf (delta-price product) (- oldprice (siteprice product))))
     (if raw-count-transit
         (setf (count-transit  product) count-transit))
     ;; проставляем флаг active
