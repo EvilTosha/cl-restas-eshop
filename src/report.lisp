@@ -245,7 +245,7 @@
 
 (defun create-sale-filter (group)
   (edit-marketing-filter
-   group "sale" "Распродажа" #'groupd.is-groupd))
+   group "sale" "Ликвидация склада!" #'groupd.is-groupd))
 
 (defun create-bestprice-filter (group)
   (edit-marketing-filter
@@ -310,7 +310,9 @@
                 "printery"
                 "mfu"
                 "myshki"
-                "klaviatury")))
+                "klaviatury"
+                "holodilniki-i-morozilniki"
+                "stiralnie-mashiny")))
 
 (defun report.convert-name (input-string)
   (string-trim (list #\Space #\Tab #\Newline)
