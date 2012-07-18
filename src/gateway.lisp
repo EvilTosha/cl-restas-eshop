@@ -99,7 +99,7 @@
 
 (defun gateway.process-product1 (articul raw-price raw-siteprice isnew isspec
                                  name realname raw-count-total raw-count-transit
-                                 raw-bonuscount)
+                                 raw-bonuscount raw-oldprice)
   (declare (ignore isnew isspec))
   (let* ((old-product (getobj (format nil "~a" articul) 'product))
          (product (aif old-product
@@ -107,6 +107,7 @@
                        (make-instance 'product :articul articul)))
          (price (ceiling (arnesi:parse-float raw-price)))
          (siteprice (ceiling (arnesi:parse-float raw-siteprice)))
+         (oldprice (ceiling (arnesi:parse-float raw-oldprice)))
          (count-total (ceiling (arnesi:parse-float raw-count-total)))
          (count-transit (ceiling (arnesi:parse-float raw-count-transit)))
          (bonuscount (ceiling (arnesi:parse-float raw-bonuscount))))
@@ -144,6 +145,15 @@
                  (equal (count-total product)
                         (count-transit product)))
             0))
+    ;; старая цена для аукционных товаров
+    ;; когда розничная цена и цена сайта совпадают, но необходимо
+    ;; отображать разницу
+    (when (and (groupd.is-groupd product)
+             raw-oldprice
+             (= (delta-price product) 0)
+             (/= oldprice 0))
+        (setf (delta-price product) (- oldprice (siteprice product)))
+        (format t "~&~a:~a | ~a ~a ~a" articul name price oldprice raw-oldprice))
     (if raw-count-transit
         (setf (count-transit  product) count-transit))
     ;; проставляем флаг active
@@ -193,10 +203,11 @@
              (isspec    (cdr (assoc :isspec elt)))
              (name      (cdr (assoc :name elt)))
              (realname  (cdr (assoc :realname elt)))
+             (oldprice (cdr (assoc :price--old elt)))
              (count-total    (cdr (assoc :count--total elt)))
              (count-transit  (cdr (assoc :count--transit elt))))
          ;; (log5:log-for info-console "~a" elt)
-         (gateway.process-product1 articul price siteprice isnew isspec name realname count-total count-transit bonuscount)))))
+         (gateway.process-product1 articul price siteprice isnew isspec name realname count-total count-transit bonuscount oldprice)))))
 
 (defun gateway.get-pathname-fulls (&optional (timestamp (get-universal-time)))
   "список файлов выгрузок до определенной даты"
