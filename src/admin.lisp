@@ -107,14 +107,14 @@
         ;;else
         (if post-data
             (progn
-              (cond
+              (string-case type
                 ;; TODO: fix for all classes
-                ((equal "product" type)
+                ("product"
                  (setf item (make-instance 'product
                                            :articul (parse-integer key))))
-                ((equal "group" type)
+                ("group"
                  (setf item (make-instance 'group)))
-                ((equal "filter" type)
+                ("filter"
                  (setf item (make-instance 'filter)))
                 (t "Unknown type"))
               (setf (key item) key)
@@ -178,8 +178,8 @@
 (defun admin.do-action (action)
   (handler-case
       (if (not (null action))
-          (cond
-            ((string= "do-gc" action)
+          (string-case action
+            ("do-gc"
              (progn
                (sb-ext:gc :full t)
                (regex-replace-all
@@ -188,43 +188,43 @@
                     (*standard-output*)
                   (room))
                 "<br>")))
-            ((string= "report-products" action)
+            ("report-products"
              (progn
                (let ((name (format nil "reports/products-report-~a.csv" (time.encode.backup-filename))))
                  (create-report name #'write-products-report)
                  "DO PRODUCTS REPORT")))
-            ((string= "proccess-pictures" action)
+            ("proccess-pictures"
              (progn
                (rename-convert-all)
                "DO proccess-pictures"))
-            ((string= "dtd" action)
+            ("dtd"
              (progn
                (dtd)
                "DO DTD"))
-            ((string= "report" action)
+            ("report"
              (progn
                (let ((name (format nil "reports/write-groups-active-product-num-~a.csv" (time.encode.backup-filename))))
                  (create-report name #'write-groups-active-product-num)
                  "DO REPORT")))
-            ((string= "articles-restore" action)
+            ("articles-restore"
              (articles.restore)
              "RESTORE ARTICLES")
-            ((string= "main-page-restore" action)
+            ("main-page-restore"
              (main-page.restore)
              "RESTORE MAIN-PAGE")
-            ((string= "static-pages-restore" action)
+            ("static-pages-restore"
              (static-pages.restore)
              "STATIC PAGES RESTORE")
-            ((string= "groupd-restore" action)
+            ("groupd-restore"
              (groupd.restore)
              "GROUPD RESTORE")
-            ((string= "seo-report" action)
+            ("seo-report"
              (report.do-seo-reports)
              "SEO-REPORT")
-            ((string= "keyoptions-aliases-restore" action)
+            ("keyoptions-aliases-restore"
              (report.do-alias-reports)
              action)
-            ((string= "gateway-restore" action)
+            ("gateway-restore"
              (gateway.restore-history)
              "GATEWAY-RESTORE")
             (t (format nil "DON't know action ~a" action))))

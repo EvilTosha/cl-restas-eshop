@@ -249,6 +249,7 @@
 
 ;; отображение страницы статьи
 (defmethod restas:render-object ((designer eshop-render) (object article))
-  (cond ((equal (ctype object) "static") (articles.show-static object))
-        ((equal (ctype object) "article") (articles.show-article object))
-        ((equal (ctype object) "landscape") (articles.show-landscape object))))
+  (string-case (ctype object)
+    ("static" (articles.show-static object))
+    ("article" (articles.show-article object))
+    ("landscape" (articles.show-landscape object))))

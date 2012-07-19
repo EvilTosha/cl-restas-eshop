@@ -220,9 +220,10 @@
     (if (string= payment "") (setf payment "payment_method-1"))
     ;;Выставляем адрес доставки для филиалов
     (when (string= delivery-type "pickup")
-      (setf addr (cond ((string= pickup "pickup-1") "Левашовский пр., д.12")
-                       ((string= pickup "pickup-2") "Петергоф, ул. Ботаническая, д.18, к.3")
-                       (t "Левашовский пр., д.12")))) ;; по умолчанию главный магазин
+      (setf addr (string-case pickup
+                   ("pickup-1" "Левашовский пр., д.12")
+                   ("pickup-2" "Петергоф, ул. Ботаническая, д.18, к.3")
+                   (t "Левашовский пр., д.12")))) ;; по умолчанию главный магазин
     (if (or (equal discount-cart t)
             (servo.valid-string-p discount-cart))
         (setf ekk discount-cart-number))
@@ -238,9 +239,10 @@
         (bonuscount)) ;; сумма бонусов
     ;; кукисы пользователя
     (mapcar #'(lambda (cookie)
-                (cond ((string= (car cookie) "cart") (setf cart (json:decode-json-from-string (cdr cookie))))
-                      ((string= (car cookie) "user-nc") (setf user (json:decode-json-from-string (cdr cookie))))
-                      (t nil)))
+                (string-case (car cookie)
+                  ("cart" (setf cart (json:decode-json-from-string (cdr cookie))))
+                  ("user-nc" (setf user (json:decode-json-from-string (cdr cookie))))
+                  (t nil)))
             (hunchentoot:cookies-in hunchentoot:*request*))
     ;;если кукисы не пустые
     (when (and (not (null cart))
@@ -275,14 +277,16 @@
                          :order_id order-id
                          :name (report.convert-name (format nil "~a ~a" name family))
                          :family "" ;; Фамилия не передается отдельно
-                         :paytype (cond ((string= payment "payment_method-1") "Наличными")
-                                        ((string= payment "payment_method-2") "Кредитной картой")
-                                        ((string= payment "payment_method-3") "Безналичный расчет")
-                                        ((string= payment "payment_method-4") "Банковским переводом")
-                                        (t payment))
-                         :deliverytype (cond ((string= delivery-type "express") "Курьер")
-                                             ((string= delivery-type "pickup") "Самовывоз")
-                                             (t delivery-type))
+                         :paytype (string-case payment
+                                    ("payment_method-1" "Наличными")
+                                    ("payment_method-2" "Кредитной картой")
+                                    ("payment_method-3" "Безналичный расчет")
+                                    ("payment_method-4" "Банковским переводом")
+                                    (t payment))
+                         :deliverytype (string-case delivery-type
+                                         ("express" "Курьер")
+                                         ("pickup" "Самовывоз")
+                                         (t delivery-type))
                          :addr addr
                          :bankaccount (if (string= payment "payment_method-4")
                                           bankaccount)
@@ -295,9 +299,10 @@
                                         (nth (skls.get-count-skls bonuscount)
                                              (list "бонус" "бонуса" "бонусов")))
                          :email email
-                         :comment (cond  ((string= delivery-type "express") courier_comment)
-                                         ((string= delivery-type "pickup") pickup_comment)
-                                         (t ""))
+                         :comment (string-case delivery-type
+                                    ("express" courier_comment)
+                                    ("pickup" pickup_comment)
+                                    (t ""))
                          :articles nil
                          :products products
                          :deliverysum deliverysum
@@ -307,16 +312,18 @@
                                   :name (report.convert-name (format nil "~a ~a" name family))
                                   :family ""
                                   :addr addr
-                                  :isdelivery (cond ((string= delivery-type "express") "Доставка")
-                                                    ((string= delivery-type "pickup") "Самовывоз")
-                                                    (t delivery-type)) ;;"Доставка" ;; Самовывоз
+                                  :isdelivery (string-case delivery-type
+                                                ("express" "Доставка")
+                                                ("pickup" "Самовывоз")
+                                                (t delivery-type))
                                   :phone phone
                                   :email email
                                   :date (time.get-date)
                                   :time (time.get-time)
-                                  :comment (cond  ((string= delivery-type "express") courier_comment)
-                                                  ((string= delivery-type "pickup") pickup_comment)
-                                                  (t ""))
+                                  :comment (string-case delivery-type
+                                             ("express" courier_comment)
+                                             ("pickup" pickup_comment)
+                                             (t ""))
                                   :products (append products
                                                     (if (string= delivery-type "express")
                                                         (list (list :articul "107209"
@@ -346,10 +353,11 @@
                                (list :sum pricesum
                                      :deliverysum deliverysum
                                      :comment  (let ((comment (format nil "~a"
-                                                                      (cond  ((string= delivery-type "express") courier_comment)
-                                                                             ((string= delivery-type "pickup") pickup_comment)
-                                                                             (t "")))))
-                                                 (if (equal comment "") nil comment))
+                                                                      (string-case delivery-type
+                                                                        ("express" courier_comment)
+                                                                        ("pickup" pickup_comment)
+                                                                        (t "")))))
+                                                 (when (servo.valid-string-p comment) comment))
                                      :email (if (equal email "") nil email)
                                      :name (if (equal name "") nil (report.convert-name name))
                                      :bonuscount (if (or (equal ekk t)
@@ -359,16 +367,17 @@
                                                     (nth (skls.get-count-skls bonuscount)
                                                          (list "бонус" "бонуса" "бонусов")))
                                      :courier (equal delivery-type "express")
-                                     :oplata (cond ((string= payment "payment_method-1")
-                                                    "<p class=\"h2\">Оплата наличными</p><p>Вы получите кассовый товарный чек</p>")
-                                                   ((string= payment "payment_method-2")
-                                                    "<p class=\"h2\">Оплата кредитной картой</p>")
-                                                   ((string= payment "payment_method-3")
-                                                    "<p class=\"h2\">Покупка в кредит</p>")
-                                                   ((string= payment "payment_method-4")
-                                                    (format nil "<p class=\"h2\">Оплата по безналичному расчету</p>
+                                     :oplata (string-case payment
+                                               ("payment_method-1"
+                                                "<p class=\"h2\">Оплата наличными</p><p>Вы получите кассовый товарный чек</p>")
+                                               ("payment_method-2"
+                                                "<p class=\"h2\">Оплата кредитной картой</p>")
+                                               ("payment_method-3"
+                                                "<p class=\"h2\">Покупка в кредит</p>")
+                                               ("payment_method-4"
+                                                (format nil "<p class=\"h2\">Оплата по безналичному расчету</p>
                                          <p>Реквизиты:<br/>~a</p>" bankaccount))
-                                                   (t nil))
+                                               (t nil))
                                      :addr (if (string= delivery-type "pickup")
                                                addr
                                                "Левашовский пр., д.12")

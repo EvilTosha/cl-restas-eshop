@@ -14,7 +14,7 @@
 ;;   ;; type of objects, to which filter can be applied to;
 ;;   ;; should be correct type that has own storage
 ;;   (:name objtype      :initform (error "Objtype should be specified")  :disabled nil  :type symbol        :serialize t)
-;;   ;; value, that will be used when no initial list/... supplied. Can be collection of objects,
+;;   ;; value, that will be used when no initial list/... supplied. Can be collection (list for now) of objects,
 ;;   ;; another filter (will use its own default-set) or type (will use storage of that type as collection))
 ;;   (:name default-set  :initform nil                                    :disabled nil  :type default-set   :serialize t)))
 

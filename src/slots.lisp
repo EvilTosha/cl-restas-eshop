@@ -152,6 +152,40 @@ Type: ~A" type))
   (declare (string string))
   (anything-to-symbol string))
 
+;; declare type specifier for convenient type checks
+(deftype default-set ()
+  `(or symbol list filter))
+
+;; default-set, значение выборки для фильра по умолчанию
+(defmethod slots.%view ((type (eql 'default-set)) value name disabled)
+  (declare (default-set value) (string name) (boolean disabled))
+  ;; TODO: write proper viewer
+  (slots.%view 'string value name disabled))
+
+(defmethod slots.%get-data ((type (eql 'default-set)) post-data-string)
+  (declare (string post-data-string))
+  ;; TODO: write proper get-data
+  post-data-string)
+
+(defmethod slots.%encode-to-string ((type (eql 'default-set)) value)
+  (declare (default-set value))
+  (encode-json-to-string
+  (etypecase value
+    (symbol `(symbol ,value))
+    ;; Note: each element of list must have method "key"
+    ;; and can be found by "getobj" method
+    (list `(list ,(mapcar #'key value)))
+    (filter `(filter ,(key value))))))
+
+(defmethod slots.%decode-from-string ((type (eql 'default-set)) string)
+  (declare (string string))
+  (let ((decoded-list (decode-json-from-string string)))
+    (string-case (first decoded-list)
+      ("symbol" (anything-to-symbol (second decoded-list)))
+      ("list" (keys-to-objects (second decoded-list)))
+      ("filter" (getobj (second decoded-list) 'filter)))))
+
+
 ;;textedit, онлайновый WYSIWYG редактор текста
 (defmethod slots.%view ((type (eql 'textedit)) value name disabled)
   (if disabled
@@ -229,6 +263,7 @@ Type: ~A" type))
 
 ;;bool
 (defmethod slots.%view ((type (eql 'bool)) value name disabled)
+  (declare (boolean value) (string name) (boolean disabled))
   (soy.class_forms:bool-field
    (list :name name :checked value :disabled disabled)))
 

@@ -15,7 +15,8 @@
      :split-sequence
      :cl-ppcre
      :json
-     :cl-fad)
+     :cl-fad
+     :string-case)
   (:import-from :arnesi :parse-float)
   (:import-from :alexandria :read-file-into-string)
   (:export :config.parse-config

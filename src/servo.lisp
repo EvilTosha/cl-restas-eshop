@@ -5,11 +5,10 @@
 (defmacro with-sorted-paginator (get-products request-get-plist body)
   `(let* ((products ,get-products)
           (sorting  (getf ,request-get-plist :sort))
-          (sorted-products   (cond ((string= sorting "pt")
-                                    (sort products #'< :key #'siteprice))
-                                   ((string= sorting "pb")
-                                    (sort products #'> :key #'siteprice))
-                                   (t products))))
+          (sorted-products (string-case sorting
+                             ("pt" (sort products #'< :key #'siteprice))
+                             ("pb" (sort products #'> :key #'siteprice))
+                             (t products))))
      (multiple-value-bind (paginated pager)
          (paginator ,request-get-plist sorted-products)
        ,body)))
@@ -711,7 +710,3 @@
   "When obj is list return obj, otherwise return list with only element - obj"
   (if (consp obj) obj (list obj)))
 
-;; !! make properly working
-(defmacro case-test (test-func keyform &body cases)
-  "Works like usual case, but accepts function for test"
-  (sb-impl::case-body 'case-body keyform cases t test-func nil nil nil))
