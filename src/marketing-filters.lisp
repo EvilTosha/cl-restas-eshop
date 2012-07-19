@@ -94,10 +94,9 @@
   (edit-marketing-filter
    group "ipad3" "IPad 3"
    #'(lambda (p)
-       (let (opts)
-         (with-option1 p "Общие характеристики" "Модель"
-                       (setf opts (getf option :value)))
-         (string= (format nil "~(~A~)" opts) "ipad new")))))
+       (string= "ipad new"
+                (format nil "~(~A~)"
+                        (get-option p "Общие характеристики" "Модель"))))))
 
 (defun create-man-sale-filter (group)
   (edit-marketing-filter
@@ -123,15 +122,14 @@
 	(create-ipad3-filter (getobj "planshetnie-komputery" 'group))
 	(report.set-filters (list (getobj "noutbuki" 'group))
 											#'(lambda (product)
-													(let ((opts))
-														(with-option1 product
-															"Общие характеристики" "Тип устройства"
-															(setf opts (getf option :value)))
-														(equal opts "Ультрабук")))
+													(equal (get-option product
+                                             "Общие характеристики"
+                                             "Тип устройства")
+                                 "Ультрабук"))
 											"Ультрабуки"
 											"ultrabooks")
   ;; TODO: убрать костыль
-	(report.set-filters (process-and-collect-storage 'group)
+	(report.set-filters (collect-storage 'group)
 											#'groupd.holiday.is-groupd
 											"Для отдыха"
 											"holidays"))

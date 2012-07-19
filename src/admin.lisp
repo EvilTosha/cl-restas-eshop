@@ -125,7 +125,6 @@
               (class-core.edit-fields item post-data)
               ;;doesn't work with filters
               (slots.product-groups-fix item)
-              (object-fields.product-groups-fix item)
               (setobj (key item) item) ;;adding item into storage
               (admin.edit-content))
             ;;else (post-data is nil)
