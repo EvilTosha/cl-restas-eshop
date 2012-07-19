@@ -85,7 +85,9 @@
          (obj (getobj key)))
     (if (gethash key static-pages.*storage*)
         t
-        (when obj
+        (when (and obj
+                   (or (groupp obj)
+                       (productp obj)))
           (aif (and (groupp obj)
                     (getf (request-get-plist) :vendor))
                (let ((vendor (vendor-transform-from-alias it)))
@@ -95,10 +97,12 @@
                t)))))
 
 (defun route-storage-object (key)
-  (aif (getobj key)
+  (aif (and key (getobj key 'product))
        it
-       ;; else: static pages
-       (gethash key static-pages.*storage*)))
+       (aif (and key (getobj key 'group))
+            it
+            ;; else: static pages
+            (gethash key static-pages.*storage*))))
 
 (restas:define-route storage-object-route  ("/:key" :requirement #'test-route-storage-object)
   (route-storage-object key))

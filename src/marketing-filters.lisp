@@ -4,9 +4,9 @@
 
 ;;Возвращает длину списка активных продуктов-потомков подходящих под фильтр
 (defun get-filtered-product-list-len (object filter)
-  (count-if (func filter)
-            (remove-if-not #'active
-                           (storage.get-recursive-products object))))
+  (length (remove-if-not (func filter)
+                         (remove-if-not #'active
+                                        (storage.get-recursive-products object)))))
 
 (defun is-empty-filtered-list (object filter)
   (zerop (get-filtered-product-list-len object filter)))
@@ -36,10 +36,31 @@
 (defmethod filters.get-filters ((filters list) (products list))
   "Возвращает список ненулевых фильтров на списке объектов и количество объесктов в выборке"
   (remove-if #'null (mapcar #'(lambda (filter)
-                                (let ((num (count-if (func filter) products)))
+                                (let ((num (length
+                                            (remove-if-not (func filter) products))))
                                   (when (plusp num)
                                     (cons filter num))))
                             filters)))
+
+(defun filters.proccess-xls (xls-file line-proccess-func &key (ignor-head-line t))
+  (log5:log-for info "proccess:: ~a" xls-file)
+  (let ((num 0))
+    (xls.restore-from-xls
+     (merge-pathnames xls-file)
+     #'(lambda (line)
+         (let* ((args (sklonenie-get-words line)))
+           (incf num)
+           (let ((vendor (gethash (string-downcase (cadr words)) *vendor-storage*)))
+             (when vendor
+               (log5:log-for info "~a|~a|~a|~a|~a"
+                             num (car words) (cadr words) vendor (length words))
+               (setf (name vendor) (cadr words)))
+             ;; (unless vendor
+             ;;   (setf vendor (make-instance 'vendor :key (string-downcase (cadr words))
+             ;;                               :name (string-downcase (cadr words)))))
+             ;; (setf (gethash (car words) (seo-texts vendor)) (caddr words))
+             ;; (setf (gethash (string-downcase (cadr words)) *vendor-storage*) vendor)
+             ))))))
 
 
 ;;; marketing filters
@@ -62,7 +83,7 @@
 
 (defun create-sale-filter (group)
   (edit-marketing-filter
-   group "sale" "Распродажа" #'groupd.is-groupd))
+   group "sale" "Ликвидация склада!" #'groupd.is-groupd))
 
 (defun create-bestprice-filter (group)
   (edit-marketing-filter
@@ -73,9 +94,10 @@
   (edit-marketing-filter
    group "ipad3" "IPad 3"
    #'(lambda (p)
-       (string= "ipad new"
-                (format nil "~(~A~)"
-                        (get-option p "Общие характеристики" "Модель"))))))
+       (let (opts)
+         (with-option1 p "Общие характеристики" "Модель"
+                       (setf opts (getf option :value)))
+         (string= (format nil "~(~A~)" opts) "ipad new")))))
 
 (defun create-man-sale-filter (group)
   (edit-marketing-filter
@@ -101,14 +123,15 @@
 	(create-ipad3-filter (getobj "planshetnie-komputery" 'group))
 	(report.set-filters (list (getobj "noutbuki" 'group))
 											#'(lambda (product)
-                          (equal (get-option product
-                                             "Общие характеристики"
-                                             "Тип устройства")
-                                 "Ультрабук"))
+													(let ((opts))
+														(with-option1 product
+															"Общие характеристики" "Тип устройства"
+															(setf opts (getf option :value)))
+														(equal opts "Ультрабук")))
 											"Ультрабуки"
 											"ultrabooks")
   ;; TODO: убрать костыль
-	(report.set-filters (collect-storage 'group)
+	(report.set-filters (process-and-collect-storage 'group)
 											#'groupd.holiday.is-groupd
 											"Для отдыха"
 											"holidays"))
@@ -125,4 +148,6 @@
                 "printery"
                 "mfu"
                 "myshki"
-                "klaviatury")))
+                "klaviatury"
+                "holodilniki-i-morozilniki"
+                "stiralnie-mashiny")))

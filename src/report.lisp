@@ -190,6 +190,7 @@
                   (setobj v p)
                   (setf (gethash v *special-products*) p))))
           (list
+           "666616"
            "999888"
            "711265"
            "834786"
@@ -223,6 +224,15 @@
   (mapcar #'(lambda (v)
               (remobj (format nil "~A" v) 'product))
           products))
+
+(defun report.add-products-to-group (product-list gr)
+  (mapcar #'(lambda (v)
+              (let ((pr (getobj (format nil "~a" v) 'product)))
+                (when pr
+                  (setf (parents pr) (list gr))
+                  (push pr (products gr)))))
+          product-list)
+  "done")
 
 (defun report.convert-name (input-string)
   (string-trim (list #\Space #\Tab #\Newline)

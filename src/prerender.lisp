@@ -78,6 +78,28 @@
                             :name name
                             :siteprice siteprice
                             :pic picname)))))))
+      ;;вставка нескольких акционнных товаров
+      ((string= type "rasprodaja")
+       (let* ((articul (nth 1 args))
+              (product (getobj articul 'product)))
+         (when product
+           (let ((name (name-seo product))
+                 (siteprice (siteprice product))
+                 (picname (car (get-pics articul))))
+             (format nil "<b><a href=\"\\~a\">~a</a></b><br><br>
+<span class=\"add\" id=\"add-img\">
+                           <big class=\"strike price\">~a</big><var> руб.</var><br>
+                           <big class=\"price red\"><b>~a</b></big><var class=\"red\"> руб.</var><br>
+~a"
+                     articul
+                     (name-seo product)
+                     (get-format-price (price product))
+                     (get-format-price siteprice)
+                     (soy.buttons:add-product-rasp
+                      (list :articul articul
+                            :name name
+                            :siteprice siteprice
+                            :pic picname)))))))
       ((string= type "price")
        (let* ((articul (nth 1 args))
               (product (getobj articul 'product)))
