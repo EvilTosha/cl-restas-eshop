@@ -103,7 +103,7 @@ Type: ~A" type))
 
 (defmethod slots.%get-data ((type (eql 'int)) post-data-string)
   (declare (string post-data-string))
-  (when (and (servo.valid-string-p post-data-string)
+  (when (and (valid-string-p post-data-string)
              (string/= "NIL" post-data-string))
     (parse-integer post-data-string)))
 

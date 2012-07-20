@@ -136,7 +136,7 @@ where key is vendor name and value is number of products with this vendor"
   (let ((vendors (make-hash-table :test #'equal)))
     (mapcar #'(lambda (product)
                 (let ((vendor (vendor product)))
-                  (when (servo.valid-string-p vendor)
+                  (when (valid-string-p vendor)
                     (sif (gethash vendor vendors)
                          (incf it)
                          (setf it 1)))))

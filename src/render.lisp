@@ -404,7 +404,7 @@
                          (key-units  (getf pair :units))
                          (optvalue (get-option product key-optgroup key-optname)))
                     (list :optgroup key-optgroup
-                          :optname (if (servo.valid-string-p key-alias)
+                          :optname (if (valid-string-p key-alias)
                                        key-alias
                                        key-optname)
                           :optvalue optvalue
@@ -501,7 +501,7 @@
                                                             (render.relink object))))
                              :keyoptions (filters.limit-end
                                           (remove-if-not #'(lambda (v)
-                                                             (servo.valid-string-p
+                                                             (valid-string-p
                                                               (getf v :optvalue)))
                                                          (render.get-keyoptions object))
                                           6)
@@ -513,7 +513,7 @@
                                                                         (soy.catalog:product
                                                                          (render.view prod)))
                                                                     (filters.limit-end (servo.find-relative-product-list object) 4))))
-                             :seotextflag (servo.valid-string-p (seo-text object))
+                             :seotextflag (valid-string-p (seo-text object))
                              :predzakaz (preorder object)
                              :addproductcart (if (preorder object)
                                                  (soy.buttons:add-predzakaz (list :articul (articul object)))
@@ -657,7 +657,7 @@
     (maphash #'(lambda (k x)
                  (let* ((vendor-alias (awhen (getobj (string-downcase k) 'vendor)
                                              (alias it)))
-                        (vendor-url (if (servo.valid-string-p vendor-alias)
+                        (vendor-url (if (valid-string-p vendor-alias)
                                         vendor-alias
                                         k)))
                    (setf (getf url-parameters :vendor) (hunchentoot:url-encode vendor-url))

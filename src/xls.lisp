@@ -151,7 +151,7 @@
                   (setf (vendor product)
                         (get-option product "Общие характеристики" "Производитель"))
                   ;; Если есть значимое realname - перезаписать в продукте
-                  (when (servo.valid-string-p realname)
+                  (when (valid-string-p realname)
                     (setf (name-seo product) realname)))))))
     (log5:log-for info "Successfully processed ~a files | ~a products" cnt num-all)))
 
@@ -178,6 +178,6 @@
         (read-line stream nil)
         (loop
            :for line := (read-line stream nil)
-           :while (servo.valid-string-p line :unwanted-chars (list #\, #\Space #\Tab) :del-method :trim)
+           :while (valid-string-p line :unwanted-chars (list #\, #\Space #\Tab) :del-method :trim)
            :do (funcall line-processor line))))
     (log5:log-for info "DONE ~a" restore-name)))

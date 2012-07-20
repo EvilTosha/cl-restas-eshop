@@ -23,7 +23,7 @@
   (let ((words (split-sequence:split-sequence #\, input-string)))
     (mapcar #'(lambda (w)
                 (let ((pure-tag (string-trim '(#\Space #\Tab #\Newline) w)))
-                  (when (servo.valid-string-p pure-tag)
+                  (when (valid-string-p pure-tag)
                     (setf (gethash (string-downcase pure-tag) tags) pure-tag))))
             words)))
 
@@ -105,7 +105,7 @@
        :collect art)))
 
 (defun get-articles-by-tags (articles-list &optional tags)
-  (if (not (servo.valid-string-p tags :unwanted-chars (list #\' #\" #\\ #\~ #\Newline)))
+  (if (not (valid-string-p tags :unwanted-chars (list #\' #\" #\\ #\~ #\Newline)))
       articles-list
       ;; else
       (let ((tags (split-sequence:split-sequence #\, tags)))

@@ -42,7 +42,7 @@
 
 (defmethod class-core.decode (in-string (dummy group-filter))
   "Decode fullfilter"
-  (when (servo.valid-string-p in-string)
+  (when (valid-string-p in-string)
     (let ((*package* (find-package :eshop))
           (tmp (read-from-string in-string)))
       (make-instance 'group-filter
@@ -156,7 +156,7 @@ Reload this method if more actions required"
 
 (defmethod %post-unserialize-item ((item filter))
   ;; eval func-string to func
-  (when (servo.valid-string-p (func-string item))
+  (when (valid-string-p (func-string item))
     (setf (func item) (eval (read-from-string (func-string item)))))
   ;; после десериализации в parent лежит список key родительских групп
   (setf (parents item)
@@ -192,7 +192,7 @@ Reloaded standard method %post-unserialize"
     (maphash #'(lambda (k v)
                  (declare (ignore k))
                  (let ((name (name v)))
-                   (when (servo.valid-string-p name)
+                   (when (valid-string-p name)
                      (setobj (string-downcase name) v 'vendor))))
              (copy-structure storage))))
 
@@ -248,7 +248,8 @@ such as pointer to storage, serialize flag, etc.")
      (typep object ',name)))
 
 (defmacro class-core.make-class-and-methods (name slot-list &key (serialize t)
-                                             (make-storage t) storage-size)
+                                             (make-storage t) storage-size
+                                             instance-initforms)
   "Make class, storage for its instances (if needed) and necessary methods for it
 \(such as serialization, unserialization, viewing, editing, etc)"
   `(values
@@ -259,7 +260,7 @@ such as pointer to storage, serialize flag, etc.")
      (class-core.define-class-checker ,name)
      ;; make singleton instance of class
      (setf (getf (gethash ',name *classes*) :instance)
-           (make-instance ',name))
+           (make-instance ',name ,@instance-initforms))
      (class-core.define-view-method ,name ,slot-list)
      (class-core.define-edit-method ,name ,slot-list)
      ,@(when make-storage
@@ -294,3 +295,8 @@ Remove elements from result list corresponding to remove-func"
       (if (null parent)
           item
           (class-core.get-root-parent parent)))))
+
+(defun class-exist-p (class)
+  "Checks whether system has class with given name"
+  (declare (symbol class))
+  (not (null (gethash class *classes*))))

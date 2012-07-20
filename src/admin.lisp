@@ -177,63 +177,60 @@
 
 (defun admin.do-action (action)
   (handler-case
-      (if (not (null action))
-          (string-case action
-            ("do-gc"
-             (progn
-               (sb-ext:gc :full t)
-               (regex-replace-all
-                "\\n"
-                (with-output-to-string
-                    (*standard-output*)
-                  (room))
-                "<br>")))
-            ("report-products"
-             (progn
-               (let ((name (format nil "reports/products-report-~a.csv" (time.encode.backup-filename))))
-                 (create-report name #'write-products-report)
-                 "DO PRODUCTS REPORT")))
-            ("proccess-pictures"
-             (progn
-               (rename-convert-all)
-               "DO proccess-pictures"))
-            ("dtd"
-             (progn
-               (dtd)
-               "DO DTD"))
-            ("report"
-             (progn
-               (let ((name (format nil "reports/write-groups-active-product-num-~a.csv" (time.encode.backup-filename))))
-                 (create-report name #'write-groups-active-product-num)
-                 "DO REPORT")))
-            ("articles-restore"
-             (articles.restore)
-             "RESTORE ARTICLES")
-            ("main-page-restore"
-             (main-page.restore)
-             "RESTORE MAIN-PAGE")
-            ("groupd-restore"
-             (groupd.restore)
-             "RESTORE SALES")
-            ("cartrige-restore"
-             (cartrige.restore)
-             "RESTORE Cartrige")
-            ("static-pages-restore"
-             (static-pages.restore)
-             "STATIC PAGES RESTORE")
-            ("groupd-restore"
-             (groupd.restore)
-             "GROUPD RESTORE")
-            ("seo-report"
-             (report.do-seo-reports)
-             "SEO-REPORT")
-            ("keyoptions-aliases-restore"
-             (report.do-alias-reports)
-             action)
-            ("gateway-restore"
-             (gateway.restore-history)
-             "GATEWAY-RESTORE")
-            (t (format nil "DON't know action ~a" action))))
+      (when action
+        (string-case action
+          ("do-gc"
+           (progn
+             (sb-ext:gc :full t)
+             (regex-replace-all
+              "\\n"
+              (with-output-to-string
+                  (*standard-output*)
+                (room))
+              "<br>")))
+          ("report-products"
+           (progn
+             (let ((name (format nil "reports/products-report-~a.csv" (time.encode.backup-filename))))
+               (create-report name #'write-products-report)
+               "DO PRODUCTS REPORT")))
+          ("proccess-pictures"
+           (progn
+             (rename-convert-all)
+             "DO proccess-pictures"))
+          ("dtd"
+           (progn
+             (dtd)
+             "DO DTD"))
+          ("report"
+           (progn
+             (let ((name (format nil "reports/write-groups-active-product-num-~a.csv" (time.encode.backup-filename))))
+               (create-report name #'write-groups-active-product-num)
+               "DO REPORT")))
+          ("articles-restore"
+           (articles.restore)
+           "RESTORE ARTICLES")
+          ("main-page-restore"
+           (main-page.restore)
+           "RESTORE MAIN-PAGE")
+          ("cartrige-restore"
+           (cartrige.restore)
+           "RESTORE Cartrige")
+          ("static-pages-restore"
+           (static-pages.restore)
+           "STATIC PAGES RESTORE")
+          ("groupd-restore"
+           (groupd.restore)
+           "GROUPD RESTORE")
+          ("seo-report"
+           (report.do-seo-reports)
+           "SEO-REPORT")
+          ("keyoptions-aliases-restore"
+           (report.do-alias-reports)
+           action)
+          ("gateway-restore"
+           (gateway.restore-history)
+           "GATEWAY-RESTORE")
+          (t (format nil "DON't know action ~a" action))))
     (error (e) (format  nil "ERROR:~%~a" e))))
 
 (defun admin.parenting-content (post-data)

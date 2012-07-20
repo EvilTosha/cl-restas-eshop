@@ -61,7 +61,7 @@
   (declare (product product))
   (some #'(lambda (optgroup) (some #'(lambda (option)
                                        (and option
-                                            (servo.valid-string-p (getf option :value))
+                                            (valid-string-p (getf option :value))
                                             (not (find (getf option :name)
                                                        (list "Производитель" "Модель") :test #'equal))))
                                    (getf optgroup :options)))
@@ -84,7 +84,7 @@
                (if (active v)
                    "yes"
                    "no")
-               (if (servo.valid-string-p (seo-text v))
+               (if (valid-string-p (seo-text v))
                    "yes"
                    "no")
                (length (products v))
@@ -124,7 +124,7 @@
      #'(lambda (v)
          (setf vendor-name "Нет")
          (setf vendor-name (vendor v))
-         (setf desc (if (servo.valid-string-p (seo-text v))
+         (setf desc (if (valid-string-p (seo-text v))
                         "yes"
                         "no"))
          (format stream "\"~a\";\"~a\";\"~a\";http://www.320-8080.ru/~a;~a;~a;~%"

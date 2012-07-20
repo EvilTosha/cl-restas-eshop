@@ -110,7 +110,7 @@
 
 (defun classes.has-vendor-seo-text (group vendor-key)
   "Chech whether there is vendor's seo-text for given group"
-  (and group (servo.valid-string-p vendor-key)
+  (and group (valid-string-p vendor-key)
        (let ((vendor-obj (gethash (string-downcase vendor-key) (vendors group))))
          (and vendor-obj (gethash (key group) (seo-texts vendor-obj))))
        t))
@@ -119,7 +119,7 @@
   "If vendor passed, try to return corresponding seo-text for group,
 if there is not one, or no vendor passed, return group's seo-text"
   (declare (group group))
-  (let ((vendor-object (when (servo.valid-string-p vendor-key)
+  (let ((vendor-object (when (valid-string-p vendor-key)
                          (gethash (string-downcase vendor-key) (vendors group)))))
     (aif (and vendor-object (gethash (key group) (seo-texts vendor-object)))
          it             ; if condition non-nil, it is required seo-text

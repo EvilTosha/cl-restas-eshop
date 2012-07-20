@@ -51,7 +51,7 @@
            (value-x (siteprice product)))
        (unless value-f
          (setf value-f "0"))
-       (unless (servo.valid-string-p value-t)
+       (unless (valid-string-p value-t)
          (setf value-t "99999999"))
        (setf value-f (arnesi:parse-float (format nil "~as" value-f)))
        (setf value-t (arnesi:parse-float (format nil "~as" value-t)))
@@ -692,7 +692,7 @@
    'string))
 
 
-(defun servo.valid-string-p (s &key (whitespace-check t)
+(defun valid-string-p (s &key (whitespace-check t)
                               (unwanted-chars (list #\Space #\Tab #\Newline))
                               (del-method :replace-all))
   (and s (string/= s "") (if whitespace-check

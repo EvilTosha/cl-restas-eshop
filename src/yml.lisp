@@ -204,15 +204,15 @@
                                                                                 product "Secret" "Yandex"))
                                                                      (parser-name (get-option
                                                                                    product "Secret" "Parser")))
-                                                                 (if (not (servo.valid-string-p parser-name))
+                                                                 (if (valid-string-p parser-name)
+                                                                     parser-name
                                                                      (if (or (null yml-name)
                                                                              (string= ""
                                                                                       (stripper yml-name))
                                                                              (string= "No"
                                                                                       (stripper yml-name)))
                                                                          (name product)
-                                                                         yml-name)
-                                                                     parser-name))
+                                                                         yml-name)))
                                                          :description nil))))))))
 
 

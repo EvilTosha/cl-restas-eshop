@@ -225,7 +225,7 @@
                    ("pickup-2" "Петергоф, ул. Ботаническая, д.18, к.3")
                    (t "Левашовский пр., д.12")))) ;; по умолчанию главный магазин
     (if (or (equal discount-cart t)
-            (servo.valid-string-p discount-cart))
+            (valid-string-p discount-cart))
         (setf ekk discount-cart-number))
     (values-list (list phone delivery-type name email city addr courier_comment pickup pickup_comment payment bankaccount ekk family))))
 
@@ -357,11 +357,11 @@
                                                                         ("express" courier_comment)
                                                                         ("pickup" pickup_comment)
                                                                         (t "")))))
-                                                 (when (servo.valid-string-p comment) comment))
+                                                 (when (valid-string-p comment) comment))
                                      :email (if (equal email "") nil email)
                                      :name (if (equal name "") nil (report.convert-name name))
                                      :bonuscount (if (or (equal ekk t)
-                                                          (servo.valid-string-p ekk))
+                                                         (valid-string-p ekk))
                                                       bonuscount)
                                      :bonusname (if bonuscount
                                                     (nth (skls.get-count-skls bonuscount)
