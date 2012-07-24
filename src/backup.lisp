@@ -40,7 +40,8 @@
                         :external-format :utf-8)
     (process-storage #'(lambda (obj)
                          (format file "~A~%" (backup.serialize-entity obj)))
-                     type))
+                     type
+                     #'serialize-p))
   (log5:log-for info "Total serialized: ~a" (count-storage type)))
 
 

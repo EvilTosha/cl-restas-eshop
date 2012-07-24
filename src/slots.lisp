@@ -170,12 +170,12 @@ Type: ~A" type))
 (defmethod slots.%encode-to-string ((type (eql 'default-set)) value)
   (declare (default-set value))
   (encode-json-to-string
-  (etypecase value
-    (symbol `(symbol ,value))
-    ;; Note: each element of list must have method "key"
-    ;; and can be found by "getobj" method
-    (list `(list ,(mapcar #'key value)))
-    (filter `(filter ,(key value))))))
+   (etypecase value
+     (symbol `(symbol ,value))
+     ;; Note: each element of list must have method "key"
+     ;; and can be found by "getobj" method
+     (list `(list ,(mapcar #'key value)))
+     (filter `(filter ,(key value))))))
 
 (defmethod slots.%decode-from-string ((type (eql 'default-set)) string)
   (declare (string string))
@@ -184,6 +184,34 @@ Type: ~A" type))
       ("symbol" (anything-to-symbol (second decoded-list)))
       ("list" (keys-to-objects (second decoded-list)))
       ("filter" (getobj (second decoded-list) 'filter)))))
+
+;; declare type specifier for convenient type checks
+(deftype filter-fn-data ()
+  `(or string list))
+
+(defmethod slots.%view ((type (eql 'filter-fn-data)) value name disabled)
+  (declare (filter-fn-data value) (string name) (boolean disabled))
+  ;; TODO: write proper viewer
+  (slots.%view 'string value name disabled))
+
+(defmethod slots.%get-data ((type (eql 'filter-fn-data)) post-data-string)
+  (declare (string post-data-string))
+  ;; TODO: write proper get-data
+  post-data-string)
+
+(defmethod slots.%encode-to-string ((type (eql 'filter-fn-data)) value)
+  (declare (filter-fn-data value))
+  (encode-json-to-string
+   (etypecase value
+     (string `(string ,value))
+     (list `(list ,(mapcar #'key value))))))
+
+(defmethod slots.%decode-from-string ((type (eql 'filter-fn-data)) string)
+  (declare (string string))
+  (let ((decoded-list (decode-json-from-string string)))
+    (string-case (first decoded-list)
+      ("string" (second decoded-list))
+      ("list" (keys-to-objects (second decoded-list) :type 'filter)))))
 
 
 ;;textedit, онлайновый WYSIWYG редактор текста

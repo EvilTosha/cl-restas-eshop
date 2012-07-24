@@ -230,7 +230,7 @@ such as pointer to storage, serialize flag, etc.")
   (getf (gethash type *classes*) :instance))
 
 (defmethod get-instance ((type string))
-  (get-instance (string-to-symbol type)))
+  (get-instance (anything-to-symbol type)))
 
 (defun get-last-bakup-pathname (type)
   "Return pathname for file of last backup objects of given type"
@@ -272,15 +272,14 @@ such as pointer to storage, serialize flag, etc.")
                ,@(when serialize
                        `((backup.define-serialize-method ,name ,slot-list)))))))
 
-(defun keys-to-objects (key-list &key type (remove-func #'null) default key)
+(defun keys-to-objects (key-list &key type (remove-if #'null) default key)
   "Returns list of objects corresponding to given list of keys.
 If parameter type is given, use this type, otherwise doesnt check types.
 Remove elements from result list corresponding to remove-func"
   ;;; TODO: make as method not only on lists
-  ;;; TODO: allow null type
   (declare (symbol type))
   (let ((key (sequence:canonize-key key)))
-    (remove-if remove-func
+    (remove-if remove-if
                (mapcar #'(lambda (key-obj)
                            (getobj (funcall key key-obj) type default))
                        key-list))))

@@ -54,14 +54,14 @@
  :storage-size 400)
 
 
-(class-core.make-class-and-methods
- filter
- ((:name key               :initform ""       :disabled t    :type string)
-  (:name parents           :initform nil      :disabled t    :type group-list)
-  (:name name              :initform ""       :disabled nil  :type string)
-  (:name func              :initform ""       :disabled t    :type string)
-  (:name func-string       :initform ""       :disabled t    :type textedit))
- :serialize nil)
+;; (class-core.make-class-and-methods
+;;  filter
+;;  ((:name key               :initform ""       :disabled t    :type string)
+;;   (:name parents           :initform nil      :disabled t    :type group-list)
+;;   (:name name              :initform ""       :disabled nil  :type string)
+;;   (:name func              :initform ""       :disabled t    :type string)
+;;   (:name func-string       :initform ""       :disabled t    :type textedit))
+;;  :serialize nil)
 
 (class-core.make-class-and-methods
  vendor
@@ -76,6 +76,15 @@
    (base              :initarg :base            :initform nil       :accessor base)
    (advanced          :initarg :advanced        :initform nil       :accessor advanced)))
 
+
+(defgeneric serialize-p (object)
+  (:documentation "Checks whether object needs serialization (used in backup methods)"))
+
+(defmethod serialize-p (object)
+  t)
+
+(defmethod serialize-p ((object filter))
+  (valid-string-p (func-data object)))
 
 
 ;; TODO: rewrite options store mechanism (with using string literal -> id convertion)

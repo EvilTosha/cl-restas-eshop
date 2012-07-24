@@ -4,20 +4,22 @@
 
 (class-core.make-class-and-methods
  filter
- ((:name key          :initform ""                                     :disabled t    :type string        :serialize t)
+ ((:name key          :initform ""                                     :disabled t    :type string           :serialize t)
   ;; filtering function for applying to object/slot/etc, func's signature should be (foo object-list values-plist);
   ;; also for objects satisfying filter, func should return object itself, not t or some other value
-  (:name func         :initform nil                                    :disabled t    :type undefined     :serialize nil)
-  (:name func-string  :initform ""                                     :disabled nil  :type string        :serialize t)
+  (:name func         :initform nil                                    :disabled t    :type undefined        :serialize nil)
+  ;; if func is basic function, func-data contains string of func; if func is composition of
+  ;; other filters, func-data contains list of those filters
+  (:name func-data    :initform ""                                     :disabled nil  :type filter-fn-data   :serialize t)
   ;; should be plist of strings (in fact it could be not only string, but any object that has
   ;; read/write methods)
-  (:name data         :initform nil                                    :disabled nil  :type string-plist  :serialize t)
+  (:name data         :initform nil                                    :disabled nil  :type string-plist     :serialize t)
   ;; type of objects, to which filter can be applied to;
   ;; should be correct type that has own storage
-  (:name objtype      :initform (error "Objtype should be specified")  :disabled nil  :type symbol        :serialize t)
+  (:name objtype      :initform (error "Objtype should be specified")  :disabled nil  :type symbol           :serialize t)
   ;; value, that will be used when no initial list/... supplied. Can be collection (list for now) of objects,
   ;; another filter (will use its own default-set) or type (will use storage of that type as collection))
-  (:name default-set  :initform nil                                    :disabled nil  :type default-set   :serialize t))
+  (:name default-set  :initform nil                                    :disabled nil  :type default-set      :serialize t))
  :instance-initforms (:objtype 'undefined)
  ;; just for testing, remove later
  :serialize nil)
@@ -71,7 +73,32 @@ This functions shouldn't be used frequently, use filters.filter function for lis
 (defun filters.create-standard-filters ()
   "Creating standard filters, such as getters of children of object,
 or filtrating by value of specific option of product"
-  )
+  (mapcar #'(lambda (new-filter)
+              (setobj (key new-filter) new-filter 'filter))
+          (list
+           ;; filter active products
+           (make-instance 'filter
+                          :key "active-products-filter"
+                          :func #'(lambda (product-list params)
+                                    (declare (list product-list params) (ignore params))
+                                    (remove-if-not #'active product-list))
+                          :objtype 'product
+                          :default-set 'product)
+           ;; get all child products of given group (key)
+           (make-instance 'filter
+                          :key "group-children-filter"
+                          :func #'(lambda (product-list params)
+                                    (declare (list product-list params))
+                                    (let ((group-key (getf params :group-key)))
+                                      (remove-if-not
+                                       #'(lambda (product)
+                                           (some #'(lambda (parent)
+                                                     (string= (key parent) group-key))
+                                                 (parents product)))
+                                       product-list)))
+                          :objtype 'product
+                          :default-set 'product))))
+
 
 (defun filters.limit-start (items start)
   (nthcdr start items))

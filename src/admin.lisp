@@ -166,7 +166,7 @@
 (defun admin.make-backup (post-data)
   (let ((dobackup (getf post-data :dobackup))
         (output))
-    (when (and post-data (string= dobackup "dobackup"))
+    (when (string= dobackup "dobackup")
       (setf output
             (handler-case
                 (progn
@@ -177,60 +177,53 @@
 
 (defun admin.do-action (action)
   (handler-case
-      (when action
-        (string-case action
-          ("do-gc"
-           (progn
-             (sb-ext:gc :full t)
-             (regex-replace-all
-              "\\n"
-              (with-output-to-string
-                  (*standard-output*)
-                (room))
-              "<br>")))
-          ("report-products"
-           (progn
-             (let ((name (format nil "reports/products-report-~a.csv" (time.encode.backup-filename))))
-               (create-report name #'write-products-report)
-               "DO PRODUCTS REPORT")))
-          ("proccess-pictures"
-           (progn
-             (rename-convert-all)
-             "DO proccess-pictures"))
-          ("dtd"
-           (progn
-             (dtd)
-             "DO DTD"))
-          ("report"
-           (progn
-             (let ((name (format nil "reports/write-groups-active-product-num-~a.csv" (time.encode.backup-filename))))
-               (create-report name #'write-groups-active-product-num)
-               "DO REPORT")))
-          ("articles-restore"
-           (articles.restore)
-           "RESTORE ARTICLES")
-          ("main-page-restore"
-           (main-page.restore)
-           "RESTORE MAIN-PAGE")
-          ("cartrige-restore"
-           (cartrige.restore)
-           "RESTORE Cartrige")
-          ("static-pages-restore"
-           (static-pages.restore)
-           "STATIC PAGES RESTORE")
-          ("groupd-restore"
-           (groupd.restore)
-           "GROUPD RESTORE")
-          ("seo-report"
-           (report.do-seo-reports)
-           "SEO-REPORT")
-          ("keyoptions-aliases-restore"
-           (report.do-alias-reports)
-           action)
-          ("gateway-restore"
-           (gateway.restore-history)
-           "GATEWAY-RESTORE")
-          (t (format nil "DON't know action ~a" action))))
+      (string-case (ensure-string action)
+        ("do-gc"
+         (sb-ext:gc :full t)
+         (htmlize
+          (with-output-to-string
+              (*standard-output*)
+            (room))))
+        ("report-products"
+         (let ((name (format nil "reports/products-report-~a.csv" (time.encode.backup-filename))))
+           (create-report name #'write-products-report)
+           "DO PRODUCTS REPORT"))
+        ("proccess-pictures"
+         (rename-convert-all)
+         "DO proccess-pictures")
+        ("dtd"
+         (dtd)
+         "DO DTD")
+        ("report"
+         (let ((name (format nil "reports/write-groups-active-product-num-~A.csv"
+                             (time.encode.backup-filename))))
+           (create-report name #'write-groups-active-product-num)
+           "DO REPORT"))
+        ("articles-restore"
+         (articles.restore)
+         "RESTORE ARTICLES")
+        ("main-page-restore"
+         (main-page.restore)
+         "RESTORE MAIN-PAGE")
+        ("cartrige-restore"
+         (cartrige.restore)
+         "RESTORE Cartrige")
+        ("static-pages-restore"
+         (static-pages.restore)
+         "STATIC PAGES RESTORE")
+        ("groupd-restore"
+         (groupd.restore)
+         "GROUPD RESTORE")
+        ("seo-report"
+         (report.do-seo-reports)
+         "SEO-REPORT")
+        ("keyoptions-aliases-restore"
+         (report.do-alias-reports)
+         action)
+        ("gateway-restore"
+         (gateway.restore-history)
+         "GATEWAY-RESTORE")
+        (t (format nil "DON't know action ~a" action)))
     (error (e) (format  nil "ERROR:~%~a" e))))
 
 (defun admin.parenting-content (post-data)
@@ -250,7 +243,7 @@
                               :when-fn
                               #'(lambda (item)
                                   (and (null (parent item))
-                                       (not (gethash (key item) *special-products*)))))))
+                                       (not (special-p item)))))))
     (soy.class_forms:parenting-page
      (list :products (mapcar #'(lambda (product)
                                  (soy.class_forms:unparented-product-checkbox
@@ -260,33 +253,22 @@
            :length (length unparented-products)
            :groups (slots.%view 'group-list nil "GROUPS" nil)))))
 
-(defun show-admin-page (&optional (key nil))
+(defun show-admin-page (&optional (key ""))
   (let ((post-data (servo.alist-to-plist (hunchentoot:post-parameters hunchentoot:*request*))))
     (soy.admin:main
      (list :content
-           (cond
-             ((null key)
-              (format nil "<p> Админка в разработке </p>"))
-             ((string= key "info")
-              (soy.admin:info (list :info (admin.get-info))))
-             ((string= key "actions")
-              (soy.admin:action-buttons (list :post post-data
-                                              :info (admin.do-action (getf post-data :action)))))
-             ((string= key "edit")
-              (admin.edit-content post-data))
-             ((string= key "make")
-              (admin.make-content post-data))
-             ((string= key "parenting")
-              (admin.parenting-content post-data))
-             ((string= key "pics")
-              (admin.pics-deleting post-data))
-             ((string= key "templates")
-              (admin.compile-template post-data))
-             ((string= key "backup")
-              (admin.make-backup post-data))
-             ((string= key "cron-jobs")
-              (cron.html-print-job-list post-data))
-             (t (format nil "~a" key)))))))
+           (string-case (ensure-string key)
+             ("info" (soy.admin:info (list :info (admin.get-info))))
+             ("actions" (soy.admin:action-buttons (list :post post-data
+                                                        :info (admin.do-action
+                                                               (getf post-data :action)))))
+             ("edit" (admin.edit-content post-data))
+             ("make" (admin.make-content post-data))
+             ("parenting" (admin.parenting-content post-data))
+             ("pics" (admin.pics-deleting post-data))
+             ("templates" (admin.compile-template post-data))
+             ("backup" (admin.make-backup post-data))
+             (t "Админка в разработке"))))))
 
 
 (defun admin.post-data-preprocessing (post-data)

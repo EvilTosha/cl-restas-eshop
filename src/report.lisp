@@ -4,6 +4,16 @@
 
 (defparameter *special-products* (make-hash-table :test #'equal))
 
+(defgeneric special-p (product)
+  (:documentation "Checks whether product is in *special-products*"))
+
+(defmethod special-p ((product string))
+  (not (null (gethash product *special-products*))))
+
+(defmethod special-p ((product product))
+  (when product
+    (special-p (key product))))
+
 (defun write-products-report (stream)
   (labels ((get-2-lvl-group (obj)
              (when (parent obj)

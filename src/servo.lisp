@@ -710,3 +710,16 @@
   "When obj is list return obj, otherwise return list with only element - obj"
   (if (consp obj) obj (list obj)))
 
+(defun ensure-string (obj)
+  "If obj is string return obj, if obj is nil, convert to empty string, otherwise throw error"
+  ;; TODO: add printable types check
+  (etypecase obj
+    (string obj)
+    (null "")
+    (t (error "Object is niether string nor nil"))))
+
+(defun htmlize (string)
+  "Make string appropriate for viewing in html (replace newlines with <br />)"
+  (declare (string string))
+  (regex-replace-all "\\n" string "<br />"))
+
