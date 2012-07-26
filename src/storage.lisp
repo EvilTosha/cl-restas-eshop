@@ -70,15 +70,14 @@ If no type given, search in all storages"
                (remhash key (get-storage k)))
            *classes*))
 
-(defun process-storage (func type &optional when-fn)
+(defun process-storage (func type &optional (when-fn (constantly t)))
   "Process storage of given type apllying given func to each element.
 Func should take 1 argument - elt for processing
 Note: processed element can't be changed during processing"
-  (declare (function func) (symbol type) ((or null function) when-fn))
+  (declare (function func when-fn) (symbol type))
   (maphash #'(lambda (k v)
                (declare (ignore k))
-               (when (and when-fn
-                          (funcall when-fn v))
+               (when (funcall when-fn v)
                  (funcall func v)))
            (get-storage type)))
 

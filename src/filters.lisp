@@ -29,9 +29,9 @@
 (class-core.make-class-and-methods
  basic-filter
  (;; type of filter ('option-range, 'option-checkbox, etc.)
-  (:name filter-type  :initform (error "type should be specified")     :disabled nil  :type symbol           :serialize t)
+  (:name filter-type  :initform (error "Filter-type should be specified") :disabled nil  :type symbol           :serialize t)
   ;; same meaning as slot data in filter class
-  (:name data         :initform nil                                    :disabled nil  :type string-plist     :serialize t))
+  (:name data         :initform nil                                       :disabled nil  :type string-plist     :serialize t))
  :instance-initforms (:filter-type 'undefined)
  :make-storage nil)
 
