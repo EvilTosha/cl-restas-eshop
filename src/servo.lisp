@@ -719,7 +719,8 @@
     (t (error "Object is niether string nor nil"))))
 
 (defun htmlize (string)
-  "Make string appropriate for viewing in html (replace newlines with <br />)"
+  "Make string appropriate for viewing in html (replace newlines with <br />);
+Used for printing system info to browser"
   (declare (string string))
   (regex-replace-all "\\n" string "<br />"))
 

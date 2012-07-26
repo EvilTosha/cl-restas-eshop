@@ -56,7 +56,12 @@ add it to all parents' lists"
   (:documentation "Decoding slot value from string (not json string).
 Usually used for unserializing from backup entry"))
 
-;;; Standard error methods, used when no more specific method defined
+(defgeneric slots.%serialize-p (type value &optional initform)
+  (:documentation "Check whether slot-value needs serialization. Usually it checks
+for not being equal to initform.
+Note: initform is passed unevaluated"))
+
+;;; Standard error/default methods, used when no more specific method defined
 (defmethod slots.%get-data (type post-data-string)
   (declare (string post-data-string))
   (error "Attempt to get data for slot that couldn't be represented in admin-table"))
@@ -70,6 +75,11 @@ Type: ~A" type))
   (declare (ignore string))
   (error "Attempt to decode from string slot, that hasn't string reperesentation.
 Type: ~A" type))
+
+(defmethod slots.%serialize-p (type value &optional initform)
+  (and value
+       (valid-string-p (format nil "~A" value))
+       (not (equal value (eval initform)))))
 
 ;;string - строковый тип
 (defmethod slots.%view ((type (eql 'string)) value name disabled)
@@ -152,6 +162,11 @@ Type: ~A" type))
   (declare (string string))
   (anything-to-symbol string))
 
+(defmethod slots.%serialize-p ((type (eql 'symbol)) value &optional initform)
+  ;; symbol always should be serializable
+  (declare (ignore initform))
+  t)
+
 ;; declare type specifier for convenient type checks
 (deftype default-set ()
   `(or symbol list filter))
@@ -211,6 +226,9 @@ Type: ~A" type))
   (let ((decoded-list (decode-json-from-string string)))
     (string-case (first decoded-list)
       ("string" (second decoded-list))
+      ;; list of probably mixed filters and  basic-filters
+      ;; filters have keys so they can be stored by keys
+      ;; basic filters serialize by their 'serialize method
       ("list" (keys-to-objects (second decoded-list) :type 'filter)))))
 
 

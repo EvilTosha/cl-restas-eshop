@@ -77,8 +77,8 @@ Note: processed element can't be changed during processing"
   (declare (function func) (symbol type) ((or null function) when-fn))
   (maphash #'(lambda (k v)
                (declare (ignore k))
-               (when (or (null when-fn)
-                         (funcall when-fn v))
+               (when (and when-fn
+                          (funcall when-fn v))
                  (funcall func v)))
            (get-storage type)))
 

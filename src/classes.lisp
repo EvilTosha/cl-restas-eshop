@@ -54,14 +54,14 @@
  :storage-size 400)
 
 
-;; (class-core.make-class-and-methods
-;;  filter
-;;  ((:name key               :initform ""       :disabled t    :type string)
-;;   (:name parents           :initform nil      :disabled t    :type group-list)
-;;   (:name name              :initform ""       :disabled nil  :type string)
-;;   (:name func              :initform ""       :disabled t    :type string)
-;;   (:name func-string       :initform ""       :disabled t    :type textedit))
-;;  :serialize nil)
+(class-core.make-class-and-methods
+ filter
+ ((:name key               :initform ""       :disabled t    :type string)
+  (:name parents           :initform nil      :disabled t    :type group-list)
+  (:name name              :initform ""       :disabled nil  :type string)
+  (:name func              :initform ""       :disabled t    :type string)
+  (:name func-string       :initform ""       :disabled t    :type textedit))
+ :serialize nil)
 
 (class-core.make-class-and-methods
  vendor

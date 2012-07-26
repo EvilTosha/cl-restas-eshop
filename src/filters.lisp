@@ -20,9 +20,20 @@
   ;; value, that will be used when no initial list/... supplied. Can be collection (list for now) of objects,
   ;; another filter (will use its own default-set) or type (will use storage of that type as collection))
   (:name default-set  :initform nil                                    :disabled nil  :type default-set      :serialize t))
- :instance-initforms (:objtype 'undefined)
- ;; just for testing, remove later
- :serialize nil)
+ :instance-initforms (:objtype 'undefined))
+
+;; class for storing basic filters such as radio-option filter, checkbox-option filter, etc.
+;; can't be used as standalone filter, the only usage is in slots of filters
+;; Note: no need for checking objects' type, because basic filter can only be used within
+;; filter's checks, and all typechecks are done there
+(class-core.make-class-and-methods
+ basic-filter
+ (;; type of filter ('option-range, 'option-checkbox, etc.)
+  (:name filter-type  :initform (error "type should be specified")     :disabled nil  :type symbol           :serialize t)
+  ;; same meaning as slot data in filter class
+  (:name data         :initform nil                                    :disabled nil  :type string-plist     :serialize t))
+ :instance-initforms (:filter-type 'undefined)
+ :make-storage nil)
 
 (defun filters.filter (filter &key obj-set outer-params)
   "Filters given set of objects with given filter by given params. Returns list of parameters.
@@ -97,7 +108,10 @@ or filtrating by value of specific option of product"
                                                  (parents product)))
                                        product-list)))
                           :objtype 'product
-                          :default-set 'product))))
+                          :default-set 'product)
+           (make-instance 'filter
+                          :key "")))
+
 
 
 (defun filters.limit-start (items start)

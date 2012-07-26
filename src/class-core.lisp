@@ -52,9 +52,9 @@
 
 
 (defmacro class-core.define-unserialize-method (name slot-list)
-  `(progn
-     (defmethod %unserialize (raw (dummy ,name))
-       "Make an object with read from file fields"
+  `(defmethod %unserialize (line (dummy ,name))
+     "Make an object with read from file fields"
+     (let ((raw (decode-json-from-string line)))
        (make-instance
         ',name
         ,@(mapcan
@@ -66,24 +66,24 @@
                      (if val
                          (slots.%decode-from-string ',(getf field :type) val)
                          ,initform)))))
-           slot-list)))
-     (defmethod %unserialize-from-file (filepath (dummy ,name) storage)
-       "Read from file and decode json"
-       (with-open-file (file filepath)
-         (let ((file-length (cl:file-length file))
-               (percent 0))
-           (loop
-              :for line := (read-line file nil 'EOF)
-              :until (eq line 'EOF)
-              :do
-              (let ((item (%unserialize (decode-json-from-string line)
-                                        dummy))
-                    (cur-pos (round (* 100 (/ (cl:file-position file) file-length)))))
-                (when (> cur-pos percent)
-                  (setf percent cur-pos)
-                  (when (zerop (mod percent 10))
-                    (log5:log-for info-console "Done percent: ~a%" percent)))
-                (setf (gethash (key item) storage) item))))))))
+           slot-list)))))
+
+(defun %unserialize-from-file (filepath dummy storage)
+  "Read from file and decode json; only applicable to classes with storage"
+  (with-open-file (file filepath)
+    (let ((file-length (cl:file-length file))
+          (percent 0))
+      (loop
+         :for line := (read-line file nil 'EOF)
+         :until (eq line 'EOF)
+         :do
+         (let ((item (%unserialize line dummy))
+               (cur-pos (round (* 100 (/ (cl:file-position file) file-length)))))
+           (when (> cur-pos percent)
+             (setf percent cur-pos)
+             (when (zerop (mod percent 10))
+               (log5:log-for info-console "Done percent: ~a%" percent)))
+           (setf (gethash (key item) storage) item))))))
 
 (defun class-core.bind-product-to-group (product group)
   "Bind product to group, and push product to group's children"
@@ -247,7 +247,9 @@ such as pointer to storage, serialize flag, etc.")
      ,(format nil "Return T if OBJECT is a ~A, and NIL otherwise." name)
      (typep object ',name)))
 
-(defmacro class-core.make-class-and-methods (name slot-list &key (serialize t)
+(defmacro class-core.make-class-and-methods (name slot-list &key
+                                             (serialize t)
+                                             (serializable t)
                                              (make-storage t) storage-size
                                              instance-initforms)
   "Make class, storage for its instances (if needed) and necessary methods for it
@@ -267,10 +269,10 @@ such as pointer to storage, serialize flag, etc.")
              `(;; set :storage property if class as pointer to real storage
                (setf (getf (gethash ',name *classes*) :storage)
                      (make-hash-table :test #'equal ,@(awhen storage-size
-                                                             (list :size it))))
-               (class-core.define-unserialize-method ,name ,slot-list)
-               ,@(when serialize
-                       `((backup.define-serialize-method ,name ,slot-list)))))))
+                                                             (list :size it))))))
+     ,@(when serializable
+             `((class-core.define-unserialize-method ,name ,slot-list)
+               (backup.define-serialize-method ,name ,slot-list)))))
 
 (defun keys-to-objects (key-list &key type (remove-if #'null) default key)
   "Returns list of objects corresponding to given list of keys.

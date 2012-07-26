@@ -7,24 +7,20 @@
 (defmacro backup.define-serialize-method (name class-slots)
   "Macros for creating serialize method"
   `(defmethod backup.serialize-entity ((object ,name))
-     (format nil "{~{~a~^,~}}"
+     (format nil "{~{~A~^,~}}"
              (remove-if #'null
                         (list
                          ,@(mapcar #'(lambda (slot)
-                                       `(let* ((slot-value (,(getf slot :name) object))
-                                               (encoded-value (when slot-value
-                                                                (slots.%encode-to-string
-                                                                 ',(getf slot :type)
-                                                                 slot-value))))
-                                          (when (and slot-value
-                                                     (string/= (format nil "~a" slot-value) "")
-                                                     ;; FIXME: it's not correct to use such getter
-                                                     ;; for initform here
-                                                     (not (equal slot-value ,(getf slot :initform)))
-                                                     encoded-value)
-                                            (format nil "~a:~a"
+                                       `(let ((slot-value (,(getf slot :name) object)))
+                                          (when (slots.%serialize-p
+                                                 ',(getf slot :type)
+                                                 ;; initform should be passed unevaluated
+                                                 slot-value ',(getf slot :initform))
+                                            (format nil "~A:~A"
                                                     (encode-json-to-string ',(getf slot :name))
-                                                    (encode-json-to-string encoded-value)))))
+                                                    (encode-json-to-string (slots.%encode-to-string
+                                                                            ',(getf slot :type)
+                                                                            slot-value))))))
                                    (remove-if-not #'(lambda (slot)
                                                       (getf slot :serialize))
                                                   class-slots)))))))
@@ -42,7 +38,7 @@
                          (format file "~A~%" (backup.serialize-entity obj)))
                      type
                      #'serialize-p))
-  (log5:log-for info "Total serialized: ~a" (count-storage type)))
+  (log5:log-for info "Total serialized: ~A" (count-storage type)))
 
 
 (defun backup.serialize-all (&key (backup-dir (config.get-option "PATHS" "path-to-backups"))
