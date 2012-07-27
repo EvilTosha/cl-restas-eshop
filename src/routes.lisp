@@ -54,22 +54,25 @@
 ;; FILTER
 
 (defun test-route-filter ()
+  ;; marketing-filters-test
   (let* ((request-list (request-list))
-         (key (cadr request-list))
-         (filter (caddr request-list))
-         (grp (getobj key 'group))
-         (fltr (getobj filter 'filter)))
-    (and grp
-         fltr
-         (equal (key (parent fltr)) key))))
+         (group-key (cadr request-list))
+         (filter-key (caddr request-list))
+         (group (getobj group-key 'group))
+         (filter (getobj filter-key 'filter)))
+    (and group
+         filter
+         (equal group (parent filter)))))
 
 (defun route-filter (filter)
   (getobj filter 'filter))
 
 (restas:define-route filter/-route ("/:key/:filter/" :requirement #'test-route-filter)
+  (declare (ignore key))
   (route-filter filter))
 
 (restas:define-route filter-route ("/:key/:filter" :requirement #'test-route-filter)
+  (declare (ignore key))
   (route-filter filter))
 
 

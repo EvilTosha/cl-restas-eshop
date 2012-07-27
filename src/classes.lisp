@@ -134,3 +134,21 @@ if there is not one, or no vendor passed, return group's seo-text"
          it             ; if condition non-nil, it is required seo-text
          ;; else
          (seo-text group))))
+
+
+(defgeneric parent (item)
+  (:documentation "Returns main parent of item"))
+
+(defmethod parent (item)
+  "Standard parent, when no more specific method defined"
+  (first (parents item)))
+
+(defmethod name ((item filter))
+  (getf (data item) :name))
+
+(defun get-root-parent (item)
+  (when item
+    (let ((parent (parent item)))
+      (if (null parent)
+          item
+          (get-root-parent parent)))))

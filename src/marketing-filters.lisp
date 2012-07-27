@@ -2,45 +2,40 @@
 
 (in-package #:eshop)
 
-;;Возвращает длину списка активных продуктов-потомков подходящих под фильтр
-(defun get-filtered-product-list-len (object filter)
-  (length (remove-if-not (func filter)
-                         (remove-if-not #'active
-                                        (storage.get-recursive-products object)))))
+(defun marketing-filters.group-children (group &optional (showall nil))
+  (declare (group group) (boolean showall))
+  (if showall
+      (products group)
+      (filters.filter (getobj "active-products" 'filter) :obj-set (products group))))
 
-(defun is-empty-filtered-list (object filter)
-  (zerop (get-filtered-product-list-len object filter)))
+(defun marketing-filters.render-filters (group &optional (showall nil))
+  "Rendering of one-click filters"
+  (declare (group group))
+  (let* ((products (marketing-filters.group-children group showall))
+         (filters (marketing-filters.get-filters group products)))
+    (when filters
+      ;; FIXME: write proper render method (common for all filters)
+      (list (soy.fullfilter:rightfilter
+             (list :filters (mapcar #'(lambda (pair)
+                                        (list :name (getf (data (car pair)) :name)
+                                              :key (key (car pair))
+                                              :parentkey (key group)
+                                              :num (cdr pair)))
+                                    filters)))))))
 
+(defgeneric marketing-filters.get-filters (object products)
+  (:documentation "Returns list of non-null filters and number of products in result"))
 
-;;Составление строки для представления фильтров в 1 клик на странице с fullfilter
-(defun filters.make-string-filter (filter num &optional itsme)
-  (if itsme
-      (format nil "<b>~a</b> (~a)<br/>"
-              (name filter)
-              num)
-      (format nil "<a class=\"rightfilter\" href=\"/~a/~a\">~a</a> (~a)<br/>"
-              (key (parent filter))
-              (key filter)
-              (name filter)
-              num)))
+(defmethod marketing-filters.get-filters ((group group) (products list))
+  (marketing-filters.get-filters (filters group) products))
 
-;;количество непустых фильтров у группы
-(defun num-nonempty-filters (object)
-  (length (remove-if #'(lambda (fil) (is-empty-filtered-list object fil))
-                     (filters object))))
-
-(defmethod filters.get-filters ((group group) (products list))
-  "Возвращает список ненулевых фильтров на списке объектов и количество объесктов в выборке"
-  (filters.get-filters (filters group) products))
-
-(defmethod filters.get-filters ((filters list) (products list))
-  "Возвращает список ненулевых фильтров на списке объектов и количество объесктов в выборке"
-  (remove-if #'null (mapcar #'(lambda (filter)
-                                (let ((num (length
-                                            (remove-if-not (func filter) products))))
-                                  (when (plusp num)
-                                    (cons filter num))))
-                            filters)))
+(defmethod marketing-filters.get-filters ((filters list) (products list))
+  (remove-if #'null
+             (mapcar #'(lambda (filter)
+                         (let ((num (filters.count filter :obj-set products)))
+                           (when (plusp num)
+                             (cons filter num))))
+                     filters)))
 
 (defun filters.proccess-xls (xls-file line-proccess-func &key (ignor-head-line t))
   (log5:log-for info "proccess:: ~a" xls-file)

@@ -27,7 +27,7 @@
 ;;TODO временно убрана проверка на пустые группы, тк это поле невалидно
 (defun render.menu (&optional current-object)
   "Creating left menu"
-  (let* ((current-root (class-core.get-root-parent current-object))
+  (let* ((current-root (get-root-parent current-object))
          (dividers (list "setevoe-oborudovanie" "foto-and-video" "rashodnye-materialy"))
          (src-lst
           (mapcar #'(lambda (val)
@@ -57,23 +57,6 @@
                                                   :icon (icon val)))))
                   (get-root-groups))))
     (soy.menu:main (list :elts src-lst))))
-
-(defmethod render.get-oneclick-filters ((group group) &optional (full nil))
-  "Отобрадение фильтров в один клик"
-  (let ((products)
-        (filters))
-    (setf products (if full
-                       (storage.get-filtered-products group #'atom)
-                       (storage.get-filtered-products group #'active)))
-    (setf filters (filters.get-filters group products))
-    (when filters
-      (list (soy.fullfilter:rightfilter
-             (list :filters (mapcar #'(lambda (v)
-                                        (filters.make-string-filter (car v)
-                                                                    (cdr v)))
-                                    filters)))))))
-
-
 
 (defmethod render.get-keywords ((object group) &optional (parameters (request-get-plist)))
   (let* ((name (name object))
@@ -131,7 +114,7 @@
                :breadcrumbs (soy.catalog:breadcrumbs (breadcrumbs-add-vendor1 (render.breadcrumbs object) parameters))
                :menu (render.menu object)
                :rightblocks (append
-                             (render.get-oneclick-filters object showall)
+                             (marketing-filters.render-filters object showall)
                              ;;fullfilter
                              (let ((ret (rightblocks object parameters)))
                                (when (fullfilter object)
@@ -152,7 +135,7 @@
                                                                               #'atom
                                                                               #'active))
                                                                (products (storage.get-filtered-products child show-func))
-                                                               (filters (filters.get-filters child products)))
+                                                               (filters (marketing-filters.get-filters child products)))
                                                           (list
                                                            :is-active (active child)
                                                            :name (name child)
@@ -345,51 +328,53 @@
   (let ((optlist
          (remove-if
           #'null
-          (mapcar #'(lambda (optgroup)
-                      ;;не отображать группу опций с именем "Secret"
-                      (if (string/= (getf optgroup :name)
-                                    "Secret")
-                          (let ((options
-                                 (mapcar #'(lambda (option)
-                                             (unless (equal "" (getf option :value))
-                                               (soy.product:option
-                                                (list :name (getf option :name)
-                                                      :value (getf option :value)))))
-                                         (getf optgroup :options))))
-                            (if (notevery #'null options)
-                                (soy.product:optgroup (list :name (getf optgroup :name)
-                                                            :options options))
-                                ""))))
-                  optgroups))))
+          (mapcar
+           #'(lambda (optgroup)
+               ;;не отображать группу опций с именем "Secret"
+               (if (string/= (getf optgroup :name)
+                             "Secret")
+                   (let ((options
+                          (mapcar #'(lambda (option)
+                                      (unless (equal "" (getf option :value))
+                                        (soy.product:option
+                                         (list :name (getf option :name)
+                                               :value (getf option :value)))))
+                                  (getf optgroup :options))))
+                     (if (notevery #'null options)
+                         (soy.product:optgroup (list :name (getf optgroup :name)
+                                                     :options options))
+                         ""))))
+          optgroups))))
     (when optlist
       (soy.product:optlist (list :optgroups optlist)))))
 
 (defmethod render.get-catalog-keyoptions ((object product))
   (let ((parent (parent object)))
     (when parent
-      (remove-if #'null
-                 (mapcar #'(lambda (pair)
-                             (let ((key-optgroup (getf pair :optgroup))
-                                   (key-optname  (getf pair :optname))
-                                   (key-alias  (getf pair :showname))
-                                   (key-units  (getf pair :units))
-                                   (optvalue))
-                               (mapcar #'(lambda (optgroup)
-                                           (when (string= (getf optgroup :name) key-optgroup)
-                                             (let ((options (getf optgroup :options)))
-                                               (mapcar #'(lambda (option)
-                                                           (if (string= (getf option :name) key-optname)
-                                                               (setf optvalue (getf option :value))))
-                                                       options))))
-                                       (optgroups object))
-                               (if (and optvalue
-                                        (not (equal "" optvalue)))
-                                   (list :optgroup key-alias
-                                         :optvalue (if (equal "Есть" optvalue)
-                                                       ""
-                                                       optvalue)
-                                         :optunits key-units))))
-                         (catalog-keyoptions parent))))))
+      (remove-if
+       #'null
+       (mapcar
+        #'(lambda (pair)
+            (let ((key-optgroup (getf pair :optgroup))
+                  (key-optname  (getf pair :optname))
+                  (key-alias  (getf pair :showname))
+                  (key-units  (getf pair :units))
+                  (optvalue))
+              (mapcar #'(lambda (optgroup)
+                          (when (string= (getf optgroup :name) key-optgroup)
+                            (let ((options (getf optgroup :options)))
+                              (mapcar #'(lambda (option)
+                                          (if (string= (getf option :name) key-optname)
+                                              (setf optvalue (getf option :value))))
+                                                   options))))
+                      (optgroups object))
+              (when (valid-string-p optvalue)
+                (list :optgroup key-alias
+                      :optvalue (if (equal "Есть" optvalue)
+                                    ""
+                                    optvalue)
+                      :optunits key-units))))
+        (catalog-keyoptions parent))))))
 
 
 
@@ -580,15 +565,13 @@
 
 
 (defmethod restas:render-object ((designer eshop-render) (object filter))
-  (let ((request-get-plist (request-get-plist))
-        (fltr-name  (name object))
-        (grname (name (parent object)))
-        (products-list)
-        (all-products-list))
-    (setf all-products-list (if (getf request-get-plist :showall)
-                                (storage.get-filtered-products (parent object) #'atom)
-                                (storage.get-filtered-products (parent object) #'active)))
-    (setf products-list (remove-if-not (func object) all-products-list))
+  (let* ((request-get-plist (request-get-plist))
+         (fltr-name  (getf (data object) :name))
+         (group (parent object))
+         (group-name (name group))
+         (showall (getf request-get-plist :showall))
+         (group-children (marketing-filters.group-children group showall))
+         (products-list (filters.filter object :obj-set group-children)))
     (if (null (getf request-get-plist :sort))
         (setf (getf request-get-plist :sort) "pt"))
     (awhen (getf (request-get-plist) :vendor)
@@ -601,32 +584,31 @@
       request-get-plist
       (default-page
           (soy.catalog:content
-           (list :name (name object)
+           (list :name fltr-name
                  :breadcrumbs (soy.catalog:breadcrumbs (render.breadcrumbs object))
                  :menu (render.menu object)
                  :rightblocks (append
-                               (render.get-oneclick-filters (parent object)
-                                                            (getf request-get-plist :showall))
-                               (rightblocks (parent object) request-get-plist))
+                               (marketing-filters.render-filters group showall)
+                               (rightblocks group request-get-plist))
                  :subcontent (soy.catalog:centerproduct
                               (list
                                :sorts (sorts request-get-plist)
-                               :producers (render.show-producers all-products-list)
+                               :producers (render.show-producers group-children)
                                :accessories (soy.catalog:accessories)
                                :pager pager
                                :products (loop
                                             :for product
                                             :in  paginated
                                             :collect (render.view product))))))
-          :keywords (format nil "~a ~a" grname fltr-name)
-          :description (format nil "~a ~a" grname fltr-name)
+          :keywords (format nil "~a ~a" group-name fltr-name)
+          :description (format nil "~a ~a" group-name fltr-name)
           :title (let ((vendor (getf (request-get-plist) :vendor))
                        (name-1 (sklonenie fltr-name 1))
                        (name-2 (sklonenie fltr-name 2))
                        (name-3 (sklonenie fltr-name 3))
-                       (grname-1 (sklonenie grname 1))
-                       (grname-2 (sklonenie grname 2))
-                       (grname-3 (sklonenie grname 3)))
+                       (grname-1 (sklonenie group-name 1))
+                       (grname-2 (sklonenie group-name 2))
+                       (grname-3 (sklonenie group-name 3)))
                    (string-titlecase
                     (if vendor
                         (format nil "~a ~a ~a - купить ~a ~a ~a по низкой цене, продажа ~a ~a ~a с доставкой и гарантией в ЦиFры 320-8080"
@@ -649,7 +631,8 @@
 
 
 
-(defmethod render.show-producers ((products list))
+(defun render.show-producers (products)
+  (declare (list products))
   (let* ((vendors (storage.get-vendors products))
          (url-parameters (request-get-plist))
          (veiws nil))

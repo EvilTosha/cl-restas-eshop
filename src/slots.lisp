@@ -219,7 +219,15 @@ Type: ~A" type))
   (encode-json-to-string
    (etypecase value
      (string `(string ,value))
-     (list `(list ,(mapcar #'key value))))))
+     ;; list of probably mixed filters and  basic-filters
+     ;; filters have keys so they can be stored by keys
+     ;; basic filters serialize by their 'serialize method
+     (list `(list ,(mapcar #'(lambda (elt)
+                               (etypecase elt
+                                 (filter (list 'filter (key elt)))
+                                 (basic-filter
+                                  (list 'basic-filter (backup.serialize-entity elt)))))
+                           value))))))
 
 (defmethod slots.%decode-from-string ((type (eql 'filter-fn-data)) string)
   (declare (string string))
@@ -229,7 +237,15 @@ Type: ~A" type))
       ;; list of probably mixed filters and  basic-filters
       ;; filters have keys so they can be stored by keys
       ;; basic filters serialize by their 'serialize method
-      ("list" (keys-to-objects (second decoded-list) :type 'filter)))))
+      ("list" (mapcar #'(lambda (pair)
+                          (string-case (first pair)
+                            ("filter" (getobj (second pair) 'filter))
+                            ("basicFilter" (%unserialize (second pair)
+                                                          (get-instance 'basic-filter)))
+                            (t (log5:log-for warning
+                                             "Unappropriate type ~A in 'filter-fn-data slot"
+                                             (first pair)))))
+                      (second decoded-list))))))
 
 
 ;;textedit, онлайновый WYSIWYG редактор текста

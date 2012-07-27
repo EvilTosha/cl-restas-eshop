@@ -286,17 +286,6 @@ Remove elements from result list corresponding to remove-func"
                            (getobj (funcall key key-obj) type default))
                        key-list))))
 
-(defun parent (item)
-  "Returns main parent of item"
-  (car (parents item)))
-
-(defun class-core.get-root-parent (item)
-  (when item
-    (let ((parent (parent item)))
-      (if (null parent)
-          item
-          (class-core.get-root-parent parent)))))
-
 (defun class-exist-p (class)
   "Checks whether system has class with given name"
   (declare (symbol class))

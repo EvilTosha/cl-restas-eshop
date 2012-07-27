@@ -537,7 +537,8 @@
             (storage.get-recursive-products object))
     result-products))
 
-(defmethod vendor-filter-controller (product vendor)
+;; TODO: move to filters
+(defun vendor-filter-controller (product vendor)
   (let ((product-vendor (vendor product)))
     (string=
      (string-downcase (string-trim '(#\Space #\Tab #\Newline) product-vendor))
