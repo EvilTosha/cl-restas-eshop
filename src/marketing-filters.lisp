@@ -9,7 +9,7 @@
       (filters.filter (getobj "active-products" 'filter) :obj-set (products group))))
 
 (defun marketing-filters.render-filters (group &optional (showall nil))
-  "Rendering of one-click filters"
+  "Rendering of marketing filters"
   (declare (group group))
   (let* ((products (marketing-filters.group-children group showall))
          (filters (marketing-filters.get-filters group products)))
@@ -37,76 +37,78 @@
                              (cons filter num))))
                      filters)))
 
-(defun filters.proccess-xls (xls-file line-proccess-func &key (ignor-head-line t))
-  (log5:log-for info "proccess:: ~a" xls-file)
-  (let ((num 0))
-    (xls.restore-from-xls
-     (merge-pathnames xls-file)
-     #'(lambda (line)
-         (let* ((args (sklonenie-get-words line)))
-           (incf num)
-           (let ((vendor (gethash (string-downcase (cadr words)) *vendor-storage*)))
-             (when vendor
-               (log5:log-for info "~a|~a|~a|~a|~a"
-                             num (car words) (cadr words) vendor (length words))
-               (setf (name vendor) (cadr words)))
-             ;; (unless vendor
-             ;;   (setf vendor (make-instance 'vendor :key (string-downcase (cadr words))
-             ;;                               :name (string-downcase (cadr words)))))
-             ;; (setf (gethash (car words) (seo-texts vendor)) (caddr words))
-             ;; (setf (gethash (string-downcase (cadr words)) *vendor-storage*) vendor)
-             ))))))
-
-
 ;;; marketing filters
 
-(defun edit-marketing-filter (group key-suffix name func)
-  (let* ((key (format nil "~A-~A" (key group) key-suffix))
-         new-filter
-         (filter (aif (find key (filters group) :test #'equal :key #'key)
-                      it
-                      (progn
-                        (setf new-filter t)
-                        (setobj key (make-instance 'filter))))))
-    (setf (name filter) name)
-    (setf (func filter) func)
-    (setf (key filter) key)
-    (setf (parents filter) (list group))
-    (when new-filter
-      (push filter (filters group)))
-    filter))
+(defun marketing-filters.bind-filter (group default-filter)
+  "Make copy of default-filter with unique key, and with group as parent,
+then bind group and new filter to each other;
+Filter's key is concatenated group's and default-filter's keys"
+  (declare (group group) (filter default-filter))
+  (let* ((key (format nil "~A-~A" (key group) (key default-filter)))
+         (filter default-filter))
+    ;; setup filter's slots
+    (setf (key filter) key
+          (parents filter) (list group))
+    ;; add filter to group's filters slot
+    (setf (gethash key (filters group)) filter)
+    (setobj key filter 'filter)))
 
-(defun create-sale-filter (group)
-  (edit-marketing-filter
-   group "sale" "Ликвидация склада!" #'groupd.is-groupd))
+;; TODO: make recreating/restoring methos(s)
+(defun marketing-filters.create-all-filters ()
+  "Creating all marketing filters in system"
 
-(defun create-bestprice-filter (group)
-  (edit-marketing-filter
-   group "bestprice" "Горячий уик-энд скидок"
-   #'(lambda (object) (plusp (delta-price object)))))
 
-(defun create-ipad3-filter (group)
-  (edit-marketing-filter
-   group "ipad3" "IPad 3"
-   #'(lambda (p)
-       (string= "ipad new"
-                (format nil "~(~A~)"
-                        (get-option p "Общие характеристики" "Модель"))))))
+(defun mareketing-filters.default-sale-filter ()
+  "Creating \"sale\" default filter"
+  (make-instance 'filter
+                 :key "sale"
+                 :func #'groupd.is-groupd
+                 :objtype 'product
+                 :default-set 'products
+                 :data (list :name "Ликвидация склада!")))
 
-(defun create-man-sale-filter (group)
-  (edit-marketing-filter
-   group "23feb" "Подарки к 23 февраля" #'groupd.man.is-groupd))
+(defun marketing-filters.default-bestprice-filter ()
+  (make-instance 'filter
+                 :key "bestprice"
+                 :func #'(lambda (object) (plusp (delta-price object)))
+                 :objtype 'product
+                 :default-set 'products
+                 :data (list :name "Горячий уик-энд скидок")))
 
-(defun create-woman-sale-filter (group)
-  (edit-marketing-filter
-   group "8mart" "Подарки к 8 марта" #'groupd.woman.is-groupd))
+(defun marketing-filters.create-ipad3-filter ()
+  (let* ((group (getobj "planshetnie-komputery" 'group))
+         (filter
+          (make-instance 'filter
+                         :key "ipad-filter"
+                         ;; list of one basic-filter
+                         :func-data (list (make-instance
+                                           'basic-filter
+                                           :filter-type 'exact-match
+                                           :data (list :optgroup "Общие характеристики"
+                                                       :optname "Модель"
+                                                       :variant "ipad new")))
+                         :objtype 'product
+                         :default-set (marketing-filters.group-children group)
+                         :parents (list group)
+                         :data (list :name "IPad 3"))))
+    (marketing-filters.bind-filter group filter)))
 
-(defun report.set-man-salefilter ()
-  (process-storage #'create-man-sale-filter 'group))
-
-(defun report.set-woman-salefilter ()
-  (process-storage #'create-woman-sale-filter 'group))
-
+(defun marketing-filters.create-ultrabooks-filter ()
+  (let* ((group (getobj "noutbuki" 'group))
+         (filter
+          (make-instance 'fitler
+                         :key "ultrabooks-filter"
+                         :func-data (list (make-instance
+                                           'basic-filter
+                                           :filter-type 'exact-match
+                                           :data (list :optgroup "Общие характеристики"
+                                                       :optname "Тип устройства"
+                                                       :variant "Ультрабук")))
+                         :objtype 'product
+                         :default-set (marketing-filters.group-children group)
+                         :parents (list group)
+                         :data (list :name "Ультрабуки"))))
+    (marketing-filters.bind-filter group filter)))
 
 (defun report.set-filters (groups filter-func name filter-key)
   (mapcar #'(lambda (gr)
@@ -114,15 +116,8 @@
           groups))
 
 (defun report.create-marketing-filters ()
-	(create-ipad3-filter (getobj "planshetnie-komputery" 'group))
-	(report.set-filters (list (getobj "noutbuki" 'group))
-											#'(lambda (product)
-													(equal (get-option product
-                                             "Общие характеристики"
-                                             "Тип устройства")
-                                 "Ультрабук"))
-											"Ультрабуки"
-											"ultrabooks")
+	(marketing-filters.create-ipad3-filter)
+  (marketing-filters.create-ultrabooks-filter)
   ;; TODO: убрать костыль
 	(report.set-filters (collect-storage 'group)
 											#'groupd.holiday.is-groupd

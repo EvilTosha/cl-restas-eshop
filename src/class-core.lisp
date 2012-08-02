@@ -40,6 +40,9 @@
                                                   (getf field :name)))))))
                  slot-list))))
 
+;;; TODO: move to classes.lisp (or products.lisp) file
+;;; and probably rename to decode-fullfilter
+;;; TODO: move to new filters mechanism
 (defmethod class-core.decode (in-string (dummy group-filter))
   "Decode fullfilter"
   (when (valid-string-p in-string)
@@ -50,10 +53,11 @@
                      :base (getf tmp :base)
                      :advanced (getf tmp :advanced)))))
 
+(defgeneric %unserialize (line dummy)
+  (:documentation "Make an object with read from file fields")
 
 (defmacro class-core.define-unserialize-method (name slot-list)
   `(defmethod %unserialize (line (dummy ,name))
-     "Make an object with read from file fields"
      (let ((raw (decode-json-from-string line)))
        (make-instance
         ',name
@@ -247,6 +251,7 @@ such as pointer to storage, serialize flag, etc.")
      ,(format nil "Return T if OBJECT is a ~A, and NIL otherwise." name)
      (typep object ',name)))
 
+;;; TODO: add :documentation arg
 (defmacro class-core.make-class-and-methods (name slot-list &key
                                              (serialize t)
                                              (serializable t)

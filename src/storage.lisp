@@ -29,7 +29,8 @@ Note: returned object is NOT setfable (but its fields are)"
       (maphash #'(lambda (k v)
                    (declare (ignore v))
                    (awhen (and (not res)  ; find only first (but almost always
-                                        ; there should be only one required object)
+                                          ; there should be only one required object)
+                               (get-storage k)
                                (gethash key (get-storage k)))
                      (setf res it)))
                *classes*)
