@@ -200,52 +200,43 @@ Type: ~A" type))
       ("list" (keys-to-objects (second decoded-list)))
       ("filter" (getobj (second decoded-list) 'filter)))))
 
-;; declare type specifier for convenient type checks
-(deftype filter-fn-data ()
-  `(or string list))
 
-(defmethod slots.%view ((type (eql 'filter-fn-data)) value name disabled)
-  (declare (filter-fn-data value) (string name) (boolean disabled))
+(defmethod slots.%view ((type (eql 'filters-hash-table)) value name disabled)
+  (declare (hash-table value) (string name) (boolean disabled))
   ;; TODO: write proper viewer
   (slots.%view 'string value name disabled))
 
-(defmethod slots.%get-data ((type (eql 'filter-fn-data)) post-data-string)
+(defmethod slots.%get-data ((type (eql 'filters-hash-table)) post-data-string)
   (declare (string post-data-string))
   ;; TODO: write proper get-data
   post-data-string)
 
-(defmethod slots.%encode-to-string ((type (eql 'filter-fn-data)) value)
-  (declare (filter-fn-data value))
+(defmethod slots.%encode-to-string ((type (eql 'filters-hash-table)) hash-table)
+  (declare (hash-table hash-table))
   (encode-json-to-string
-   (etypecase value
-     (string `(string ,value))
-     ;; list of probably mixed filters and  basic-filters
-     ;; filters have keys so they can be stored by keys
-     ;; basic filters serialize by their 'serialize method
-     (list `(list ,(mapcar #'(lambda (elt)
-                               (etypecase elt
-                                 (filter (list 'filter (key elt)))
-                                 (basic-filter
-                                  (list 'basic-filter (backup.serialize-entity elt)))))
-                           value))))))
+   (loop
+      :for key :being :the hash-keys :in hash-table
+      :using (hash-value filter)
+      :collect (cons
+                key
+                (encode-json-to-string
+                 (etypecase filter
+                   (filter `(filter ,(key filter)))
+                   (basic-filter `(basic-filter ,(backup.serialize-entity filter)))))))))
 
-(defmethod slots.%decode-from-string ((type (eql 'filter-fn-data)) string)
+(defmethod slots.%decode-from-string ((type (eql 'filters-hash-table)) string)
   (declare (string string))
-  (let ((decoded-list (decode-json-from-string string)))
-    (string-case (first decoded-list)
-      ("string" (second decoded-list))
-      ;; list of probably mixed filters and  basic-filters
-      ;; filters have keys so they can be stored by keys
-      ;; basic filters serialize by their 'serialize method
-      ("list" (mapcar #'(lambda (pair)
-                          (string-case (first pair)
-                            ("filter" (getobj (second pair) 'filter))
-                            ("basicFilter" (%unserialize (second pair)
-                                                          (get-instance 'basic-filter)))
-                            (t (log5:log-for warning
-                                             "Unappropriate type ~A in 'filter-fn-data slot"
-                                             (first pair)))))
-                      (second decoded-list))))))
+  (let ((decoded-list (decode-json-from-string string))
+        (hash-table (make-hash-table :test #'equal)))
+    (loop
+       :for (key . value) :in decoded-list
+       :do (let ((decoded-list (decode-json-from-string value)))
+             (setf (gethash (anything-to-symbol key) hash-table)
+                   (string-case (first decoded-list)
+                     ("filter" (getobj (second decoded-list) 'filter))
+                     ;; TODO: probably make unserialize?
+                     ("basicFilter" (%unserialize (second decoded-list) (get-instance 'basic-filter)))))))
+    hash-table))
 
 
 ;;textedit, онлайновый WYSIWYG редактор текста
@@ -302,7 +293,7 @@ Type: ~A" type))
                   res-list))
              hashtable)
     (when res-list
-      (format nil "[~{~a~^,~}]" res-list))))
+      (format nil "[~{~A~^,~}]" res-list))))
 
 (defmethod slots.%decode-from-string ((type (eql 'textedit-hashtable)) string)
   (declare (string string))

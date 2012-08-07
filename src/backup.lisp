@@ -49,7 +49,8 @@
   (let* ((date-time (time.encode.backup-filename)))
     (maphash
      #'(lambda (class properties)
-         (when (getf properties :serialize)
+         (when (and (getf properties :serialize)
+                    (getf properties :storage))
            (let ((path (merge-pathnames
                         (format nil "~(~A~)/~(~:*~A~)-~A.bkp"
                                 class date-time) backup-dir)))

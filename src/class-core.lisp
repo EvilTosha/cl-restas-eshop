@@ -54,7 +54,7 @@
                      :advanced (getf tmp :advanced)))))
 
 (defgeneric %unserialize (line dummy)
-  (:documentation "Make an object with read from file fields")
+  (:documentation "Make an object with read from file fields"))
 
 (defmacro class-core.define-unserialize-method (name slot-list)
   `(defmethod %unserialize (line (dummy ,name))
@@ -159,17 +159,17 @@ Reload this method if more actions required"
     (setf (fullfilter item) (class-core.decode (raw-fullfilter item) (make-instance 'group-filter)))))
 
 (defmethod %post-unserialize-item ((item filter))
-  ;; eval func-string to func
-  (when (valid-string-p (func-string item))
-    (setf (func item) (eval (read-from-string (func-string item)))))
-  ;; после десериализации в parent лежит список key родительских групп
-  (setf (parents item)
-        (keys-to-objects (parents item) :type 'group))
-  ;; проставление ссылок у родителей на данную группу
-  (mapcar #'(lambda (parent)
-              (push item (filters parent)))
-          (parents item)))
-
+  ;; ;; eval func-string to func
+  ;; (when (valid-string-p (func-string item))
+  ;;   (setf (func item) (eval (read-from-string (func-string item)))))
+  ;; ;; после десериализации в parent лежит список key родительских групп
+  ;; (setf (parents item)
+  ;;       (keys-to-objects (parents item) :type 'group))
+  ;; ;; проставление ссылок у родителей на данную группу
+  ;; (mapcar #'(lambda (parent)
+  ;;             (push item (filters parent)))
+  ;;         (parents item)))
+)
 
 (defmethod %post-unserialize-item ((item vendor))
   "Do post-unserialize actions with vendor object"
@@ -205,21 +205,23 @@ Reloaded standard method %post-unserialize"
   ;; unserialize all instances, without processing slots
   (maphash
    #'(lambda (class properties)
-       (let ((t-storage (make-hash-table :test #'equal)) ; storage for temp instances
-             (instance (get-instance class)))
-         (log5:log-for info "Unserialize ~A..." class)
-         (%unserialize-from-file (get-last-bakup-pathname class)
-                                 instance
-                                 t-storage)
-         ;; set real storage as fully unserialized temp storage
-         (setf (getf properties :storage) t-storage)))
+       ;; unserialize from file, only if class has storage
+       (when (getf properties :storage)
+         (let ((t-storage (make-hash-table :test #'equal)) ; storage for temp instances
+               (instance (get-instance class)))
+           (log5:log-for info "Unserialize ~A..." class)
+           (%unserialize-from-file (get-last-bakup-pathname class)
+                                   instance
+                                   t-storage)
+           ;; set real storage as fully unserialized temp storage
+           (setf (getf properties :storage) t-storage))))
    *classes*)
   ;; post-unserialize actions, such as making links instead of text keys
   ;; Note: can't be merged with previous maphash, because must be after it
   (maphash
    #'(lambda (class properties)
-       (declare (ignore properties))
-       (%post-unserialize (get-instance class)))
+       (when (getf properties :storage)
+         (%post-unserialize (get-instance class))))
    *classes*))
 
 (defparameter *classes* (make-hash-table :test #'equal)

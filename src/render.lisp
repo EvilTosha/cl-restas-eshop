@@ -296,8 +296,6 @@
                                   (delta-price object)))
             :bestprice (plusp (delta-price object))
             :groupd (groupd.is-groupd object)
-            :groupd_man (groupd.man.is-groupd object)
-            :groupd_woman (groupd.woman.is-groupd object)
             :groupd_holiday (groupd.holiday.is-groupd object)
             :firstpic (car pics)
             :promotiontext (concatenate 'string

@@ -6,16 +6,20 @@
  filter
  ((:name key          :initform ""                                     :disabled t    :type string             :serialize t)
   ;; hashtable of other filters and basic filters, for consequentally applying
+  ;; Note: keys should be symbols
   (:name filters      :initform (make-hash-table :test #'equal)        :disabled nil  :type filters-hash-table :serialize t)
   ;; TODO: only groups allowed as parents for now, probably add arbitrary objects later
   (:name parents      :initform nil                                    :disabled nil  :type group-list         :serialize t)
   ;; should be plist of strings (in fact it could be not only string, but any object that has
   ;; read/write methods)
   (:name data         :initform nil                                    :disabled nil  :type string-plist       :serialize t)
+  (:name serialize    :initform t                                      :disabled nil  :type bool               :serialize t)
   ;; value, that will be used when no initial list/... supplied. Can be collection (list for now) of objects,
   ;; another filter (will use its own default-set) or type (will use storage of that type as collection))
-  (:name default-set  :initform nil)))
+  (:name default-set  :initform nil                                    :disabled nil  :type default-set        :serialize t)))
 
+(defmethod name ((object filter))
+  (getf (data object) :name))
 
 ;;; base class for deriving all basic-filter (such as option-range, or slot-exact-match, or custom-fn)
 (class-core.make-class-and-methods
@@ -232,9 +236,9 @@ Returns list of objects"))
   ;; TODO: range, interval, half-interval, equal
   (let* ((params (data filter))
          (slot-name (anything-to-symbol (getf params :slot-name)))
-         (min (awhen (get params :slot-min)
+         (min (awhen (getf params :slot-min)
                 (parse-float it)))
-         (max (awhen (get params :slot-max)
+         (max (awhen (getf params :slot-max)
                 (parse-float it))))
     (declare ((or null number) min max))
     (remove-if-not
@@ -282,12 +286,12 @@ Returns list of objects"))
      obj-set)))
 
 
-(defmethod filters.filter ((filter filter) &key obj-set outer-params)
+(defmethod filters.filter ((filter filter) &key (obj-set nil obj-set-supplied-p) outer-params)
   "Filters given set of objects with given filter by given params. Returns list of objects.
 If no set specified, use default filter's set.
 Params appended with default filter data before passing to filter function"
   (declare (default-set obj-set) (list outer-params))
-  (let* ((set-identifier (if obj-set obj-set (default-set filter)))
+  (let* ((set-identifier (if obj-set-supplied-p obj-set (default-set filter)))
          (set
           (etypecase set-identifier
             (list
@@ -318,9 +322,16 @@ Params appended with default filter data before passing to filter function"
   "Checks single object for corresponding to given filter"
   (not (null (filters.filter filter :obj-set (ensure-list object)))))
 
-(defun filters.count (filter &key obj-set outer-params)
+(defun filters.count (filter &rest params &key obj-set outer-params)
   "Counts number of elements in filtered list"
-  (length (filters.filter filter :obj-set obj-set :outer-params outer-params)))
+  (declare (ignore obj-set outer-params))
+  (length (apply #'filters.filter filter params)))
+
+(defun filters.add-filter (filter inner-filter )
+  (declare (filter filter) ((or filter basic-filter) inner-filter))
+  ;; TODO: get rid of gensym
+  (setf (gethash (gensym) (filters filter))
+        inner-filter))
 
 (defun filters.create-standard-filters ()
   "Creating standard filters, such as getters of children of object,

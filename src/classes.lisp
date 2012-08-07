@@ -42,7 +42,7 @@
   (:name delivery-price      :initform nil                             :disabled nil   :type int                       :serialize t)
   (:name groups              :initform nil                             :disabled t     :type group-list                :serialize nil)
   (:name products            :initform nil                             :disabled t     :type product-list              :serialize nil)
-  (:name filters             :initform nil                             :disabled t     :type undefined                 :serialize nil)
+  (:name filters             :initform (make-hash-table :test #'equal) :disabled t     :type undefined                 :serialize nil)
   (:name fullfilter          :initform nil                             :disabled t     :type undefined                 :serialize nil)
   (:name raw-fullfilter      :initform nil                             :disabled nil   :type textedit-raw              :serialize t)
   (:name vendors             :initform (make-hash-table :test #'equal) :disabled t     :type undefined #||hash-table||#:serialize nil)
@@ -78,14 +78,10 @@
 
 
 (defgeneric serialize-p (object)
-  (:documentation "Checks whether object needs serialization (used in backup methods)"))
-
-(defmethod serialize-p (object)
-  t)
-
-(defmethod serialize-p ((object filter))
-  (valid-string-p (func-data object)))
-
+  (:documentation "Checks whether object needs serialization (used in backup methods)")
+  (:method (object) t)
+  (:method ((object filter))
+           (serialize object)))
 
 ;; TODO: rewrite options store mechanism (with using string literal -> id convertion)
 (defmacro with-option1 (product optgroup-name option-name body)
