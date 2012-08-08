@@ -204,7 +204,18 @@ Type: ~A" type))
 (defmethod slots.%view ((type (eql 'filters-hash-table)) value name disabled)
   (declare (hash-table value) (string name) (boolean disabled))
   ;; TODO: write proper viewer
-  (slots.%view 'string value name disabled))
+  (soy.class_forms:filter-hash-table-field
+   (list :disabled disabled
+         :name name
+         :types (list (list :name "Option Checkbox"     :value "option-checkbox-filter")
+                      (list :name "Option Radio"        :value "option-radio-filter")
+                      (list :name "Option Exact Match"  :value "option-exact-match-filter")
+                      (list :name "Option Substring"    :value "option-substring-filter")
+                      (list :name "Option Exist"        :value "option-have-filter")
+                      (list :name "Slot Range"          :value "slot-range-filter")
+                      (list :name "Slot Value (Symbol)" :value "slot-value-symbol-filter")
+                      (list :name "Slot Value (String)" :value "slot-value-string-filter")
+                      (list :name "Function"            :value "function-filter")))))
 
 (defmethod slots.%get-data ((type (eql 'filters-hash-table)) post-data-string)
   (declare (string post-data-string))

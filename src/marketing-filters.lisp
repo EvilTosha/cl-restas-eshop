@@ -3,14 +3,14 @@
 (in-package #:eshop)
 
 (defun marketing-filters.group-children (group &optional (showall nil))
-  (declare (group group) (boolean showall))
+  (declare (group group))
   (if showall
       (products group)
       (filters.filter (getobj "active-products" 'filter) :obj-set (products group))))
 
 (defun marketing-filters.render-filters (group &optional (showall nil))
   "Rendering of marketing filters"
-  (declare (group group) (boolean showall))
+  (declare (group group))
   (let* ((products (marketing-filters.group-children group showall))
          (filters (marketing-filters.get-filters group products)))
     (when filters

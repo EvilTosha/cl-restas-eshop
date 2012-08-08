@@ -53,6 +53,36 @@
 (restas:define-route admin-test-get-request-route ("/administration-super-panel/test-get-post" :method :get)
   (admin.test-get-post-parse))
 
+(restas:define-route admin-filter-create ("administration-super-panel/filter-create" :method :get)
+  (string-case (hunchentoot:get-parameter "get")
+    ("fields"
+     (encode-json-to-string
+      ;; TODO: unify somehow
+      (string-case (hunchentoot:get-parameter "filter-type")
+        ("option-checkbox-filter" (list (list (cons 'name "Группа опций") (cons 'value 'optgroup))
+                                        (list (cons 'name "Имя опции") (cons 'value 'optname))
+                                        (list (cons 'name "Варианты") (cons 'value 'variants) (cons 'type 'multy))))
+        ("option-radio-filter" (list (list (cons 'name "Группа опций") (cons 'value 'optgroup))
+                                     (list (cons 'name "Имя опции") (cons 'value 'optname))
+                                     (list (cons 'name "Вариант") (cons 'value 'variant))))
+        ("option-exact-match-filter" (list (list (cons 'name "Группа опций") (cons 'value 'optgroup))
+                                           (list (cons 'name "Имя опции") (cons 'value 'optname))
+                                           (list (cons 'name "Вариант") (cons 'value 'variant))))
+        ("option-substring-filter" (list (list (cons 'name "Группа опций") (cons 'value 'optgroup))
+                                         (list (cons 'name "Имя опции") (cons 'value 'optname))
+                                         (list (cons 'name "Вариант") (cons 'value 'variant))))
+        ("option-have-filter" (list (list (cons 'name "Группа опций") (cons 'value 'optgroup))
+                                    (list (cons 'name "Имя опции") (cons 'value 'optname))))
+        ("slot-range-filter" (list (list (cons 'name "Характеристика") (cons 'value 'slot-name))
+                                   (list (cons 'name "Минимальное значение") (cons 'value 'slot-min))
+                                   (list (cons 'name "Максимальное значение") (cons 'value 'slot-max))))
+        ("slot-value-symbol-filter" (list (list (cons 'name "Характеристика") (cons 'value 'slot-name))
+                                          (list (cons 'name "Значение") (cons 'value 'slot-value))))
+        ("slot-value-string-filter" (list (list (cons 'name "Характеристика") (cons 'value 'slot-name))
+                                          (list (cons 'name "Значение") (cons 'value 'slot-value))))
+        ("function-filter" (list (list (cons 'name "Функция") (cons 'value 'func-text)))))))))
+
+
 (defun admin-compile-templates ()
   (servo.compile-soy "admin.soy"
                      "class_forms.soy"))
