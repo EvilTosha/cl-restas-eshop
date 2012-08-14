@@ -174,8 +174,8 @@ Reload this method if more actions required"
   (setf (keyoptions item) (mapcar #'(lambda (pair)
                                       (list :optgroup (cdr (assoc :optgroup pair))
                                             :optname (cdr (assoc :optname pair))
-                                            :showname (cdr (assoc :showname item))
-                                            :units (cdr (assoc :units item))))
+                                            :showname (cdr (assoc :showname pair))
+                                            :units (cdr (assoc :units pair))))
                                   (keyoptions item)))
   ;;catalog-keyoptions
   (setf (catalog-keyoptions item)
