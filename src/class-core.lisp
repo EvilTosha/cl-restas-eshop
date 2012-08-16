@@ -40,24 +40,11 @@
                                                   (getf field :name)))))))
                  slot-list))))
 
-;;; TODO: move to classes.lisp (or products.lisp) file
-;;; and probably rename to decode-fullfilter
-;;; TODO: move to new filters mechanism
-(defmethod class-core.decode (in-string (dummy group-filter))
-  "Decode fullfilter"
-  (when (valid-string-p in-string)
-    (let ((*package* (find-package :eshop))
-          (tmp (read-from-string in-string)))
-      (make-instance 'group-filter
-                     :name (getf tmp :name)
-                     :base (getf tmp :base)
-                     :advanced (getf tmp :advanced)))))
-
-(defgeneric %unserialize (line dummy)
+(defgeneric %unserialize (type line)
   (:documentation "Make an object with read from file fields"))
 
 (defmacro class-core.define-unserialize-method (name slot-list)
-  `(defmethod %unserialize (line (dummy ,name))
+  `(defmethod %unserialize ((type (eql ',name)) line)
      (let ((raw (decode-json-from-string line)))
        (make-instance
         ',name
@@ -72,8 +59,9 @@
                          ,initform)))))
            slot-list)))))
 
-(defun %unserialize-from-file (filepath dummy storage)
+(defun %unserialize-from-file (filepath type storage)
   "Read from file and decode json; only applicable to classes with storage"
+  (declare (symbol type))
   (with-open-file (file filepath)
     (let ((file-length (cl:file-length file))
           (percent 0))
@@ -81,7 +69,7 @@
          :for line := (read-line file nil 'EOF)
          :until (eq line 'EOF)
          :do
-         (let ((item (%unserialize line dummy))
+         (let ((item (%unserialize type line))
                (cur-pos (round (* 100 (/ (cl:file-position file) file-length)))))
            (when (> cur-pos percent)
              (setf percent cur-pos)
@@ -101,7 +89,7 @@
     (pushnew product (products group))))
 
 
-(defgeneric %post-unserialize (item)
+(defgeneric %post-unserialize (type)
   (:documentation "Method that called after unserializing all the items from files.
 Usually it transform string keys to pointers to other objects, such as parents or childs."))
 
@@ -109,13 +97,13 @@ Usually it transform string keys to pointers to other objects, such as parents o
   (:documentation "Processing individual item after unserialize"))
 
 ;;; TODO: make this method standard using "before" keyword
-(defmethod %post-unserialize (dummy)
-  "Do standard post-unserialize actions with each item of same type as dummy
+(defmethod %post-unserialize (type)
+  "Do standard post-unserialize actions with each item of given type
 Reload this method if more actions required"
   (maphash #'(lambda (k v)
                (declare (ignore k))
                (%post-unserialize-item v))
-           (get-storage (type-of dummy))))
+           (get-storage type)))
 
 ;;вызывается после десереализации продукта
 (defmethod %post-unserialize-item ((item product))
@@ -156,20 +144,7 @@ Reload this method if more actions required"
   (setf (empty item) (notany #'active (products item)))
   (when (and (raw-fullfilter item)
              (null (fullfilter item)))
-    (setf (fullfilter item) (class-core.decode (raw-fullfilter item) (make-instance 'group-filter)))))
-
-(defmethod %post-unserialize-item ((item filter))
-  ;; ;; eval func-string to func
-  ;; (when (valid-string-p (func-string item))
-  ;;   (setf (func item) (eval (read-from-string (func-string item)))))
-  ;; ;; после десериализации в parent лежит список key родительских групп
-  ;; (setf (parents item)
-  ;;       (keys-to-objects (parents item) :type 'group))
-  ;; ;; проставление ссылок у родителей на данную группу
-  ;; (mapcar #'(lambda (parent)
-  ;;             (push item (filters parent)))
-  ;;         (parents item)))
-)
+    (setf (fullfilter item) (decode-fullfilter (raw-fullfilter item)))))
 
 (defmethod %post-unserialize-item ((item vendor))
   "Do post-unserialize actions with vendor object"
@@ -185,7 +160,7 @@ Reload this method if more actions required"
                    (setf (gethash vendor-key (vendors group)) item)))
              (seo-texts item))))
 
-(defmethod %post-unserialize ((dummy vendor))
+(defmethod %post-unserialize ((type (eql 'vendor)))
   "Do post-unserialize actions with vendor storage.
 Reloaded standard method %post-unserialize"
   (let ((storage (get-storage 'vendor)))
@@ -207,11 +182,10 @@ Reloaded standard method %post-unserialize"
    #'(lambda (class properties)
        ;; unserialize from file, only if class has storage
        (when (getf properties :storage)
-         (let ((t-storage (make-hash-table :test #'equal)) ; storage for temp instances
-               (instance (get-instance class)))
+         (let ((t-storage (make-hash-table :test #'equal))) ; storage for temp instances
            (log5:log-for info "Unserialize ~A..." class)
            (%unserialize-from-file (get-last-bakup-pathname class)
-                                   instance
+                                   class
                                    t-storage)
            ;; set real storage as fully unserialized temp storage
            (setf (getf properties :storage) t-storage))))
@@ -221,7 +195,7 @@ Reloaded standard method %post-unserialize"
   (maphash
    #'(lambda (class properties)
        (when (getf properties :storage)
-         (%post-unserialize (get-instance class))))
+         (%post-unserialize class)))
    *classes*))
 
 (defparameter *classes* (make-hash-table :test #'equal)
@@ -253,6 +227,17 @@ such as pointer to storage, serialize flag, etc.")
      ,(format nil "Return T if OBJECT is a ~A, and NIL otherwise." name)
      (typep object ',name)))
 
+(defgeneric slot-type (class slot)
+  (:documentation "Return slot type (for using in methods in slots.lisp"))
+
+(defmacro class-core.define-slot-type-getter (name slots)
+  `(defmethod slot-type ((class (eql ',name)) slot)
+     (case (anything-to-symbol slot)
+       ,@(mapcar #'(lambda (slot-plist)
+                     `(',(getf slot-plist :name) ',(getf slot-plist :type)))
+                 slots))))
+
+
 ;;; TODO: add :documentation arg
 (defmacro class-core.make-class-and-methods (name slot-list &key
                                              (serialize t)
@@ -267,6 +252,7 @@ such as pointer to storage, serialize flag, etc.")
      (setf (gethash ',name *classes*) (list :serialize ,serialize))
      (class-core.define-class ,name ,slot-list)
      (class-core.define-class-checker ,name)
+     (class-core.define-slot-type-getter ,name ,slot-list)
      ;; make singleton instance of class
      (setf (getf (gethash ',name *classes*) :instance)
            (make-instance ',name ,@instance-initforms))

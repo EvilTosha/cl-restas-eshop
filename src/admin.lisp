@@ -82,6 +82,33 @@
                                           (list (cons 'name "Значение") (cons 'value 'slot-value))))
         ("function-filter" (list (list (cons 'name "Функция") (cons 'value 'func-text)))))))))
 
+(restas:define-route admin-filter-create-post ("administration-super-panel/filter-create" :method :post)
+  (setf *test-post* (hunchentoot:post-parameter "filters"))
+  nil)
+
+(restas:define-route admin-get-slot-route ("administration-super-panel/get-slot" :method :get)
+  (let ((object (getobj (hunchentoot:get-parameter "key")))
+        (slot (anything-to-symbol (hunchentoot:get-parameter "slot"))))
+    (if object
+        (slots.%encode-ajax-data (slot-type (type-of object) slot) (slot-value object slot))
+        (encode-json-to-string "ERROR: no such object"))))
+
+(restas:define-route admin-edit-slot-route ("administration-super-panel/edit-slot" :method :post)
+  (let ((object (getobj (hunchentoot:post-parameter "key")))
+        (slot (anything-to-symbol (hunchentoot:post-parameter "slot")))
+        (value (hunchentoot:post-parameter "value")))
+    (setf *test-post* (hunchentoot:post-parameters hunchentoot:*request*))
+    (if object
+        (handler-case
+            (progn
+              (setf (slot-value object slot)
+                    (slots.%get-data (slot-type (type-of object) slot) value))
+              ;; return value
+              (encode-json-plist-to-string (list :success t :msg "Success")))
+          (error (e) (encode-json-plist-to-string (list :success nil :msg (format nil "Error: ~A" e)))))
+        ;; else
+        (encode-json-plist-to-string (list :success nil :msg "Error: Object doesn't exist")))))
+
 
 (defun admin-compile-templates ()
   (servo.compile-soy "admin.soy"
@@ -302,48 +329,6 @@
 
 
 (defun admin.post-data-preprocessing (post-data)
-  "keyoptions & aliases (catalog-keyoptions) preprocessing"
-  (let ((result post-data)
-        (keyoptions)
-        (catalog-keyoptions)
-        (raw-fullfilter (getf post-data :raw-fullfilter)))
-    ;;keyoptions
-    (loop
-       :for cnt :from 0
-       :while (getf post-data
-                    (anything-to-keyword (format nil "keyoption-og-~a" cnt)))
-       :do (let ((optgroup (getf post-data
-                                 (anything-to-keyword (format nil "keyoption-og-~a" cnt))))
-                 (optname (getf post-data
-                                (anything-to-keyword (format nil "keyoption-on-~a" cnt))))
-                 (showname (getf post-data
-                                 (anything-to-keyword (format nil "keyoption-sn-~a" cnt))))
-                 (units (getf post-data
-                              (anything-to-keyword (format nil "keyoption-un-~a" cnt)))))
-             (when (and (string/= "" optgroup) (string/= "" optname))
-               (push (list :optgroup optgroup :optname optname :showname showname :units units) keyoptions))))
-    (setf result (append result (list :keyoptions (nreverse keyoptions))))
-    ;;catalog keyoptions
-    (loop
-       :for cnt :from 0
-       :while (getf post-data
-                    (anything-to-keyword (format nil "catalog-keyoption-og-~a" cnt)))
-       :do (let ((optgroup (getf post-data
-                                 (anything-to-keyword (format nil "catalog-keyoption-og-~a" cnt))))
-                 (optname (getf post-data
-                                (anything-to-keyword (format nil "catalog-keyoption-on-~a" cnt))))
-                 (showname (getf post-data
-                                 (anything-to-keyword (format nil "catalog-keyoption-sn-~a" cnt))))
-                 (units (getf post-data
-                              (anything-to-keyword (format nil "catalog-keyoption-un-~a" cnt)))))
-             (when (and (string/= "" optgroup) (string/= "" optname) (string/= "" showname))
-               (push (list :optgroup optgroup :optname optname :showname showname :units units) catalog-keyoptions))))
-    (setf result (append result (list :catalog-keyoptions (nreverse catalog-keyoptions))))
-    ;; fullfilter decode
-    (if raw-fullfilter
-        (let ((new-raw (getf result :raw-fullfilter))
-              (new-full))
-          (setf new-full (class-core.decode new-raw (make-instance 'group-filter)))
-          (setf (getf result :fullfilter) new-full)
-          (setf (getf result :raw-fullfilter) new-raw)))
-    result))
+  (swhen (getf post-data :raw-fullfilter)
+    (setf (getf post-data :fullfilter) (decode-fullfilter it)))
+  post-data)

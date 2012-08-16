@@ -88,7 +88,7 @@ Type: ~A" type))
 
 (defmethod slots.%get-data ((type (eql 'string)) post-data-string)
   (declare (string post-data-string))
-  post-data-string)
+  (decode-json-from-string post-data-string))
 
 (defmethod slots.%encode-to-string ((type (eql 'string)) value)
   value)
@@ -109,13 +109,15 @@ Type: ~A" type))
 
 ;;int
 (defmethod slots.%view ((type (eql 'int)) value name disabled)
-  (slots.%view 'string (format nil "~D" value) name disabled))
+  (soy.class_forms:integer-field
+   (list :name name :disabled disabled :value value)))
 
 (defmethod slots.%get-data ((type (eql 'int)) post-data-string)
   (declare (string post-data-string))
-  (when (and (valid-string-p post-data-string)
-             (string/= "NIL" post-data-string))
-    (parse-integer post-data-string)))
+  (let ((int (decode-json-from-string post-data-string)))
+    (if (integerp int)
+        int
+        (error "Error: value ~A is not integer" int))))
 
 (defmethod slots.%encode-to-string ((type (eql 'int)) value)
   (format nil "~D" value))
@@ -231,9 +233,7 @@ Type: ~A" type))
       :collect (cons
                 key
                 (encode-json-to-string
-                 (etypecase filter
-                   (filter `(filter ,(key filter)))
-                   (basic-filter `(basic-filter ,(backup.serialize-entity filter)))))))))
+                 (backup.serialize-entity filter))))))
 
 (defmethod slots.%decode-from-string ((type (eql 'filters-hash-table)) string)
   (declare (string string))
@@ -243,10 +243,7 @@ Type: ~A" type))
        :for (key . value) :in decoded-list
        :do (let ((decoded-list (decode-json-from-string value)))
              (setf (gethash (anything-to-symbol key) hash-table)
-                   (string-case (first decoded-list)
-                     ("filter" (getobj (second decoded-list) 'filter))
-                     ;; TODO: probably make unserialize?
-                     ("basicFilter" (%unserialize (second decoded-list) (get-instance 'basic-filter)))))))
+                   (%unserialize 'basic-filter decoded-list))))
     hash-table))
 
 
@@ -332,7 +329,11 @@ Type: ~A" type))
    (list :name name :checked value :disabled disabled)))
 
 (defmethod slots.%get-data ((type (eql 'bool)) post-data-string)
-  (equal post-data-string "T"))
+  (declare (string post-data-string))
+  (let ((bool (decode-json-from-string post-data-string)))
+    (if (typep bool 'boolean)
+        bool
+        (error "Error: value ~A is not bool" bool))))
 
 (defmethod slots.%encode-to-string ((type (eql 'bool)) value)
   (format nil "~A" value))
@@ -391,7 +392,7 @@ Type: ~A" type))
 
 (defmethod slots.%get-data ((type (eql 'group-list)) string-list)
   (when string-list
-    (keys-to-objects (ensure-list string-list) :type 'group)))
+    (keys-to-objects (decode-json-from-string string-list) :type 'group)))
 
 (defmethod slots.%encode-to-string ((type (eql 'group-list)) groups)
   (format nil "[~{\"~A\"~^,~}]" (mapcar #'key groups)))
@@ -427,24 +428,23 @@ Type: ~A" type))
 ;;keyoptions
 (defmethod slots.%view ((type (eql 'keyoptions)) value name disabled)
   (soy.class_forms:keyoptions-field
-   (list :keyoptions (let ((cnt 0))
-                       (mapcar #'(lambda (keyoption)
-                                   (incf cnt)
-                                   (soy.class_forms:keyoption-field
-                                    (append keyoption (list :number (- cnt 1)))))
-                               value))
-         :emptyfield (soy.class_forms:keyoption-field (list
-                                                       :number (format nil "' + $~aCnt + '"
-                                                                       name)))
+   (list :keyoptions value
          :name name
-         :number (- (length value) 1)
          :disabled disabled)))
 
-
 (defmethod slots.%get-data ((type (eql 'keyoptions)) post-data-string)
-  ;;; see post-processing in admin.lisp
-  ;;; TODO: make normal processing
-  post-data-string)
+  (declare (string post-data-string))
+  (let ((keyoptions-list (decode-json-from-string post-data-string)))
+    (remove-if #'null
+               (mapcar
+                #'(lambda (keyoption-alist)
+                    (let ((keyoption (servo.alist-to-plist keyoption-alist)))
+                      (when (and (getf keyoption :optgroup)
+                                 (getf keyoption :optname)
+                                 (getf keyoption :showname))
+                        keyoption)))
+                keyoptions-list))))
+
 
 (defmethod slots.%encode-to-string ((type (eql 'keyoptions)) keyoptions)
   (format nil "[~{~a~^,~}]"
@@ -467,21 +467,22 @@ Type: ~A" type))
 
 (defmethod slots.%view ((type (eql 'catalog-keyoptions)) value name disabled)
   (soy.class_forms:catalog-keyoptions-field
-   (list :keyoptions (let ((cnt 0))
-                       (mapcar #'(lambda (keyoption)
-                                   (incf cnt)
-                                   (soy.class_forms:catalog-keyoption-field
-                                    (append keyoption (list :number (- cnt 1)))))
-                               value))
-         :emptyfield (soy.class_forms:catalog-keyoption-field (list
-                                                               :number (format nil "' + $~aCnt + '"
-                                                                               (replace-all name "-" "_"))))
-         :name (replace-all name "-" "_")
-         :number (- (length value) 1)
+   (list :keyoptions value
+         :name name
          :disabled disabled)))
 
-(defmethod slots.%get-data ((type (eql 'catalog-keyoptions)) string)
-  string)
+(defmethod slots.%get-data ((type (eql 'catalog-keyoptions)) post-data-string)
+  (declare (string post-data-string))
+  (let ((keyoptions-list (decode-json-from-string post-data-string)))
+    (remove-if #'null
+               (mapcar
+                #'(lambda (keyoption-alist)
+                    (let ((keyoption (servo.alist-to-plist keyoption-alist)))
+                      (when (and (getf keyoption :optgroup)
+                                 (getf keyoption :optname)
+                                 (getf keyoption :showname))
+                        keyoption)))
+                keyoptions-list))))
 
 (defmethod slots.%encode-to-string ((type (eql 'catalog-keyoptions)) keyoptions)
   (format nil "[~{~a~^,~}]"

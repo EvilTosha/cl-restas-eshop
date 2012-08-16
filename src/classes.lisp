@@ -55,15 +55,6 @@
 
 
 (class-core.make-class-and-methods
- filter
- ((:name key               :initform ""       :disabled t    :type string)
-  (:name parents           :initform nil      :disabled t    :type group-list)
-  (:name name              :initform ""       :disabled nil  :type string)
-  (:name func              :initform ""       :disabled t    :type string)
-  (:name func-string       :initform ""       :disabled t    :type textedit))
- :serialize nil)
-
-(class-core.make-class-and-methods
  vendor
  ((:name key       :initform ""                              :disabled t   :type string             :serialize t)
   (:name name      :initform ""                              :disabled nil :type string             :serialize t)
@@ -148,3 +139,15 @@ if there is not one, or no vendor passed, return group's seo-text"
       (if (null parent)
           item
           (get-root-parent parent)))))
+
+
+;;; TODO: move to new filters mechanism
+(defun decode-fullfilter (in-string)
+  "Decode fullfilter"
+  (when (valid-string-p in-string)
+    (let ((*package* (find-package :eshop))
+          (tmp (read-from-string in-string)))
+      (make-instance 'group-filter
+                     :name (getf tmp :name)
+                     :base (getf tmp :base)
+                     :advanced (getf tmp :advanced)))))

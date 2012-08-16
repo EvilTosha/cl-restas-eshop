@@ -68,9 +68,14 @@ Needed keys (in params): :slot-name, :slot-value"))
 Function's signature should be #'(lambda (object &optional params) ...) and return t or nil.
 Needed keys (in params): :func-text"))
 
+(defclass filter-basic-filter (basic-filter)
+  ((filter :initarg filter :initform nil :accessor filter))
+  (:documentation "Proxy basic filter for common filter.
+Needed keys (in params): :filter-key"))
+
 ;;; (re)define needed methods
 ;;; TODO: move all to eshop-core package
-(defmethod %unserialize :around (line (dummy basic-filter))
+(defmethod %unserialize :around ((type (eql 'basic-filter)) line)
   (let ((basic-filter (call-next-method)))
     ;;  return basic-filter with appropriate type
     (make-instance (filter-type basic-filter)
@@ -151,6 +156,17 @@ Also show needed params in slime"))
                  :filter-type type
                  :data (list :func-text func-text)
                  :func (eval (read-from-string func-text))))
+
+(defmethod filters.create-basic-filter ((type (eql 'filter-basic-filter)) &rest params
+                                        &key filter-key)
+  (declare (ignore params))
+  (aif (getobj filter-key 'filter)
+       (make-instance 'filter-basic-filter
+                      :filter-type type
+                      :data (list :filter-key filter-key)
+                      :func it)
+       ;; else
+       (error "Can't find filter with key ~A" filter-key)))
 
 (defgeneric filters.filter (filter &key obj-set outer-params)
   (:documentation "Filters given set of objects with given filter by given params;
@@ -284,6 +300,10 @@ Returns list of objects"))
      #'(lambda (obj)
          (funcall (func filter) obj params))
      obj-set)))
+
+(defmethod filters.filter ((filter filter-basic-filter) &key obj-set outer-params)
+  (filters.filter (getobj (getf (data filter) :filter-key) 'filter)
+                  :obj-set obj-set :outer-params outer-params))
 
 
 (defmethod filters.filter ((filter filter) &key (obj-set nil obj-set-supplied-p) outer-params)
