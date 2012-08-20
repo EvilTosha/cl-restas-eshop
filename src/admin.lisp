@@ -55,43 +55,17 @@
 
 (restas:define-route admin-filter-create ("administration-super-panel/filter-create" :method :get)
   (string-case (hunchentoot:get-parameter "get")
+    ("filter-types"
+     ;; FIXME: use json encode, not format
+     (format nil "[~{~A~^,~}]" (mapcar #'encode-json-plist-to-string
+                                       (filters.get-basics-types))))
     ("fields"
-     (encode-json-to-string
-      ;; TODO: unify somehow
-      (string-case (hunchentoot:get-parameter "filter-type")
-        ("option-checkbox-filter" (list (list (cons 'name "Группа опций") (cons 'value 'optgroup))
-                                        (list (cons 'name "Имя опции") (cons 'value 'optname))
-                                        (list (cons 'name "Варианты") (cons 'value 'variants) (cons 'type 'multy))))
-        ("option-radio-filter" (list (list (cons 'name "Группа опций") (cons 'value 'optgroup))
-                                     (list (cons 'name "Имя опции") (cons 'value 'optname))
-                                     (list (cons 'name "Вариант") (cons 'value 'variant))))
-        ("option-exact-match-filter" (list (list (cons 'name "Группа опций") (cons 'value 'optgroup))
-                                           (list (cons 'name "Имя опции") (cons 'value 'optname))
-                                           (list (cons 'name "Вариант") (cons 'value 'variant))))
-        ("option-substring-filter" (list (list (cons 'name "Группа опций") (cons 'value 'optgroup))
-                                         (list (cons 'name "Имя опции") (cons 'value 'optname))
-                                         (list (cons 'name "Вариант") (cons 'value 'variant))))
-        ("option-have-filter" (list (list (cons 'name "Группа опций") (cons 'value 'optgroup))
-                                    (list (cons 'name "Имя опции") (cons 'value 'optname))))
-        ("slot-range-filter" (list (list (cons 'name "Характеристика") (cons 'value 'slot-name))
-                                   (list (cons 'name "Минимальное значение") (cons 'value 'slot-min))
-                                   (list (cons 'name "Максимальное значение") (cons 'value 'slot-max))))
-        ("slot-value-symbol-filter" (list (list (cons 'name "Характеристика") (cons 'value 'slot-name))
-                                          (list (cons 'name "Значение") (cons 'value 'slot-value))))
-        ("slot-value-string-filter" (list (list (cons 'name "Характеристика") (cons 'value 'slot-name))
-                                          (list (cons 'name "Значение") (cons 'value 'slot-value))))
-        ("function-filter" (list (list (cons 'name "Функция") (cons 'value 'func-text)))))))))
+     (format nil "[~{~A~^,~}]" (mapcar #'encode-json-plist-to-string
+                                       (filters.get-basic-fields (hunchentoot:get-parameter "filter-type")))))))
 
 (restas:define-route admin-filter-create-post ("administration-super-panel/filter-create" :method :post)
   (setf *test-post* (hunchentoot:post-parameter "filters"))
   nil)
-
-(restas:define-route admin-get-slot-route ("administration-super-panel/get-slot" :method :get)
-  (let ((object (getobj (hunchentoot:get-parameter "key")))
-        (slot (anything-to-symbol (hunchentoot:get-parameter "slot"))))
-    (if object
-        (slots.%encode-ajax-data (slot-type (type-of object) slot) (slot-value object slot))
-        (encode-json-to-string "ERROR: no such object"))))
 
 (restas:define-route admin-edit-slot-route ("administration-super-panel/edit-slot" :method :post)
   (let ((object (getobj (hunchentoot:post-parameter "key")))
@@ -103,6 +77,9 @@
             (progn
               (setf (slot-value object slot)
                     (slots.%get-data (slot-type (type-of object) slot) value))
+              ;; FIXME: bad code
+              (when (and (groupp object) (equal slot 'raw-fullfilter))
+                (setf (fullfilter object) (decode-fullfilter (raw-fullfilter object))))
               ;; return value
               (encode-json-plist-to-string (list :success t :msg "Success")))
           (error (e) (encode-json-plist-to-string (list :success nil :msg (format nil "Error: ~A" e)))))

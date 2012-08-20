@@ -64,6 +64,7 @@
 		(cl-cron:make-cron-job #'eshop::backup.serialize-all :minute 0 :hour 17)
 		(cl-cron:start-cron))
   ;;; business logic
+  (eshop::filters.create-standard-filters)
   (when (eshop:config.get-option "START_OPTIONS" "make-marketing-filters")
     (eshop::groupd.restore)
     (eshop::groupd.holiday.restore)

@@ -58,6 +58,7 @@
              (log5:log-for info "Start ~(~A~) serialize to ~A" class path)
              (backup.serialize-storage-to-file class path)
              (when make-copy
+               (log5:log-for info "Making backup copy to ~A" copy-path)
                (ensure-directories-exist copy-path)
                (cl-fad:copy-file
                 path (merge-pathnames (format nil "~(~A~).bkp" class) copy-path)

@@ -94,7 +94,8 @@
 Usually it transform string keys to pointers to other objects, such as parents or childs."))
 
 (defgeneric %post-unserialize-item (item)
-  (:documentation "Processing individual item after unserialize"))
+  (:documentation "Processing individual item after unserialize")
+  (:method (item) item))
 
 ;;; TODO: make this method standard using "before" keyword
 (defmethod %post-unserialize (type)
@@ -159,6 +160,16 @@ Reload this method if more actions required"
                  (let ((group (getobj k 'group)))
                    (setf (gethash vendor-key (vendors group)) item)))
              (seo-texts item))))
+
+(defmethod %post-unserialize-item ((item filter))
+  ;; после десериализации в parent лежит список key родительских групп
+  ;; TODO: make checks for existance
+  (setf (parents item)
+        (keys-to-objects (parents item) :type 'group))
+  ;; проставление ссылок у родителей на данный продукт
+  (mapcar #'(lambda (parent)
+              (setf (gethash (key item) (filters parent)) item))
+          (parents item)))
 
 (defmethod %post-unserialize ((type (eql 'vendor)))
   "Do post-unserialize actions with vendor storage.

@@ -205,19 +205,43 @@ Type: ~A" type))
 
 (defmethod slots.%view ((type (eql 'filters-hash-table)) value name disabled)
   (declare (hash-table value) (string name) (boolean disabled))
-  ;; TODO: write proper viewer
-  (soy.class_forms:filter-hash-table-field
-   (list :disabled disabled
-         :name name
-         :types (list (list :name "Option Checkbox"     :value "option-checkbox-filter")
-                      (list :name "Option Radio"        :value "option-radio-filter")
-                      (list :name "Option Exact Match"  :value "option-exact-match-filter")
-                      (list :name "Option Substring"    :value "option-substring-filter")
-                      (list :name "Option Exist"        :value "option-have-filter")
-                      (list :name "Slot Range"          :value "slot-range-filter")
-                      (list :name "Slot Value (Symbol)" :value "slot-value-symbol-filter")
-                      (list :name "Slot Value (String)" :value "slot-value-string-filter")
-                      (list :name "Function"            :value "function-filter")))))
+  (labels ((get-variants (data)
+             (loop
+                :for i :from 0
+                :for variant := (format nil "variant-~D" i)
+                :while (getf data variant)
+                :collect (list :name variant
+                               :value (getf data variant)
+                               ;; empty for now rewrite later
+                               :placeholder "")))
+            (prepare-fields (data)
+              ;; TODO: rewrite
+              (let ((variants (get-variants data))
+                    (result))
+                (log5:log-for debug-console "~A" data)
+                (sb-pcl::doplist (key val) data
+                                 (let ((name (format nil "~A" key)))
+                                   ;; name is not like "variant-%something%"
+                                   (when (> 8 (mismatch name "variant-"))
+                                     ;; not variant
+                                     (pushnew (list :type "single"
+                                                    :name name
+                                                    :value val
+                                                    ;; empty for now, rewrite
+                                                    :palceholder "")
+                                              result))))
+                (when variants
+                  (pushnew (list :type "multi"
+                                 :variants variants)
+                           result))
+                result)))
+    (soy.class_forms:filter-hash-table-field
+     (list :disabled disabled
+           :name name
+           :types (filters.get-basics-types)
+           :filters (loop :for filter :being :the hash-values :in value
+                       :collect (list :type (filter-type filter)
+                                      :fields (prepare-fields (data filter))))))))
 
 (defmethod slots.%get-data ((type (eql 'filters-hash-table)) post-data-string)
   (declare (string post-data-string))
@@ -256,7 +280,7 @@ Type: ~A" type))
 
 (defmethod slots.%get-data ((type (eql 'textedit)) post-data-string)
   "Replace #\Replace (#\Newline remains)"
-  (servo.string-replace-chars post-data-string (list #\Return)))
+  (servo.string-replace-chars (decode-json-from-string post-data-string) (list #\Return)))
 
 (defmethod slots.%encode-to-string ((type (eql 'textedit)) value)
   (slots.%encode-to-string 'string value))

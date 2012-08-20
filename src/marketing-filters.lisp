@@ -31,7 +31,7 @@
 
 (defmethod marketing-filters.get-filters ((filters hash-table) (products list))
   (loop
-     :for filter :being :the hash-value :in filters
+     :for filter :being :the hash-values :in filters
      :for num := (filters.count filter :obj-set products)
      :when (plusp num)
      :collect (cons filter num)))
