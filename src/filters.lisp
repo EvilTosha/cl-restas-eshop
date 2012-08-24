@@ -29,9 +29,6 @@
  :make-storage nil
  :instance-initforms (:filter-type 'undefined))
 
-(defmethod initialize-instance :after ((instance function-filter) &key)
-  (setf (func instance) (eval (read-from-string (getf (data instance) :func-text)))))
-
 ;;; (re)define needed methods
 ;;; TODO: move all to eshop-core package
 (defmethod %unserialize :around ((type (eql 'basic-filter)) line)
@@ -414,6 +411,9 @@ Needed keys (in params): :slot-name, :slot-value"))
   (:documentation "Filter for checking object for satisfying arbitrary function.
 Function's signature should be #'(lambda (object &optional params) ...) and return t or nil.
 Needed keys (in params): :func-text"))
+
+(defmethod initialize-instance :after ((instance function-filter) &key)
+  (setf (func instance) (eval (read-from-string (getf (data instance) :func-text)))))
 
 (filters.register-basic-filter
  'function-filter "Function"

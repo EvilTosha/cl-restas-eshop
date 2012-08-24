@@ -58,14 +58,12 @@
                                        (filters.get-basic-fields (hunchentoot:get-parameter "filter-type")))))))
 
 (restas:define-route admin-filter-create-post ("administration-super-panel/filter-create" :method :post)
-  (setf *test-post* (hunchentoot:post-parameter "filters"))
   nil)
 
 (restas:define-route admin-edit-slot-route ("administration-super-panel/edit-slot" :method :post)
   (let ((object (getobj (hunchentoot:post-parameter "key")))
         (slot (anything-to-symbol (hunchentoot:post-parameter "slot")))
         (value (hunchentoot:post-parameter "value")))
-    (setf *test-post* (hunchentoot:post-parameters hunchentoot:*request*))
     (if object
         (handler-case
             (progn
@@ -98,8 +96,6 @@
   (let* ((key (getf (request-get-plist) :key))
          (item (getobj key))
          (item-fields (when item (class-core.make-fields item))))
-    (setf *test-post* (hunchentoot:post-parameters hunchentoot:*request*))
-    (setf *test-get* (hunchentoot:get-parameters hunchentoot:*request*))
     (when (and item post-data)
       (setf post-data (admin.post-data-preprocessing (servo.plist-to-unique post-data)))
       (class-core.edit-fields item post-data)
