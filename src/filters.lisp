@@ -52,17 +52,19 @@
 (defparameter *basic-filters-data* (make-hash-table :test #'equal)
   "Variable for storing instances of basic-filter-data, and convenient registering of basic filter types")
 
-(defun filters.get-basics-types ()
+(defun filters.get-basics-types (&optional selected-type)
   (loop :for filter-data :being :the hash-values :in *basic-filters-data*
-     :collect (list :name (type-name filter-data)
-                    :value (format nil "~A" (type-id filter-data)))))
+     :collect `(:name ,(type-name filter-data)
+                      :value ,(format nil "~(~A~)" (type-id filter-data))
+                      ,@(when (equal selected-type (type-id filter-data))
+                              `(:selected "selected")))))
 
 (defun filters.get-basic-fields (basic-id)
   (let ((data (gethash (anything-to-symbol basic-id) *basic-filters-data*)))
     (loop :for field :being :the hash-values :in (fields data)
        :using (hash-key key)
        :collect `(:name ,(getf field :name)
-                        :value ,(format nil "~A" key)
+                        :value ,(format nil "~(~A~)" key)
                         ,@(when (equal 'multi (getf field :type))
                                 `(:type  (format nil "~(~A~)" (getf field :type))))))))
 
@@ -362,8 +364,9 @@ Needed keys (in params): :slot-name, :slot-value"))
 
 (defmethod filters.create-basic-filter ((type (eql 'slot-value-symbol-filter)) &rest params
                                         &key slot-name slot-value)
-  (declare ((not null) slot-name slot-value) ((or string symbol) slot-name)
-           (symbol slot-value) (ignore params))
+  (declare ((not null) slot-name slot-value)
+           ((or string symbol) slot-name slot-value)
+           (ignore params))
   (make-instance type :filter-type type :data (list :slot-name (format nil "~A" slot-name)
                                                     :slot-value (format nil "~A" slot-value))))
 

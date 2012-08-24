@@ -582,16 +582,32 @@
   "Convert anything that has print method to symbol; Case insensitive"
   (intern (format nil "~:@(~A~)" anything)))
 
-(defun servo.alist-to-plist (alist)
-  (if (not (listp alist))
-      (error "Attempt to convert something that isn't alist to plist")
-      ;;else
-      (loop
-         :for (key . value)
-         :in alist
-         :collect (anything-to-keyword key)
-         :collect value)))
+(defun alistp (obj)
+  "Checks whether object is association list (e.g. list of conses)"
+  (when (listp obj) (every #'consp obj)))
 
+(deftype alist ()
+  `(satisfies alistp))
+
+(defun servo.alist-to-plist (alist)
+  "Non-recursive convertion from association list to property list"
+  (declare (alist alist))
+  (loop
+     :for (key . value)
+     :in alist
+     :collect (anything-to-keyword key)
+     :collect value))
+
+(defun servo.recursive-alist-to-plist (alist)
+  "Rcursive convertion from association list to property list"
+  (declare (alist alist))
+  (loop
+     :for (key . value)
+     :in alist
+     :collect (anything-to-keyword key)
+     :collect (if (alistp value)
+                  (servo.recursive-alist-to-plist value)
+                  value)))
 
 (defun servo.plist-to-unique (plist)
   "Remove duplacating keys"
@@ -724,4 +740,3 @@
 Used for printing system info to browser"
   (declare (string string))
   (regex-replace-all "\\n" string "<br />"))
-

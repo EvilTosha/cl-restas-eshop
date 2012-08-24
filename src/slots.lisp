@@ -205,48 +205,50 @@ Type: ~A" type))
 
 (defmethod slots.%view ((type (eql 'filters-hash-table)) value name disabled)
   (declare (hash-table value) (string name) (boolean disabled))
-  (labels ((get-variants (data)
+  (labels ((get-variants (data prefix)
              (loop
                 :for i :from 0
-                :for variant := (format nil "variant-~D" i)
-                :while (getf data variant)
+                :for variant := (format nil "~A~D" prefix i)
+                :for variant-value := (getf data (anything-to-keyword variant))
+                :while variant-value
                 :collect (list :name variant
-                               :value (getf data variant)
+                               :value variant-value
                                ;; empty for now rewrite later
-                               :placeholder "")))
-            (prepare-fields (data)
-              ;; TODO: rewrite
-              (let ((variants (get-variants data))
-                    (result))
-                (log5:log-for debug-console "~A" data)
-                (sb-pcl::doplist (key val) data
-                                 (let ((name (format nil "~A" key)))
-                                   ;; name is not like "variant-%something%"
-                                   (when (> 8 (mismatch name "variant-"))
-                                     ;; not variant
-                                     (pushnew (list :type "single"
-                                                    :name name
-                                                    :value val
-                                                    ;; empty for now, rewrite
-                                                    :palceholder "")
-                                              result))))
-                (when variants
-                  (pushnew (list :type "multi"
-                                 :variants variants)
-                           result))
-                result)))
+                               :placeholder (format nil "Variant ~A" i))))
+           (prepare-fields (filter-type data)
+             (let ((filter-data (gethash (anything-to-symbol filter-type)
+                                         *basic-filters-data*)))
+               (loop :for key :being :the hash-keys :in (fields filter-data)
+                  :using (hash-value field-params)
+                  :collect (if (equal (getf field-params :type) 'multi)
+                               (list :type "multi" :label (getf field-params :name)
+                                     :variants (get-variants data (getf field-params :prefix)))
+                               ;; else
+                               (list :type "single" :label (getf field-params :name)
+                                     :name (format nil "~(~A~)" key)
+                                     :value (getf data (anything-to-keyword key))))))))
     (soy.class_forms:filter-hash-table-field
      (list :disabled disabled
            :name name
            :types (filters.get-basics-types)
            :filters (loop :for filter :being :the hash-values :in value
-                       :collect (list :type (filter-type filter)
-                                      :fields (prepare-fields (data filter))))))))
+                       :collect (list :types (filters.get-basics-types
+                                              (filter-type filter))
+                                      :fields (prepare-fields (filter-type filter)
+                                                              (data filter))))))))
 
 (defmethod slots.%get-data ((type (eql 'filters-hash-table)) post-data-string)
   (declare (string post-data-string))
-  ;; TODO: write proper get-data
-  post-data-string)
+  (let ((basics (servo.recursive-alist-to-plist (decode-json-from-string post-data-string)))
+        (result (make-hash-table :test #'equal)))
+    (sb-pcl::doplist
+        (key filter) basics
+        (setf (gethash key result)
+              (apply #'filters.create-basic-filter
+                     (anything-to-symbol (getf filter :type))
+                     (getf filter :data))))
+    result))
+
 
 (defmethod slots.%encode-to-string ((type (eql 'filters-hash-table)) hash-table)
   (declare (hash-table hash-table))

@@ -47,12 +47,6 @@
 (restas:define-route admin-key-route ("/administration-super-panel/:key")
   (show-admin-page key))
 
-(restas:define-route admin-test-get-post-request-route ("/administration-super-panel/test-get-post" :method :post)
-  (admin.test-get-post-parse))
-
-(restas:define-route admin-test-get-request-route ("/administration-super-panel/test-get-post" :method :get)
-  (admin.test-get-post-parse))
-
 (restas:define-route admin-filter-create ("administration-super-panel/filter-create" :method :get)
   (string-case (hunchentoot:get-parameter "get")
     ("filter-types"
@@ -95,17 +89,6 @@
   "Updates templates"
   (admin-compile-templates))
 
-(defun admin.test-get-post-parse ()
-  "Parsing get & post parameters for testing"
-  (soy.admin:main
-   (list :content
-         (let* ((get-params (servo.alist-to-plist (hunchentoot:get-parameters hunchentoot:*request*)))
-                (post-params (servo.alist-to-plist (hunchentoot:post-parameters hunchentoot:*request*))))
-           (format nil "raw GET params: ~a <br />list to unique keys: ~a <br />raw POST params: ~a<br />list to unique keys: ~a"
-                   (print get-params) (servo.plist-to-unique get-params)
-                   (print post-params) (servo.plist-to-unique post-params))))))
-
-
 (defun admin.get-info ()
   (list (format nil "~{~a<br>~}" (mapcar #'(lambda (v) (sb-thread:thread-name v)) (sb-thread:list-all-threads)))
         (regex-replace-all "\\n" (with-output-to-string (*standard-output*) (room)) "<br>")))
@@ -115,6 +98,8 @@
   (let* ((key (getf (request-get-plist) :key))
          (item (getobj key))
          (item-fields (when item (class-core.make-fields item))))
+    (setf *test-post* (hunchentoot:post-parameters hunchentoot:*request*))
+    (setf *test-get* (hunchentoot:get-parameters hunchentoot:*request*))
     (when (and item post-data)
       (setf post-data (admin.post-data-preprocessing (servo.plist-to-unique post-data)))
       (class-core.edit-fields item post-data)
