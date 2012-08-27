@@ -132,7 +132,9 @@
     ;; цены
     (if raw-siteprice
         (setf (siteprice product) siteprice))
-    (if raw-price
+    ;; перещет дельты не проводится для акционных товаров
+    (if (and raw-price
+             (not (groupd.is-groupd product)))
         (setf (delta-price product) (- price (siteprice product))))
     ;; бонусы (нужно пересчитывать когда приходит новая цена)
     (if raw-bonuscount
