@@ -5,15 +5,16 @@
 (defparameter *special-products* (make-hash-table :test #'equal))
 
 (defun write-products-report (stream)
-  (format stream "~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~%"
+  (format stream "~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~%"
           "артикул" "цена магазина" "цена сайта" "имя" "имя real" "имя yml" "is-yml-show" "seo текст"
           "фотографии" "характеристики" "активный" "группа" "родительская группа"
-          "secret" "DTD" "vendor" "доставка" "серия" "direct-name")
+          "secret" "DTD" "vendor" "доставка" "серия" "direct-name" "дубль" "гарантия")
   (process-storage
    #'(lambda (v)
        (let ((id "нет") (name "нет") (name-real "нет") (name-yml "нет")
              (desc "нет") (img "нет") (options "нет") (active "нет")
-             (group-name "нет") (parent-group-name "нет") (secret "нет") (seria "нет") (direct-name "нет"))
+             (group-name "нет") (parent-group-name "нет") (secret "нет")
+             (seria "нет") (direct-name "нет") (double "-") (warranty "-"))
          (setf id (articul v))
          (setf name (stripper (name-provider v)))
          (setf name-real (stripper (name-seo v)))
@@ -40,7 +41,11 @@
                        (setf seria (getf option :value)))
          (with-option1 v "Secret" "Direct-name"
                        (setf direct-name (stripper (getf option :value))))
-         (format stream "~a;~a;~a;\"~a\";\"~a\";\"~a\";~a;~a;~a;~a;~a;\"~a\";\"~a\";~a;~a;~a;~a;\"~a\";\"~a\";~%"
+         (with-option1 v "Secret" "Дубль"
+                       (setf double (stripper (getf option :value))))
+         (with-option1 v "Дополнительная информация" "Гарантия"
+                       (setf warranty (stripper (getf option :value))))
+         (format stream "~a;~a;~a;\"~a\";\"~a\";\"~a\";~a;~a;~a;~a;~a;\"~a\";\"~a\";~a;~a;~a;~a;\"~a\";\"~a\";\"~a\";\"~a\";~%"
                  id (price v) (siteprice v) name name-real
                  name-yml (yml.yml-show-p v) desc img options active group-name
                  parent-group-name secret
@@ -48,19 +53,26 @@
                  (vendor v)
                  (yml.get-product-delivery-price1 v)
                  seria
-                 direct-name)))
+                 direct-name
+                 double
+                 warranty)))
    'product))
 
 (defun valid-option-p (product)
   (declare (product product))
-  (count-if #'(lambda (optgroup) (some #'(lambda (option)
+  (let ((num 0))
+    (mapcar #'(lambda (optgroup)
+                (setf num
+                      (+ num
+                         (count-if #'(lambda (option)
                                        (and option
                                             (servo.valid-string-p (getf option :value))
                                             (not (find (getf option :name)
                                                        (list "Производитель" "Модель") :test #'equal))))
-                                   (getf optgroup :options)))
-        (remove "Secret" (optgroups product)  ; remove Secret group
-                :test #'equal :key #'(lambda (opt) (getf opt :name)))))
+                                   (getf optgroup :options)))))
+                      (remove "Secret" (optgroups product)  ; remove Secret group
+                              :test #'equal :key #'(lambda (opt) (getf opt :name))))
+    num))
 
 (defun write-groups (stream)
   (format stream "~a;~a;~a;~a;~a;~a;~%"
@@ -297,7 +309,11 @@
 	(report.set-filters (process-and-collect-storage 'group)
 											#'groupd.holiday.is-groupd
 											"Для отдыха"
-											"holidays"))
+											"holidays")
+  (report.set-filters `(,(getobj "noutbuki" 'group))
+                      #'(lambda (pr) (plusp (delta-price pr)))
+                      "Лучшие цены"
+                      "bestprice"))
 
 (defun report.set-salefilter ()
   (mapcar #'(lambda (v)
