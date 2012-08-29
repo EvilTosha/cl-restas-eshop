@@ -195,7 +195,6 @@
                                        (advanced object))))
            :isshowadvanced (is-need-to-show-advanced object parameters)))))
 
-
 (defmethod restas:render-object ((designer eshop-render) (object group-filter))
   (render.render object))
 
@@ -272,7 +271,7 @@
                                           value)
                                         " "
                                         (if (zerop (yml.get-product-delivery-price1 object))
-                                            " Акция: доставим бесплатно!"
+                                            " Бесплатная доставка при заказе прямо сейчас!"
                                             (if (= 100 (yml.get-product-delivery-price1 object))
                                                 " Акция: скидка на доставку 70%. Закажи сейчас!"
                                                 (if (= 200 (yml.get-product-delivery-price1 object))
@@ -407,6 +406,8 @@
        :collect item)))
 
 (defmethod restas:render-object ((designer eshop-render) (object product))
+  (aif (servo.get-option object "Secret" "Дубль")
+       (hunchentoot:redirect (concatenate 'string "/" it) :code 301))
   (let* ((pics (get-pics (articul object)))
          (diff-percent (servo.diff-percentage (price object) (siteprice object)))
          (is-available (yml.available-for-order-p object))
@@ -449,7 +450,7 @@
                                                     value)
                                                   " "
                                                   (if (zerop (yml.get-product-delivery-price1 object))
-                                                      " Акция: доставим бесплатно!"
+                                                      " Бесплатная доставка при заказе прямо сейчас!"
                                                       (if (= 100 (yml.get-product-delivery-price1 object))
                                                           " Акция: скидка на доставку 70%. Закажи сейчас!"
                                                           (if (= 200 (yml.get-product-delivery-price1 object))
