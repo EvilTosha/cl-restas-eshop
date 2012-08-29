@@ -38,27 +38,7 @@
   (remove-if #'null (mapcar #'(lambda (filter)
                                 (let ((num (length
                                             (remove-if-not (func filter) products))))
-                                  (when (plusp num)
+                                  (when (and (plusp num)
+                                             (not (string= (key filter) "noutbuki-bestprice")))
                                     (cons filter num))))
                             filters)))
-
-(defun filters.proccess-xls (xls-file line-proccess-func &key (ignor-head-line t))
-  (log5:log-for info "proccess:: ~a" xls-file)
-  (let ((num 0))
-    (xls.restore-from-xls
-     (merge-pathnames xls-file)
-     #'(lambda (line)
-         (let* ((args (sklonenie-get-words line)))
-           (incf num)
-           (let ((vendor (gethash (string-downcase (cadr words)) *vendor-storage*)))
-             (when vendor
-               (log5:log-for info "~a|~a|~a|~a|~a"
-                             num (car words) (cadr words) vendor (length words))
-               (setf (name vendor) (cadr words)))
-             ;; (unless vendor
-             ;;   (setf vendor (make-instance 'vendor :key (string-downcase (cadr words))
-             ;;                               :name (string-downcase (cadr words)))))
-             ;; (setf (gethash (car words) (seo-texts vendor)) (caddr words))
-             ;; (setf (gethash (string-downcase (cadr words)) *vendor-storage*) vendor)
-             ))))))
-
