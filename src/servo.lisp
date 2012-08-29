@@ -227,8 +227,9 @@
                         :description description
                         :title title
                         :header (soy.header:header (append (list :cart (unless no-need-cart
-                                                                         (soy.index:cart)))
-                                                           (main-page-show-banner "line" (banner *main-page.storage*))))
+                                                                         (soy.index:cart))
+                                                                 :bannertype "line-text")
+                                                           (main-page-show-banner "line-text" (banner *main-page.storage*))))
                         :content (if content
                                      content
                                      (format nil "<pre>'~a' ~%'~a' ~%'~a'</pre>"
@@ -399,7 +400,6 @@
                                  (active product))
                              (storage.get-recursive-products object)))
       result-products)))
-
 
 (defmethod fullfilter-controller (product-list (object group) request-get-plist)
   (let ((functions (mapcar #'(lambda (elt)
@@ -704,7 +704,6 @@
                                c))
                    string))
    'string))
-
 
 (defun servo.valid-string-p (s &key (whitespace-check t)
                               (unwanted-chars (list #\Space #\Tab #\Newline))
