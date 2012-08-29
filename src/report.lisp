@@ -5,15 +5,15 @@
 (defparameter *special-products* (make-hash-table :test #'equal))
 
 (defun write-products-report (stream)
-  (format stream "~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~%"
+  (format stream "~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~%"
           "артикул" "цена магазина" "цена сайта" "имя" "имя real" "имя yml" "is-yml-show" "seo текст"
           "фотографии" "характеристики" "активный" "группа" "родительская группа"
-          "secret" "DTD" "vendor" "доставка" "серия")
+          "secret" "DTD" "vendor" "доставка" "серия" "direct-name")
   (process-storage
    #'(lambda (v)
        (let ((id "нет") (name "нет") (name-real "нет") (name-yml "нет")
              (desc "нет") (img "нет") (options "нет") (active "нет")
-             (group-name "нет") (parent-group-name "нет") (secret "нет") (seria "нет"))
+             (group-name "нет") (parent-group-name "нет") (secret "нет") (seria "нет") (direct-name "нет"))
          (setf id (articul v))
          (setf name (stripper (name-provider v)))
          (setf name-real (stripper (name-seo v)))
@@ -24,9 +24,7 @@
                         "есть"
                         "нет"))
          (setf img (length (get-pics (articul v))))
-         (setf options (if (valid-option-p v)
-                           "есть"
-                           "нет"))
+         (setf options (valid-option-p v))
          (setf active (if (active v)
                           "да"
                           "нет"))
@@ -40,19 +38,22 @@
                        (setf secret (getf option :value)))
          (with-option1 v "Общие характеристики" "Серия"
                        (setf seria (getf option :value)))
-         (format stream "~a;~a;~a;\"~a\";\"~a\";\"~a\";~a;~a;~a;~a;~a;\"~a\";\"~a\";~a;~a;~a;~a;\"~a\"~%"
+         (with-option1 v "Secret" "Direct-name"
+                       (setf direct-name (stripper (getf option :value))))
+         (format stream "~a;~a;~a;\"~a\";\"~a\";\"~a\";~a;~a;~a;~a;~a;\"~a\";\"~a\";~a;~a;~a;~a;\"~a\";\"~a\";~%"
                  id (price v) (siteprice v) name name-real
                  name-yml (yml.yml-show-p v) desc img options active group-name
                  parent-group-name secret
                  (gethash (articul v) *xls.product-table*)
                  (vendor v)
                  (yml.get-product-delivery-price1 v)
-                 seria)))
+                 seria
+                 direct-name)))
    'product))
 
 (defun valid-option-p (product)
   (declare (product product))
-  (some #'(lambda (optgroup) (some #'(lambda (option)
+  (count-if #'(lambda (optgroup) (some #'(lambda (option)
                                        (and option
                                             (servo.valid-string-p (getf option :value))
                                             (not (find (getf option :name)
@@ -245,7 +246,7 @@
 
 (defun create-sale-filter (group)
   (edit-marketing-filter
-   group "sale" "Ликвидация склада!" #'groupd.is-groupd))
+   group "sale" "Товары для гениев!" #'groupd.is-groupd))
 
 (defun create-bestprice-filter (group)
   (edit-marketing-filter
@@ -312,7 +313,30 @@
                 "myshki"
                 "klaviatury"
                 "holodilniki-i-morozilniki"
-                "stiralnie-mashiny")))
+                "stiralnie-mashiny"
+                "mobilephones"
+                "gps-navigatory"
+                "komputery"
+                "pylesosy"
+                "shveinye-mashiny"
+                "elektrochainiki-i-termopoty"
+                "feny"
+                "hlebopechki"
+                "kofevarki"
+                "mikrovolnovye-pechi"
+                "britvy"
+                "avtomagnitoli"
+                "avtomobilnie-televizori"
+                "videoregistratori"
+                "avtomobilnie-subvuferi"
+                "melkaya-bitovaya-tehnika"
+                "autoelectronica"
+                "akusticheskie-sistemy"
+                "mp3-pleery"
+                "krasota-i-zdorovie"
+                "avtomobilnie-kolonki"
+                "monitory"
+                "plity")))
 
 (defun report.convert-name (input-string)
   (string-trim (list #\Space #\Tab #\Newline)
