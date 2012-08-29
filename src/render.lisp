@@ -1,4 +1,4 @@
-;;;; render.lisp
+000;;;; render.lisp
 
 (in-package #:eshop)
 
@@ -7,7 +7,7 @@
 (setf *default-render-method* (make-instance 'eshop-render))
 
 (defmethod render.get-oneclick-filters ((group group) &optional (full nil))
-  "Отобрадение фильтров в один клик"
+  "Отображение фильтров в один клик"
   (let ((products)
         (filters))
     (setf products (if full
@@ -134,7 +134,7 @@
                                     (setf products-list
                                           (remove-if-not
                                            #'(lambda (p)
-                                               (vendor-filter-controller p (vendor-transform-from-alias it)))
+                                               (vendor-filter-controller p (vendor-transform-from-alias (string-downcase it))))
                                            products-list)))
                                   (when (getf parameters :fullfilter)
                                     (setf products-list (fullfilter-controller products-list object parameters)))
@@ -173,6 +173,9 @@
         :keywords (render.get-keywords object parameters)
         :description (render.get-description object parameters)
         :title (render.get-title object parameters))))
+
+(defun render.get-range-limits (group optgroup-name option-name)
+  ())
 
 (defmethod render.render ((object group-filter) &optional (parameters (request-get-plist)))
   (when (not (equal "" object))
@@ -468,7 +471,10 @@
                                                                           :siteprice "0" :subst ""
                                                                           :firstpic "/img/temp/i6.jpg")))
                                                             (render.relink object))))
-                             :keyoptions (list-filters.limit-end (remove-if #'(lambda (v) (equal (getf v :optvalue) "")) (render.get-keyoptions object)) 6)
+                             :keyoptions (list-filters.limit-end
+                                          (remove-if #'(lambda (v) (or (equal (getf v :optvalue) "")
+                                                                       (equal (getf v :optvalue) nil)))
+                                                               (render.get-keyoptions object)) 6)
                              :active (active object)
                              :vintage is-vintage
                              :shortdescr (seo-text object)
