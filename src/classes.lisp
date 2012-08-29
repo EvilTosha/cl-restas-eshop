@@ -59,6 +59,7 @@
  ((:name key               :initform ""       :disabled t    :type string)
   (:name parents           :initform nil      :disabled t    :type group-list)
   (:name name              :initform ""       :disabled nil  :type string)
+  (:name hidden            :initfrom nil      :disabled t    :type bool)
   (:name func              :initform ""       :disabled t    :type string)
   (:name func-string       :initform ""       :disabled t    :type textedit))
  :serialize nil)
