@@ -90,7 +90,7 @@
                        (productp obj)))
           (aif (and (groupp obj)
                     (getf (request-get-plist) :vendor))
-               (let ((vendor (vendor-transform-from-alias it)))
+               (let ((vendor (vendor-transform-from-alias (string-downcase it))))
                  (some #'(lambda (p)
                            (vendor-filter-controller p vendor))
                        (storage.get-recursive-products obj)))
