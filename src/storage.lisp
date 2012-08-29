@@ -61,9 +61,9 @@ Key and type is accessed from element itself"
   "Get object of given type from appropriate storage
 If no type given, search in all storages"
   (declare (string key) (symbol type))
-  (if type
-      (remhash key (get-storage type))
-      (remobj-global key)))
+  (remhash key (get-storage (if type
+                                type
+                                (type-of (getobj key))))))
 
 (defun remobj-global (key)
   (maphash #'(lambda (k v)

@@ -6,14 +6,14 @@
   "Замена символов перевода каретки на пробел (актуально при сериализации имен групп)"
   (substitute #\Space #\Newline string))
 
-(defgeneric slots.product-groups-fix (item)
+(defgeneric slots.parents-fix (item)
   (:documentation "Remove given item from children lists, and
-add it to such lists for its parents"))
+add it to such lists for its parents")
+  (:method (item) #| do nothing by default |#))
 
-(defmethod slots.product-groups-fix ((item product))
+(defmethod slots.parents-fix ((item product))
   "Remove given product from all groups' product lists and
 add it to all parents' lists"
-  ;;; TOCHECK
   (process-storage #'(lambda (group)
                        (setf (products group)
                              (remove (key item) (products group)
@@ -24,10 +24,9 @@ add it to all parents' lists"
               (pushnew item (products group)))
           (parents item)))
 
-(defmethod slots.product-groups-fix ((item group))
+(defmethod slots.parents-fix ((item group))
   "Remove given group from all groups' children lists and
 add it to all parents' lists"
-  ;;; TOCHECK
   (process-storage #'(lambda (group)
                        (setf (groups group)
                              (remove (key item) (groups group)
@@ -36,6 +35,17 @@ add it to all parents' lists"
   ;;add to parents
   (mapcar #'(lambda (group)
               (pushnew item (groups group)))
+          (parents item)))
+
+(defmethod slots.parents-fix ((item filter))
+  "Remove given filter from all groups' filter lists and
+add it to all parents' lists"
+  (process-storage #'(lambda (group)
+                       (remhash (key item) (filters group)))
+                   'group)
+  ;;add to parents
+  (mapcar #'(lambda (group)
+              (setf (gethash (key item) (filters group)) item))
           (parents item)))
 
 
@@ -131,13 +141,21 @@ Type: ~A" type))
 ;; (list :foo1 "bar" :foo2bar "baz") - Bad
 ;; (list :foo-1 "bar" :foo-2-bar "baz") - Good
 (defmethod slots.%view ((type (eql 'string-plist)) value name disabled)
-  ;; TODO: write appropriate realization
-  (slots.%view 'undefined value name t))
+  (soy.class_forms:data-field
+   (list :pairs (let (pairs)
+                  (sb-pcl::doplist (key val) value
+                    (push (list :name (format nil "~A" key)
+                                :value val) pairs))
+                  pairs)
+         :name name
+         :disabled disabled)))
 
 (defmethod slots.%get-data ((type (eql 'string-plist)) post-data-string)
   (declare (string post-data-string))
-  ;; TODO: write appropriate realization
-  post-data-string)
+  (loop :for pair :in (decode-json-from-string post-data-string)
+     :for pair-plist := (servo.alist-to-plist pair)
+     :collect (anything-to-keyword (getf pair-plist :name))
+     :collect (getf pair-plist :value)))
 
 (defmethod slots.%encode-to-string ((type (eql 'string-plist)) value)
   (encode-json-plist-to-string value))

@@ -2,29 +2,14 @@
 
 (in-package #:eshop)
 
-(defvar *admin-test-request*)
-(defvar *admin-test-session*)
-
-(restas:define-route admin-testtest-route ("/administration-super-panel/testtest")
-  (setf *admin-test-request* hunchentoot:*request*)
-  (setf *admin-test-session* hunchentoot:*session*)
-  "TEST")
-
-;; ADMIN ROUTE
 (restas:define-route admin-route ("/administration-super-panel")
-  (show-admin-page))
+  (restas:redirect 'admin/-route))
 
 (restas:define-route admin/-route ("/administration-super-panel/")
   (show-admin-page))
 
 (restas:define-route admin-actions-key-route ("/administration-super-panel/actions" :method :post)
   (show-admin-page "actions"))
-
-(restas:define-route admin-edit-key-route ("/administration-super-panel/edit" :method :post)
-  (show-admin-page "edit"))
-
-(restas:define-route admin-make-key-route ("/administration-super-panel/make" :method :post)
-  (show-admin-page "make"))
 
 (restas:define-route admin-pics-route ("/administration-super-panel/pics" :method :post)
   (show-admin-page "pics"))
@@ -47,6 +32,16 @@
 (restas:define-route admin-key-route ("/administration-super-panel/:key")
   (show-admin-page key))
 
+(defun admin.standard-ajax-response (success &optional msg)
+  "Standard json-encoded ajax response, include success and msg fields"
+  (encode-json-plist-to-string (list :success success :msg (if msg msg "Success"))))
+
+(defun admin.page-wrapper (content)
+  "Standard wrapper with styles, scripts, header, etc"
+  (soy.admin:main
+   (list :content content)))
+
+
 (restas:define-route admin-filter-create ("administration-super-panel/filter-create" :method :get)
   (string-case (hunchentoot:get-parameter "get")
     ("filter-types"
@@ -57,9 +52,6 @@
      (format nil "[~{~A~^,~}]" (mapcar #'encode-json-plist-to-string
                                        (filters.get-basic-fields (hunchentoot:get-parameter "filter-type")))))))
 
-(restas:define-route admin-filter-create-post ("administration-super-panel/filter-create" :method :post)
-  nil)
-
 (restas:define-route admin-edit-slot-route ("administration-super-panel/edit-slot" :method :post)
   (let ((object (getobj (hunchentoot:post-parameter "key")))
         (slot (anything-to-symbol (hunchentoot:post-parameter "slot")))
@@ -69,14 +61,15 @@
             (progn
               (setf (slot-value object slot)
                     (slots.%get-data (slot-type (type-of object) slot) value))
+              ;; TODO: write slot-specific fixers (which return whether whole-object fix is needed)
               ;; FIXME: bad code
               (when (and (groupp object) (equal slot 'raw-fullfilter))
                 (setf (fullfilter object) (decode-fullfilter (raw-fullfilter object))))
               ;; return value
-              (encode-json-plist-to-string (list :success t :msg "Success")))
-          (error (e) (encode-json-plist-to-string (list :success nil :msg (format nil "Error: ~A" e)))))
+              (admin.standard-ajax-response t))
+          (error (e) (admin.standard-ajax-response nil (format nil "Error: ~A" e))))
         ;; else
-        (encode-json-plist-to-string (list :success nil :msg "Error: Object doesn't exist")))))
+        (admin.standard-ajax-response nil "Error: Object doesn't exist"))))
 
 
 (defun admin-compile-templates ()
@@ -92,66 +85,113 @@
         (regex-replace-all "\\n" (with-output-to-string (*standard-output*) (room)) "<br>")))
 
 
-(defun admin.edit-content (&optional post-data)
-  (let* ((key (getf (request-get-plist) :key))
-         (item (getobj key))
-         (item-fields (when item (class-core.make-fields item))))
-    (when (and item post-data)
-      (setf post-data (admin.post-data-preprocessing (servo.plist-to-unique post-data)))
-      (class-core.edit-fields item post-data)
-      ;; need to fix
-      (when (and (groupp item) (getf post-data :fullfilter))
-        (setf (fullfilter item) (getf post-data :fullfilter)))
-      (slots.product-groups-fix item)
-      (setf item-fields (class-core.make-fields item)))
-    (if item
-        (soy.class_forms:formwindow
-         (list :output (format nil "~a" post-data)
-               :key key
-               :fields item-fields
-               :target "edit"))
-        "not found")))
+(restas:define-route admin-make-get-route ("/administration-super-panel/make" :method :get)
+  (admin.page-wrapper
+   (let ((key (hunchentoot:get-parameter "key"))
+         (type (hunchentoot:get-parameter "type")))
+     (if (getobj key)
+         (restas:redirect 'admin-edit-get-route)
+         ;; else
+         (if (and (valid-string-p type)
+                  (class-exist-p (anything-to-symbol type)))
+             (soy.class_forms:formwindow
+              (list :key key
+                    :type type
+                    :fields (class-core.make-fields (get-instance type))
+                    :target "make"))
+             ;; else
+             "Incorrect type or no type specified")))))
 
-(defun admin.make-content (post-data)
-  (let* ((key (getf (request-get-plist) :key))
-         (type (getf (request-get-plist) :type))
+(defgeneric admin.post-make-fix (item)
+  (:documentation "Perform class-specific fixes after creating instance")
+  (:method (item) #| do nothing by default |#))
+
+(defmethod admin.post-make-fix ((item product))
+  (setf
+   (articul item) (parse-integer (key item))
+   (date-created item) (get-universal-time)
+   (date-modified item) (get-universal-time))
+   ;; make pointers to this product from parents
+   (mapcar #'(lambda (parent)
+               (push item (products parent)))
+           (parents item)))
+
+(defmethod admin.post-make-fix ((item group))
+  ;; upsale
+  (setf (empty item) (notany #'active (products item)))
+  (mapcar #'(lambda (parent)
+              (push item (groups parent)))
+          (parents item))
+  (when (raw-fullfilter item)
+    (setf (fullfilter item) (decode-fullfilter (raw-fullfilter item)))))
+
+(defmethod admin.post-make-fix ((item vendor))
+  (let ((name (name item)))
+    (when (valid-string-p name)
+      (setobj (string-downcase name) item 'vendor))))
+
+(defmethod admin.post-make-fix ((item filter))
+  (mapcar #'(lambda (parent)
+              (setf (gethash (key item) (filters parent)) item))
+          (parents item)))
+
+(restas:define-route admin-make-post-route ("/administration-super-panel/make" :method :post)
+  (let* ((key (hunchentoot:post-parameter "key"))
+         (type (anything-to-symbol (hunchentoot:post-parameter "type")))
+         (item (getobj key)))
+    (if (not (class-exist-p type))
+        ;; return error
+        (admin.standard-ajax-response nil "Unknown type")
+        ;; else
+        (progn
+          (unless item ;; should be true always
+            (log5:log-for info "Create new item from admin panel with key: ~A" key)
+            (setf item (make-instance-from-post-data type))
+            (admin.post-make-fix item)
+            (setobj key item)) ; adding item into storage
+          ;; return success
+          (admin.standard-ajax-response t)))))
+
+(restas:define-route admin-edit-get-route ("/administration-super-panel/edit" :method :get)
+  ;; TODO: use type parameter
+  (admin.page-wrapper
+   (let* ((key (hunchentoot:get-parameter "key"))
+          (item (getobj key)))
+     (if item
+         (soy.class_forms:formwindow
+          (list :key key
+                :fields (class-core.make-fields item)
+                :target "edit"))
+         ;; else
+         "Item with specified key is not found"))))
+
+;; TODO: rewrite using slot-specific fixers (dont forget about post-make-fix and post-unserialize)
+(defgeneric admin.post-edit-fix (item)
+  (:documentation "Perform class-specific fixes after changing instance slots ")
+  (:method (item) #| do nothing by default |#))
+
+(defmethod admin.post-edit-fix ((item product))
+  (setf (date-modified item) (get-universal-time)))
+
+(defmethod admin.post-edit-fix ((item group))
+  (when (raw-fullfilter item)
+    (setf (fullfilter item) (decode-fullfilter (raw-fullfilter item)))))
+
+(restas:define-route admin-edit-post-route ("/administration-super-panel/edit" :method :post)
+  (let* ((key (hunchentoot:post-parameter "key"))
          (item (getobj key)))
     (if item
-        ;;if item exist in storage, redirect to edit page (but url still .../make?...)
-        (admin.edit-content post-data)
-        ;;else
-        (if post-data
+        (handler-case
             (progn
-              (string-case type
-                ;; TODO: fix for all classes
-                ("product"
-                 (setf item (make-instance 'product
-                                           :articul (parse-integer key))))
-                ("group"
-                 (setf item (make-instance 'group)))
-                ("filter"
-                 (setf item (make-instance 'filter)))
-                (t "Unknown type"))
-              (setf (key item) key)
-              (if (equal type "product")
-                  (setf (date-created item) (get-universal-time)
-                        (date-modified item) (get-universal-time)))
-              (setf post-data (admin.post-data-preprocessing (servo.plist-to-unique post-data)))
-              (class-core.edit-fields item post-data)
-              ;;doesn't work with filters
-              (slots.product-groups-fix item)
-              (setobj (key item) item) ;;adding item into storage
-              (admin.edit-content))
-            ;;else (post-data is nil)
-            (let ((empty-item (get-instance type)))
-              (setf (key empty-item) key)
-              (if (productp empty-item)
-                  (setf (articul empty-item) (parse-integer key)))
-              (soy.class_forms:formwindow
-               (list :key key
-                     :type type
-                     :fields (class-core.make-fields empty-item)
-                     :target "make")))))))
+              (class-core.edit-slots item)
+              (admin.post-edit-fix item)
+              (slots.parents-fix item)
+              (admin.standard-ajax-response t))
+          (error (e) (admin.standard-ajax-response nil (format nil "ERROR: ~A" e))))
+        ;; else
+        (admin.standard-ajax-response nil "Item with specified key is
+        not found"))))
+
 
 (defun admin.pics-deleting (post-data)
   (let* ((key (getf post-data :key))
@@ -278,15 +318,8 @@
                                                         :info (admin.do-action
                                                                (getf post-data :action)))))
              ("edit" (admin.edit-content post-data))
-             ("make" (admin.make-content post-data))
              ("parenting" (admin.parenting-content post-data))
              ("pics" (admin.pics-deleting post-data))
              ("templates" (admin.compile-template post-data))
              ("backup" (admin.make-backup post-data))
              (t "Админка в разработке"))))))
-
-
-(defun admin.post-data-preprocessing (post-data)
-  (swhen (getf post-data :raw-fullfilter)
-    (setf (getf post-data :fullfilter) (decode-fullfilter it)))
-  post-data)

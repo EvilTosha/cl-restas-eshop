@@ -16,7 +16,7 @@
   (:name serialize    :initform t                                      :disabled nil  :type bool               :serialize t)
   ;; value, that will be used when no initial list/... supplied. Can be collection (list for now) of objects,
   ;; another filter (will use its own default-set) or type (will use storage of that type as collection))
-  (:name default-set  :initform nil                                    :disabled nil  :type default-set        :serialize t)))
+  (:name default-set  :initform 'product                               :disabled t  :type default-set        :serialize t)))
 
 (defmethod name ((object filter))
   (getf (data object) :name))

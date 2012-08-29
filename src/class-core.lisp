@@ -21,23 +21,46 @@
       ,@(mapcar #'(lambda (field)
                     `(slots.%view ',(getf field :type)
                                   (,(getf field :name) object)
-                                  ,(format nil "~A" (getf field :name))
+                                  ,(format nil "~(~A~)" (getf field :name))
                                   ,(getf field :disabled)))
                 slot-list))))
 
-(defgeneric class-core.edit-fields (object post-data-plist)
-  (:documentation "Method for edit slot values of object according to post-data"))
+(defgeneric make-instance-from-post-data (type)
+  (:documentation "Method for creating and initializing instance of class
+from post data from admin panel.
+Note: function must be called during request, so functions like
+'hunchentoot:get-parameter could work"))
+
+
+(defmacro class-core.define-post-data-create (name slot-list)
+  `(defmethod make-instance-from-post-data ((type (eql ',name)))
+     (make-instance
+      ',name
+      ;; we have to explicitly use key, as it's disabled param
+      :key (hunchentoot:post-parameter "key")
+      ,@(mapcan #'(lambda (slot)
+           (unless (getf slot :disabled)
+             `(,(anything-to-keyword (getf slot :name))
+                (slots.%get-data ',(getf slot :type)
+                                 (hunchentoot:post-parameter
+                                  ,(format nil "~(~A~)" (getf slot :name)))))))
+                slot-list))))
+
+
+(defgeneric class-core.edit-slots (object)
+  (:documentation "Method for edit slot values of object according to post-data.
+Note: function must be called during request, so functions like
+'hunchentoot:get-parameter could work"))
 
 (defmacro class-core.define-edit-method (name slot-list)
-  `(defmethod class-core.edit-fields ((object ,name) post-data-plist)
+  `(defmethod class-core.edit-slots ((object ,name))
      (setf
-       ,@(mapcan #'(lambda (field)
-                     (unless (getf field :disabled)
-                       `((,(getf field :name) object)
-                         (slots.%get-data ',(getf field :type)
-                                          (getf post-data-plist
-                                                ,(anything-to-keyword
-                                                  (getf field :name)))))))
+       ,@(mapcan #'(lambda (slot)
+                     (unless (getf slot :disabled)
+                       `((,(getf slot :name) object)
+                         (slots.%get-data ',(getf slot :type)
+                                          (hunchentoot:post-parameter
+                                           ,(format nil "~(~A~)" (getf slot :name)))))))
                  slot-list))))
 
 (defgeneric %unserialize (type line)
@@ -130,14 +153,9 @@ Reload this method if more actions required"
 
 (defmethod %post-unserialize-item ((item group))
   ;; upsale
-  (setf (upsale-links item)
-        (mapcar #'(lambda (group-key)
-                    (when group-key
-                      (getobj group-key 'group)))
-                (upsale-links item)))
-  ;; после десериализации в parent лежит список key родительских групп
-  (setf (parents item)
-        (keys-to-objects (parents item) :type 'group))
+  (setf (upsale-links item) (keys-to-objects (upsale-links item) :type 'group)
+        ;; после десериализации в parent лежит список key родительских групп
+        (parents item) (keys-to-objects (parents item) :type 'group))
   ;; проставление ссылок у родителей на данную группу
   (mapcar #'(lambda (parent)
               (push item (groups parent)))
@@ -249,7 +267,7 @@ such as pointer to storage, serialize flag, etc.")
                  slots))))
 
 
-;;; TODO: add :documentation arg
+;;; TODO: add :documentation arg (and other args)
 (defmacro class-core.make-class-and-methods (name slot-list &key
                                              (serialize t)
                                              (serializable t)
@@ -269,6 +287,7 @@ such as pointer to storage, serialize flag, etc.")
            (make-instance ',name ,@instance-initforms))
      (class-core.define-view-method ,name ,slot-list)
      (class-core.define-edit-method ,name ,slot-list)
+     (class-core.define-post-data-create ,name ,slot-list)
      ,@(when make-storage
              `(;; set :storage property if class as pointer to real storage
                (setf (getf (gethash ',name *classes*) :storage)

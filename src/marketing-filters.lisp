@@ -20,7 +20,8 @@
                                         (list :name (getf (data (car pair)) :name)
                                               :key (key (car pair))
                                               :parentkey (key group)
-                                              :num (cdr pair)))
+                                              :num (cdr pair)
+                                              :showall showall))
                                     filters)))))))
 
 (defgeneric marketing-filters.get-filters (object products)
