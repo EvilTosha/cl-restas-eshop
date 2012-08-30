@@ -25,7 +25,7 @@
                         "есть"
                         "нет"))
          (setf img (length (get-pics (articul v))))
-         (setf options (valid-option-p v))
+         (setf options (valid-options v))
          (setf active (if (active v)
                           "да"
                           "нет"))
@@ -58,7 +58,7 @@
                  warranty)))
    'product))
 
-(defun valid-option-p (product)
+(defun valid-options (product)
   (declare (product product))
   (let ((num 0))
     (mapcar #'(lambda (optgroup)
