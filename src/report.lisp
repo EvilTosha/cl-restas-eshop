@@ -15,68 +15,76 @@
     (special-p (key product))))
 
 (defun write-products-report (stream)
-  (labels ((get-2-lvl-group (obj)
-             (when (parent obj)
-               (if (parent (parent obj))
-                   (get-2-lvl-group (parent obj))
-                   obj))))
-    (format stream "~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~%"
-            "артикул" "цена магазина" "цена сайта" "имя" "имя real" "имя yml" "is-yml-show" "seo текст"
-            "фотографии" "характеристики" "активный" "группа" "родительская группа" "группа 2-го уровня"
-            "secret" "DTD" "vendor" "доставка" "серия")
-    (process-storage
-     #'(lambda (v)
-         (let ((id "нет") (name "нет") (name-real "нет") (name-yml "нет")
-               (desc "нет") (img "нет") (options "нет") (active "нет")
-               (group-name "нет") (parent-group-name "нет") (2-group-name "нет") (secret "нет") (seria "нет"))
-           (setf id (articul v))
-           (setf name (stripper (name-provider v)))
-           (setf name-real (stripper (name-seo v)))
-           (with-option1 v "Secret" "Yandex"
-                        (setf name-yml (stripper (getf option :value))))
-           (setf desc (if (and (not (null (seo-text v)))
-                               (not (string= "" (stripper (seo-text v)))))
-                          "есть"
+  (format stream "~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~A~%"
+          "артикул" "цена магазина" "цена сайта" "имя" "имя real" "имя yml" "is-yml-show" "seo текст"
+          "фотографии" "характеристики" "активный" "группа" "родительская группа" "группа 2-го уровня"
+          "secret" "DTD" "vendor" "доставка" "серия" "direct-name" "дубль" "гарантия")
+  (process-storage
+   #'(lambda (v)
+       (let ((id "нет") (name "нет") (name-real "нет") (name-yml "нет")
+             (desc "нет") (img "нет") (options "нет") (active "нет")
+             (group-name "нет") (parent-group-name "нет") (secret "нет")
+             (seria "нет") (direct-name "нет") (double "-") (warranty "-"))
+         (setf id (articul v))
+         (setf name (stripper (name-provider v)))
+         (setf name-real (stripper (name-seo v)))
+         (with-option1 v "Secret" "Yandex"
+                       (setf name-yml (stripper (getf option :value))))
+         (setf desc (if (and (not (null (seo-text v)))
+                             (not (string= "" (stripper (seo-text v)))))
+                        "есть"
+                        "нет"))
+         (setf img (length (get-pics (articul v))))
+         (setf options (valid-options v))
+         (setf active (if (active v)
+                          "да"
                           "нет"))
-           (setf img (length (get-pics (articul v))))
-           (setf options (if (valid-option-p v)
-                             "есть"
-                             "нет"))
-           (setf active (if (active v)
-                            "да"
-                            "нет"))
-           (setf group-name (when (parent v)
-                              (stripper (name (parent v)))))
-           (setf parent-group-name (when (and (parent v)
-                                              (parent (parent v)))
-                                     (stripper (name (parent (parent v))))))
-           (setf 2-group-name (when (and (parent v) (parent (parent v)))
-                                (stripper (name (get-2-lvl-group v)))))
-           (setf secret "Нет")
-           (with-option1 v "Secret" "Checked"
-                        (setf secret (getf option :value)))
-           (with-option1 v "Общие характеристики" "Серия"
-                        (setf seria (getf option :value)))
-           (format stream "~a;~a;~a;\"~a\";\"~a\";\"~a\";~a;~a;~a;~a;~a;\"~a\";\"~a\";\"~a\";~a;~a;~a;~a;\"~a\"~%"
-                   id (price v) (siteprice v) name name-real
-                   name-yml (yml.yml-show-p v) desc img options active group-name
-                   parent-group-name 2-group-name secret
-                   (gethash (articul v) *xls.product-table*)
-                   (vendor v)
-                   (yml.get-product-delivery-price1 v)
-                   seria)))
-     'product)))
+         (setf group-name (when (parent v)
+                            (stripper (name (parent v)))))
+         (setf parent-group-name (when (and (parent v)
+                                            (parent (parent v)))
+                                   (stripper (name (parent (parent v))))))
+         (setf 2-group-name (when (and (parent v) (parent (parent v)))
+                              (stripper (name (get-2-lvl-group v)))))
+         (setf secret "Нет")
+         (with-option1 v "Secret" "Checked"
+                       (setf secret (getf option :value)))
+         (with-option1 v "Общие характеристики" "Серия"
+                       (setf seria (getf option :value)))
+         (with-option1 v "Secret" "Direct-name"
+                       (setf direct-name (stripper (getf option :value))))
+         (with-option1 v "Secret" "Дубль"
+                       (setf double (stripper (getf option :value))))
+         (with-option1 v "Дополнительная информация" "Гарантия"
+                       (setf warranty (stripper (getf option :value))))
+         (format stream "~a;~a;~a;\"~a\";\"~a\";\"~a\";~a;~a;~a;~a;~a;\"~a\";\"~a\";~a;~a;~a;~a;~a;\"~a\";\"~a\";\"~a\";\"~a\";~%"
+                 id (price v) (siteprice v) name name-real
+                 name-yml (yml.yml-show-p v) desc img options active group-name
+                 parent-group-name 2-group-name secret
+                 (gethash (articul v) *xls.product-table*)
+                 (vendor v)
+                 (yml.get-product-delivery-price1 v)
+                 seria
+                 direct-name
+                 double
+                 warranty)))
+   'product))
 
-(defun valid-option-p (product)
+(defun valid-options (product)
   (declare (product product))
-  (some #'(lambda (optgroup) (some #'(lambda (option)
+  (let ((num 0))
+    (mapcar #'(lambda (optgroup)
+                (setf num
+                      (+ num
+                         (count-if #'(lambda (option)
                                        (and option
                                             (valid-string-p (getf option :value))
                                             (not (find (getf option :name)
                                                        (list "Производитель" "Модель") :test #'equal))))
-                                   (getf optgroup :options)))
-        (remove "Secret" (optgroups product)  ; remove Secret group
-                :test #'equal :key #'(lambda (opt) (getf opt :name)))))
+                                   (getf optgroup :options)))))
+                      (remove "Secret" (optgroups product)  ; remove Secret group
+                              :test #'equal :key #'(lambda (opt) (getf opt :name))))
+    num))
 
 (defun write-groups (stream)
   (format stream "~a;~a;~a;~a;~a;~a;~%"
@@ -244,6 +252,123 @@
           product-list)
   "done")
 
+<<<<<<< HEAD
+=======
+(defun edit-marketing-filter (group key-suffix name func)
+  (let* ((key (format nil "~A-~A" (key group) key-suffix))
+         new-filter
+         (filter (aif (find key (filters group) :test #'equal :key #'key)
+                      it
+                      (progn
+                        (setf new-filter t)
+                        (setobj key (make-instance 'filter))))))
+    (setf (name filter) name)
+    (setf (func filter) func)
+    (setf (key filter) key)
+    (setf (parents filter) (list group))
+    (when new-filter
+      (push filter (filters group)))
+    filter))
+
+(defun create-sale-filter (group)
+  (edit-marketing-filter
+   group "sale" "Товары для гениев!" #'groupd.is-groupd))
+
+(defun create-bestprice-filter (group)
+  (edit-marketing-filter
+   group "bestprice" "Горячий уик-энд скидок"
+   #'(lambda (object) (plusp (delta-price object)))))
+
+(defun create-ipad3-filter (group)
+  (edit-marketing-filter
+   group "ipad3" "IPad 3"
+   #'(lambda (p)
+       (let (opts)
+         (with-option1 p "Общие характеристики" "Модель"
+                       (setf opts (getf option :value)))
+         (string= (format nil "~(~A~)" opts) "ipad new")))))
+
+(defun create-man-sale-filter (group)
+  (edit-marketing-filter
+   group "23feb" "Подарки к 23 февраля" #'groupd.man.is-groupd))
+
+(defun create-woman-sale-filter (group)
+  (edit-marketing-filter
+   group "8mart" "Подарки к 8 марта" #'groupd.woman.is-groupd))
+
+(defun report.set-man-salefilter ()
+  (process-storage #'create-man-sale-filter 'group))
+
+(defun report.set-woman-salefilter ()
+  (process-storage #'create-woman-sale-filter 'group))
+
+
+(defun report.set-filters (groups filter-func name filter-key)
+  (mapcar #'(lambda (gr)
+              (edit-marketing-filter gr filter-key name filter-func))
+          groups))
+
+(defun report.create-marketing-filters ()
+	(create-ipad3-filter (getobj "planshetnie-komputery" 'group))
+	(report.set-filters (list (getobj "noutbuki" 'group))
+											#'(lambda (product)
+													(let ((opts))
+														(with-option1 product
+															"Общие характеристики" "Тип устройства"
+															(setf opts (getf option :value)))
+														(equal opts "Ультрабук")))
+											"Ультрабуки"
+											"ultrabooks")
+  ;; TODO: убрать костыль
+	(report.set-filters (process-and-collect-storage 'group)
+											#'groupd.holiday.is-groupd
+											"Для отдыха"
+											"holidays")
+  (report.set-filters `(,(getobj "noutbuki" 'group))
+                      #'(lambda (pr) (plusp (delta-price pr)))
+                      "Лучшие цены"
+                      "bestprice"))
+
+(defun report.set-salefilter ()
+  (mapcar #'(lambda (v)
+              (create-sale-filter (getobj (format nil "~a" v) 'group)))
+          (list "netbuki"
+                "noutbuki"
+                "planshetnie-komputery"
+                "cifrovye-fotoapparaty"
+                "lcd-televizory"
+                "monitory"
+                "printery"
+                "mfu"
+                "myshki"
+                "klaviatury"
+                "holodilniki-i-morozilniki"
+                "stiralnie-mashiny"
+                "mobilephones"
+                "gps-navigatory"
+                "komputery"
+                "pylesosy"
+                "shveinye-mashiny"
+                "elektrochainiki-i-termopoty"
+                "feny"
+                "hlebopechki"
+                "kofevarki"
+                "mikrovolnovye-pechi"
+                "britvy"
+                "avtomagnitoli"
+                "avtomobilnie-televizori"
+                "videoregistratori"
+                "avtomobilnie-subvuferi"
+                "melkaya-bitovaya-tehnika"
+                "autoelectronica"
+                "akusticheskie-sistemy"
+                "mp3-pleery"
+                "krasota-i-zdorovie"
+                "avtomobilnie-kolonki"
+                "monitory"
+                "plity")))
+
+>>>>>>> wolfor-dev-shop
 (defun report.convert-name (input-string)
   (string-trim (list #\Space #\Tab #\Newline)
                (format nil "~:(~a~)" input-string)))

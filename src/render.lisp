@@ -1,4 +1,4 @@
-;;;; render.lisp
+000;;;; render.lisp
 
 (in-package #:eshop)
 
@@ -169,7 +169,7 @@
                                     (setf products-list
                                           (remove-if-not
                                            #'(lambda (p)
-                                               (vendor-filter-controller p (vendor-transform-from-alias it)))
+                                               (vendor-filter-controller p (vendor-transform-from-alias (string-downcase it))))
                                            products-list)))
                                   (when (getf parameters :fullfilter)
                                     (setf products-list (fullfilter-controller products-list object parameters)))
@@ -209,6 +209,9 @@
         :description (render.get-description object parameters)
         :title (render.get-title object parameters))))
 
+(defun render.get-range-limits (group optgroup-name option-name)
+  ())
+
 (defmethod render.render ((object group-filter) &optional (parameters (request-get-plist)))
   (when (not (equal "" object))
     (soy.fullfilter:container
@@ -229,7 +232,6 @@
                                                                 (cadr elt)))))
                                        (advanced object))))
            :isshowadvanced (is-need-to-show-advanced object parameters)))))
-
 
 (defmethod restas:render-object ((designer eshop-render) (object group-filter))
   (render.render object))
@@ -302,7 +304,7 @@
                                         (get-option object "Secret" "Продающий текст")
                                         " "
                                         (if (zerop (yml.get-product-delivery-price1 object))
-                                            " Акция: доставим бесплатно!"
+                                            " Бесплатная доставка при заказе прямо сейчас!"
                                             (if (= 100 (yml.get-product-delivery-price1 object))
                                                 " Акция: скидка на доставку 70%. Закажи сейчас!"
                                                 (if (= 200 (yml.get-product-delivery-price1 object))
@@ -427,6 +429,8 @@
        :collect item)))
 
 (defmethod restas:render-object ((designer eshop-render) (object product))
+  (aif (servo.get-option object "Secret" "Дубль")
+       (hunchentoot:redirect (concatenate 'string "/" it) :code 301))
   (let* ((pics (get-pics (articul object)))
          (diff-percent (servo.diff-percentage (price object) (siteprice object)))
          (is-available (yml.available-for-order-p object))
@@ -462,7 +466,7 @@
                                                   (get-option object "Secret" "Продающий текст")
                                                   " "
                                                   (if (zerop (yml.get-product-delivery-price1 object))
-                                                      " Акция: доставим бесплатно!"
+                                                      " Бесплатная доставка при заказе прямо сейчас!"
                                                       (if (= 100 (yml.get-product-delivery-price1 object))
                                                           " Акция: скидка на доставку 70%. Закажи сейчас!"
                                                           (if (= 200 (yml.get-product-delivery-price1 object))

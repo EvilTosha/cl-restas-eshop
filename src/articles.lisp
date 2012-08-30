@@ -186,15 +186,19 @@
 (defmethod articles.show-static ((object article))
 	(soy.index:main (list :keywords "" ;;keywords
                         :description "" ;;description
-                        :title (name object)
+                        :title  (if (title object)
+                                    (title object)
+                                    (name object))
                         :header (soy.header:header (append (list :cart (soy.index:cart)
                                                                  :bannertype "line-text")
                                                            (main-page-show-banner "line-text" (banner *main-page.storage*))))
                         :footer (soy.footer:footer)
                         :content  (soy.static:main
                                    (list :menu (render.menu)
+                                         :sharebuttons (soy.articles:share-buttons
+                                                         (list :key (key object)))
                                          :breadcrumbs (bredcrumbs object)
-                                         :subcontent  (body object)
+                                         :subcontent  (prerender-string-replace (body object))
                                          :rightblock  (rightblock object))))))
 
 (defmethod articles.show-article  ((object article))
@@ -204,8 +208,9 @@
                                     (title object)
                                     (name object))
                         :headext (soy.articles:head-share-buttons (list :key (key object)))
-                        :header (soy.header:header (append (list :cart (soy.index:cart))
-                                                           (main-page-show-banner "line" (banner *main-page.storage*))))
+                        :header (soy.header:header (append (list :cart (soy.index:cart)
+                                                                 :bannertype "line-text")
+                                                           (main-page-show-banner "line-text" (banner *main-page.storage*))))
                         :footer (soy.footer:footer)
                         :content (soy.static:main
                                   (list :menu (render.menu)
