@@ -68,7 +68,7 @@
                                        (and option
                                             (servo.valid-string-p (getf option :value))
                                             (not (find (getf option :name)
-                                                       (list "Производитель" "Модель") :test #'equal))))
+                                                       (list "Производитель" "Модель" "Гарантия" "Сайт производителя") :test #'equal))))
                                    (getf optgroup :options)))))
                       (remove "Secret" (optgroups product)  ; remove Secret group
                               :test #'equal :key #'(lambda (opt) (getf opt :name))))
