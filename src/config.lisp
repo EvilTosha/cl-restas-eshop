@@ -25,9 +25,9 @@
     path))
 
 (defun config.bool-processing (bool-string)
-  (cond
-    ((string= "1" bool-string) t)
-    ((string= "0" bool-string) nil)
+  (string-case bool-string
+    ("1" t)
+    ("0" nil)
     (t (error "Wrong bool argument, must be 1/0"))))
 
 (defun config.int-processing (int-string)
@@ -43,11 +43,11 @@
         (config.set-option section option
                            (let ((option-value
                                   (config.get-option section option)))
-                             (cond
-                               ((string= type "path") (config.path-processing option-value))
-                               ((string= type "bool") (config.bool-processing option-value))
-                               ((string= type "int") (config.int-processing option-value))
-                               ((string= type "string") (config.string-processing option-value)))))
+                             (string-case type
+                               ("path" (config.path-processing option-value))
+                               ("bool" (config.bool-processing option-value))
+                               ("int" (config.int-processing option-value))
+                               ("string" (config.string-processing option-value)))))
         (format *standard-output* "   ~a~%" (config.get-option section option)))
       ;; option doesn't exist
       (error (format nil "Option ~a/~a doesn't exist" section option))))

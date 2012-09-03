@@ -183,7 +183,7 @@
                           :if-does-not-exist :create
                           :external-format :utf-8)
       (mapcar #'(lambda (data)
-                  (format file "~&~a" (object-fields.string-delete-newlines (sb-ext:octets-to-string data :external-format :cp1251))))
+                  (format file "~&~a" (slots.string-delete-newlines (sb-ext:octets-to-string data :external-format :cp1251))))
               (reverse raws)))))
 
 (defun gateway.store-history (history)
@@ -207,7 +207,6 @@
              (oldprice (cdr (assoc :price--old elt)))
              (count-total    (cdr (assoc :count--total elt)))
              (count-transit  (cdr (assoc :count--transit elt))))
-         ;; (log5:log-for info-console "~a" elt)
          (gateway.process-product1 articul price siteprice isnew isspec name realname count-total count-transit bonuscount oldprice)))))
 
 (defun gateway.get-pathname-fulls (&optional (timestamp (get-universal-time)))
@@ -237,7 +236,7 @@
          :do (progn
                (when (and (string<= start (subseq line 0 19))
                           (string<= (subseq line 0 19) finish))
-                 (log5:log-for info "single: ~a" line)
+                 (log5:log-for info-console "single: ~a" line)
                  (setf data (json:decode-json-from-string (subseq line 21)))
                  (gateway.process-products1 data)))))))
 
@@ -308,5 +307,5 @@
 
 (defun gateway.store-singles (history)
   (mapcar #'(lambda (v)
-              (gateway.store-single-gateway (object-fields.string-delete-newlines (sb-ext:octets-to-string (third v) :external-format :cp1251)) (time.decode.backup (car v))))
+              (gateway.store-single-gateway (slots.string-delete-newlines (sb-ext:octets-to-string (third v) :external-format :cp1251)) (time.decode.backup (car v))))
           history))

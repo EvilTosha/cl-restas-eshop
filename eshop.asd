@@ -1,5 +1,5 @@
 (defsystem eshop
-  :depends-on (#:restas #:cl-json #:arnesi #:closure-template #:log5 #:py-configparser)
+  :depends-on (#:restas #:cl-json #:arnesi #:closure-template #:log5 #:py-configparser #:string-case)
   :components
   ((:module "src"
             :components
@@ -29,16 +29,16 @@
              (:file "catalog" :depends-on ("rename" "images"))
              (:file "prerender" :depends-on ("catalog"))
              (:file "storage" :depends-on ("prerender"))
-             (:file "main-page" :depends-on ("storage"))
-             (:file "filters" :depends-on ("main-page"))
-             (:file "oneclickcart" :depends-on ("filters"))
-             (:file "static-pages" :depends-on ("images"))
-             (:file "list-filters" :depends-on ("static-pages"))
-             (:file "object-fields" :depends-on ("list-filters"))
-             (:file "backup" :depends-on ("object-fields"))
+             (:file "slots" :depends-on ("storage"))
+             (:file "backup" :depends-on ("slots"))
              (:file "class-core" :depends-on ("backup"))
              (:file "classes" :depends-on ("class-core"))
-             (:file "admin" :depends-on ("classes" "cron"))
+             (:file "main-page" :depends-on ("classes"))
+             (:file "filters" :depends-on ("main-page"))
+             (:file "marketing-filters" :depends-on ("filters"))
+             (:file "oneclickcart" :depends-on ("marketing-filters"))
+             (:file "static-pages" :depends-on ("images" "log"))
+             (:file "admin" :depends-on ("filters" "cron"))
              (:file "gateway" :depends-on ("admin"))
              (:file "email" :depends-on ("gateway"))
              (:file "groupd" :depends-on ("email"))

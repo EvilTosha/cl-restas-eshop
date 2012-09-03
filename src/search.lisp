@@ -82,7 +82,7 @@
       (soy.catalog:content
        (list :name "Поиск мысли..."
              :breadcrumbs "<a href=\"/catalog\">Каталог</a> / Поиск"
-             :menu (class-core.menu)
+             :menu (render.menu)
              :rightblocks (list (soy.catalog:rightblock1)
                                 (soy.catalog:rightblock2))
              :subcontent (if (null centercontent)

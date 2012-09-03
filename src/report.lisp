@@ -4,10 +4,20 @@
 
 (defparameter *special-products* (make-hash-table :test #'equal))
 
+(defgeneric special-p (product)
+  (:documentation "Checks whether product is in *special-products*"))
+
+(defmethod special-p ((product string))
+  (not (null (gethash product *special-products*))))
+
+(defmethod special-p ((product product))
+  (when product
+    (special-p (key product))))
+
 (defun write-products-report (stream)
-  (format stream "~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~%"
+  (format stream "~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~A~%"
           "артикул" "цена магазина" "цена сайта" "имя" "имя real" "имя yml" "is-yml-show" "seo текст"
-          "фотографии" "характеристики" "активный" "группа" "родительская группа"
+          "фотографии" "характеристики" "активный" "группа" "родительская группа" "группа 2-го уровня"
           "secret" "DTD" "vendor" "доставка" "серия" "direct-name" "дубль" "гарантия")
   (process-storage
    #'(lambda (v)
@@ -34,6 +44,8 @@
          (setf parent-group-name (when (and (parent v)
                                             (parent (parent v)))
                                    (stripper (name (parent (parent v))))))
+         (setf 2-group-name (when (and (parent v) (parent (parent v)))
+                              (stripper (name (get-2-lvl-group v)))))
          (setf secret "Нет")
          (with-option1 v "Secret" "Checked"
                        (setf secret (getf option :value)))
@@ -45,10 +57,10 @@
                        (setf double (stripper (getf option :value))))
          (with-option1 v "Дополнительная информация" "Гарантия"
                        (setf warranty (stripper (getf option :value))))
-         (format stream "~a;~a;~a;\"~a\";\"~a\";\"~a\";~a;~a;~a;~a;~a;\"~a\";\"~a\";~a;~a;~a;~a;\"~a\";\"~a\";\"~a\";\"~a\";~%"
+         (format stream "~a;~a;~a;\"~a\";\"~a\";\"~a\";~a;~a;~a;~a;~a;\"~a\";\"~a\";~a;~a;~a;~a;~a;\"~a\";\"~a\";\"~a\";\"~a\";~%"
                  id (price v) (siteprice v) name name-real
                  name-yml (yml.yml-show-p v) desc img options active group-name
-                 parent-group-name secret
+                 parent-group-name 2-group-name secret
                  (gethash (articul v) *xls.product-table*)
                  (vendor v)
                  (yml.get-product-delivery-price1 v)
@@ -66,7 +78,7 @@
                       (+ num
                          (count-if #'(lambda (option)
                                        (and option
-                                            (servo.valid-string-p (getf option :value))
+                                            (valid-string-p (getf option :value))
                                             (not (find (getf option :name)
                                                        (list "Производитель" "Модель" "Гарантия" "Сайт производителя") :test #'equal))))
                                    (getf optgroup :options)))))
@@ -90,11 +102,11 @@
                (if (active v)
                    "yes"
                    "no")
-               (if (servo.valid-string-p (seo-text v))
+               (if (valid-string-p (seo-text v))
                    "yes"
                    "no")
                (length (products v))
-               (length (remove-if-not #'active (products v)))))
+               (count-if #'active (products v))))
    'group))
 
 (defun write-groups-active-product-num (stream)
@@ -130,7 +142,7 @@
      #'(lambda (v)
          (setf vendor-name "Нет")
          (setf vendor-name (vendor v))
-         (setf desc (if (servo.valid-string-p (seo-text v))
+         (setf desc (if (valid-string-p (seo-text v))
                         "yes"
                         "no"))
          (format stream "\"~a\";\"~a\";\"~a\";http://www.320-8080.ru/~a;~a;~a;~%"
@@ -144,7 +156,7 @@
                      "yes"
                      "no")
                  desc))
-    'product)))
+     'product)))
 
 
 (defun write-vendors (stream)
@@ -175,7 +187,7 @@
                                     "yes"
                                     "no")
                                 (length products)
-                                (length (remove-if-not #'active products)))))
+                                (count-if #'active products))))
                   (storage.get-vendors (storage.get-filtered-products v #'atom)))))
    'group))
 
@@ -240,6 +252,8 @@
           product-list)
   "done")
 
+<<<<<<< HEAD
+=======
 (defun edit-marketing-filter (group key-suffix name func)
   (let* ((key (format nil "~A-~A" (key group) key-suffix))
          new-filter
@@ -354,6 +368,7 @@
                 "monitory"
                 "plity")))
 
+>>>>>>> wolfor-dev-shop
 (defun report.convert-name (input-string)
   (string-trim (list #\Space #\Tab #\Newline)
                (format nil "~:(~a~)" input-string)))
@@ -372,7 +387,7 @@
 
 (defun report.write-alias (&optional (stream *standard-output*))
   (format stream "имя группы; наличие алиасов; группа опций ; опция; имя алиаса; ед. измерения;")
-  (process-and-collect-storage
+  (collect-storage
    'group
    :func #'(lambda (gr)
              (if (null (catalog-keyoptions gr))
@@ -388,7 +403,7 @@
 
 (defun report.write-keyoptions (&optional (stream *standard-output*))
   (format stream "имя группы; наличие ключевых опций; группа опций ; опция;")
-  (process-and-collect-storage
+  (collect-storage
    'group
    :func #'(lambda (gr)
              (if (null (keyoptions gr))
@@ -412,27 +427,3 @@
     (let ((name (format nil "reports/keyoptions-report-~a.csv" (time.encode.backup-filename))))
       (create-report name #'report.write-keyoptions)
       "KEYOPTIONS REPORT DONE")))
-
-
-(defun report.write-pictures (&optional (stream *standard-output*))
-  (let ((num 0))
-    (format stream "артикул;имя;файл;ширина;высота;размер;")
-    (process-storage
-     #'(lambda (gr)
-         (mapcar #'(lambda (product)
-                     (let* ((articul (articul product))
-                            (path-art  (ppcre:regex-replace  "(\\d{1,3})(\\d{0,})"  (format nil "~a" articul) "\\1/\\1\\2")))
-                       (mapcar #'(lambda (pic)
-                                   (let ((src-pic-path
-                                          (format nil "~a/~a/~a/~a"
-                                                  (config.get-option "PATHS" "path-to-pics") "big" path-art pic)))
-                                     (with-open-file
-                                         (stream-file src-pic-path)
-
-                                       (when (zerop (file-length stream-file))
-                                         (incf num)
-                                         (format stream "~&~a;~a" articul (file-length stream-file))))))
-                               (get-pics articul))))
-                 (products gr)))
-     'group)
-    num))

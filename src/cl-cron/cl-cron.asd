@@ -1,6 +1,6 @@
 ;;; -*- Mode: LISP; Syntax: COMMON-LISP; Package: CL-CRON;
 
-;;;    Copyright (c) 2009, Mackram Ghassan Raydan 
+;;;    Copyright (c) 2009, Mackram Ghassan Raydan
 ;;;    This file is part of cl-cron.
 
 ;;;    cl-cron is free software: you can redistribute it and/or modify

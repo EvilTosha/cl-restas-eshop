@@ -23,19 +23,19 @@
         :priority priority))
 
 (defun sitemap.get-groups-routes ()
-  (process-and-collect-storage
+  (collect-storage
    'group :func #'sitemap.get-item-route
-   :when-func #'(lambda (group)
+   :when-fn #'(lambda (group)
                   (and group (active group)
                        (not (empty group))))))
 
 (defun sitemap.get-products-routes ()
-  (process-and-collect-storage
+  (collect-storage
    'product :func #'sitemap.get-item-route
-   :when-func #'active))
+   :when-fn #'active))
 
 (defun sitemap.get-filters-routes ()
-  (process-and-collect-storage 'filter :func #'sitemap.get-item-route))
+  (collect-storage 'filter :func #'sitemap.get-item-route))
 
 (defun sitemap.get-articles-routes ()
   ;;; TOCHECK: is key in article the same as key in storage?

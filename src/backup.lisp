@@ -4,28 +4,27 @@
 
 ;;; Backup functions and macros
 
-(defmacro backup.define-serialize-method (name class-fields)
+(defmacro backup.define-serialize-method (name class-slots)
   "Macros for creating serialize method"
   `(defmethod backup.serialize-entity ((object ,name))
-     (format nil "{~{~a~^,~}}"
+     (format nil "{~{~A~^,~}}"
              (remove-if #'null
                         (list
-                         ,@(mapcar #'(lambda (field)
-                                       `(let* ((field-value (,(getf field :name) object))
-                                               (encoded-value (when field-value
-                                                                (,(intern (string-upcase
-                                                                           (format nil "object-fields.~a-field-serialize" (getf field :type))))
-                                                                 field-value))))
-                                          (when (and field-value
-                                                     (string/= (format nil "~a" field-value) "")
-                                                     (not (equal field-value ,(getf field :initform)))
-                                                     encoded-value)
-                                            (format nil "~a:~a"
-                                                    (encode-json-to-string ',(getf field :name))
-                                                    encoded-value))))
-                                   (remove-if-not #'(lambda (field)
-                                                      (getf field :serialize))
-                                                  class-fields)))))))
+                         ,@(mapcar #'(lambda (slot)
+                                       `(let ((slot-value (,(getf slot :name) object)))
+                                          (when (slots.%serialize-p
+                                                 ',(getf slot :type)
+                                                 ;; initform should be passed unevaluated
+                                                 slot-value ',(getf slot :initform))
+                                            (format nil "~A:~A"
+                                                    (encode-json-to-string ',(getf slot :name))
+                                                    (encode-json-to-string (slots.%encode-to-string
+                                                                            ',(getf slot :type)
+                                                                            slot-value))))))
+                                   (remove-if-not #'(lambda (slot)
+                                                      (getf slot :serialize))
+                                                  class-slots)))))))
+
 
 (defun backup.serialize-storage-to-file (type filepath)
   "Serialize storage of given type to file."
@@ -37,8 +36,9 @@
                         :external-format :utf-8)
     (process-storage #'(lambda (obj)
                          (format file "~A~%" (backup.serialize-entity obj)))
-                     type))
-  (log5:log-for info "Total serialized: ~a" (count-storage type)))
+                     type
+                     #'serialize-p))
+  (log5:log-for info "Total serialized: ~A" (count-storage type)))
 
 
 (defun backup.serialize-all (&key (backup-dir (config.get-option "PATHS" "path-to-backups"))
@@ -49,7 +49,8 @@
   (let* ((date-time (time.encode.backup-filename)))
     (maphash
      #'(lambda (class properties)
-         (when (getf properties :serialize)
+         (when (and (getf properties :serialize)
+                    (getf properties :storage))
            (let ((path (merge-pathnames
                         (format nil "~(~A~)/~(~:*~A~)-~A.bkp"
                                 class date-time) backup-dir)))
@@ -57,6 +58,7 @@
              (log5:log-for info "Start ~(~A~) serialize to ~A" class path)
              (backup.serialize-storage-to-file class path)
              (when make-copy
+               (log5:log-for info "Making backup copy to ~A" copy-path)
                (ensure-directories-exist copy-path)
                (cl-fad:copy-file
                 path (merge-pathnames (format nil "~(~A~).bkp" class) copy-path)

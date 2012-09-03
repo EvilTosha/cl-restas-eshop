@@ -64,10 +64,12 @@
 		(cl-cron:make-cron-job #'eshop::backup.serialize-all :minute 0 :hour 17)
 		(cl-cron:start-cron))
   ;;; business logic
+  (eshop::filters.create-standard-filters)
   (when (eshop:config.get-option "START_OPTIONS" "make-marketing-filters")
     (eshop::groupd.restore)
     (eshop::groupd.holiday.restore)
-    (eshop::report.create-marketing-filters)
-    (eshop::report.set-salefilter)))
+    (eshop::marketing-filters.create-all-filters)))
 
-(print (format nil "ESHOP load finished. Time : ~a" (eshop::time.msecs-to-hms (get-internal-real-time))))
+(print (format nil "ESHOP load finished. Time : ~A" (eshop::time.msecs-to-hms (get-internal-real-time))))
+(print "Server info: ")
+(room)

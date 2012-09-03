@@ -45,5 +45,6 @@
 					 "drakma-1.2.4" ;;http клиент для тестов
 					 ;; "cl-cron" ;; http://www.trailoflight.net/cl-cron/
 					 "py-configparser-1.0.3"
-					 )))
+           "string-case"
+           )))
 

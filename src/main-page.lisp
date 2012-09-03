@@ -51,7 +51,7 @@
         (setf daily-list (main-page-get-randoms-from-weight-list full-daily-list num))
         ;; если не хватает
         (progn
-          (log5:log-for warning "WARNING: Main page daily ~a products" (length full-daily-list))
+          (log5:log-for info-console "WARNING: Main page daily ~a products" (length full-daily-list))
           (setf daily-list (main-page-get-randoms-from-weight-list full-daily-list num))))
     (mapcar #'(lambda (v) (main-page-view-product (car v) storage))
             daily-list)))
@@ -66,7 +66,7 @@
 					;; выбираем случайный товаров баннер с учетом их веса
 					(setf banner (gethash (caar (main-page-get-randoms-from-weight-list banners 1))
 																storage)))
-				(log5:log-for warning "WARNING: No banner"))
+				(log5:log-for info-console "WARNING: No banner"))
 		(if banner
 				(list :url (format nil "~a"
 													 (servo.edit-get-param (encode-uri (nth 1 (opts banner))) "bannerType" type))
@@ -85,7 +85,7 @@
         ;; выбираем случайный товаров баннер с учетом их веса
         (setf item (gethash (caar (main-page-get-randoms-from-weight-list items 1))
                             storage))
-        (log5:log-for warning "WARNING: No banner"))
+        (log5:log-for info-console "WARNING: No banner"))
     (list :name (key item)
           :review (name item)
           :ico (nth 0 (opts item))
@@ -96,7 +96,7 @@
 (defun main-page-show ()
   (default-page
       (soy.index:content
-       (list :menu (class-core.menu)
+       (list :menu (render.menu)
              :dayly  (soy.main-page:daily (list :items (main-page-products-show (daily *main-page.storage*) 6)))
              :banner (soy.main-page:banner (main-page-show-banner "center" (banner *main-page.storage*)))
              :olist (soy.main-page:olist)
@@ -105,9 +105,9 @@
              :hit (soy.main-page:hit (list :items (main-page-products-show (hit *main-page.storage*) 2)))
              :new  (soy.main-page:new (list :items (main-page-products-show (new *main-page.storage*) 6)))
              :post (soy.main-page:post
-                    (list :news (articles-view-articles (list-filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "новости")) 3))
-                          :akcii (articles-view-articles(list-filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "акции")) 3))
-                          :reviews (articles-view-articles(list-filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "обзоры")) 3))))
+                    (list :news (articles-view-articles (filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "новости")) 3))
+                          :akcii (articles-view-articles(filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "акции")) 3))
+                          :reviews (articles-view-articles(filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "обзоры")) 3))))
              :plus (soy.main-page:plus)))
       :KEYWORDS "компьютеры, купить компьютер, компьютерная техника, Петербург, Спб, Питер, Санкт-Петербург, продажа компьютеров, магазин компьютерной техники, магазин компьютеров, интернет магазин компьютеров, интернет магазин компьютерной техники, продажа компьютерной техники, магазин цифровой техники, цифровая техника, Цифры, 320-8080"
       :DESCRIPTION "Купить компьютер и другую технику вы можете в Цифрах. Цифровая техника в Интернет-магазине 320-8080.ru"

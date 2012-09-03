@@ -54,29 +54,32 @@
 ;; FILTER
 
 (defun test-route-filter ()
+  ;; marketing-filters-test
   (let* ((request-list (request-list))
-         (key (cadr request-list))
-         (filter (caddr request-list))
-         (grp (getobj key 'group))
-         (fltr (getobj filter 'filter)))
-    (and grp
-         fltr
-         (equal (key (parent fltr)) key))))
+         (group-key (cadr request-list))
+         (filter-key (caddr request-list))
+         (group (getobj group-key 'group))
+         (filter (getobj filter-key 'filter)))
+    (and group
+         filter
+         (equal group (parent filter)))))
 
 (defun route-filter (filter)
   (getobj filter 'filter))
 
 (restas:define-route filter/-route ("/:key/:filter/" :requirement #'test-route-filter)
+  (declare (ignore key))
   (route-filter filter))
 
 (restas:define-route filter-route ("/:key/:filter" :requirement #'test-route-filter)
+  (declare (ignore key))
   (route-filter filter))
 
 
 ;; STORAGE OBJECT
 
 (defun vendor-transform-from-alias (alias)
-  (aif (and alias (getobj alias 'vendor))
+  (aif (getobj alias 'vendor)
        (name it)
        alias))
 
@@ -237,8 +240,7 @@
    (babel:string-to-octets
     (default-page
       (soy.404:content
-       (list :menu (class-core.menu)
-
+       (list :menu (render.menu)
              :dayproducts (main-page-products-show (daily *main-page.storage*) 4)
              :olist (soy.main-page:olist)
              :lastreview (soy.main-page:lastreview (main-page-show-lastreview (review *main-page.storage*)))
@@ -246,9 +248,9 @@
              :hit (soy.main-page:hit (list :items (main-page-products-show (hit *main-page.storage*) 2)))
              :newproducts (main-page-products-show (new *main-page.storage*) 4)
              :post (soy.main-page:post
-                    (list :news (articles-view-articles (list-filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "новости")) 3))
-                          :akcii (articles-view-articles(list-filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "акции")) 3))
-                          :reviews (articles-view-articles(list-filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "обзоры")) 3))))
+                    (list :news (articles-view-articles (filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "новости")) 3))
+                          :akcii (articles-view-articles(filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "акции")) 3))
+                          :reviews (articles-view-articles(filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "обзоры")) 3))))
              :plus (soy.main-page:plus)))
         :keywords "Купить компьютер и другую технику вы можете в Цифрах. Цифровая техника в Интернет-магазине 320-8080.ru"
         :description "каталог, компьютеры, купить компьютер, компьютерная техника, Петербург, Спб, Питер, Санкт-Петербург, продажа компьютеров, магазин компьютерной техники, магазин компьютеров, интернет магазин компьютеров, интернет магазин компьютерной техники, продажа компьютерной техники, магазин цифровой техники, цифровая техника, Цифры, 320-8080"

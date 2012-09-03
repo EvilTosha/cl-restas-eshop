@@ -5,6 +5,7 @@
   (:export :get-dimensions
            :style-for-resize))
 
+;;; TODO: make separated package eshop-core (class-core, slots, backup, etc.)
 ;;; TODO: why not defpackage? Edit if needed
 (restas:define-module #:eshop
     (:use
@@ -15,7 +16,8 @@
      :split-sequence
      :cl-ppcre
      :json
-     :cl-fad)
+     :cl-fad
+     :string-case)
   (:import-from :arnesi :parse-float)
   (:import-from :alexandria :read-file-into-string)
   (:export :config.parse-config
@@ -50,7 +52,7 @@
 (defclass group-filter () ())
 ;; oneclickcart.lisp
 (defclass oneclickcart.answer () ())
-;; list-filters.lisp
+;; filters.lisp
 (defclass field-filter () ())
 ;; cartrige.lisp
 (defclass printer () ())

@@ -29,7 +29,8 @@ Note: returned object is NOT setfable (but its fields are)"
       (maphash #'(lambda (k v)
                    (declare (ignore v))
                    (awhen (and (not res)  ; find only first (but almost always
-                                        ; there should be only one required object)
+                                          ; there should be only one required object)
+                               (get-storage k)
                                (gethash key (get-storage k)))
                      (setf res it)))
                *classes*)
@@ -60,9 +61,9 @@ Key and type is accessed from element itself"
   "Get object of given type from appropriate storage
 If no type given, search in all storages"
   (declare (string key) (symbol type))
-  (if type
-      (remhash key (get-storage type))
-      (remobj-global key)))
+  (remhash key (get-storage (if type
+                                type
+                                (type-of (getobj key))))))
 
 (defun remobj-global (key)
   (maphash #'(lambda (k v)
@@ -70,14 +71,15 @@ If no type given, search in all storages"
                (remhash key (get-storage k)))
            *classes*))
 
-(defun process-storage (func type)
+(defun process-storage (func type &optional (when-fn (constantly t)))
   "Process storage of given type apllying given func to each element.
 Func should take 1 argument - elt for processing
 Note: processed element can't be changed during processing"
-  (declare (function func) (symbol type))
+  (declare (function func when-fn) (symbol type))
   (maphash #'(lambda (k v)
                (declare (ignore k))
-               (funcall func v))
+               (when (funcall when-fn v)
+                 (funcall func v)))
            (get-storage type)))
 
 (defun process-storage-with-keys (func type)
@@ -85,12 +87,12 @@ Note: processed element can't be changed during processing"
   (declare (function func) (symbol type))
   (maphash func (get-storage type)))
 
-(defun process-and-collect-storage (type &key (func #'identity) (when-func #'identity))
-  "Process storage of given type checking via when-func, applying func to
+(defun collect-storage (type &key (func #'identity) (when-fn #'identity))
+  "Process storage of given type checking via when-fn, applying func to
 each element and collecting its results"
   (loop
      :for elt :being :the hash-values :in (get-storage type)
-     :when (funcall when-func elt)
+     :when (funcall when-fn elt)
      :collect (funcall func elt)))
 
 (defun count-storage (type &key (when-fn #'identity when-fn-supplied-p))
@@ -107,7 +109,7 @@ each element and collecting its results"
 (defun get-root-groups ()
   "Return list of root groups sorted by order"
   (stable-sort
-   (process-and-collect-storage 'group :when-func (complement #'parents))
+   (collect-storage 'group :when-fn (complement #'parents))
    #'menu-sort))
 
 (defun storage.alphabet-group-sorter (a b)
@@ -136,7 +138,7 @@ where key is vendor name and value is number of products with this vendor"
   (let ((vendors (make-hash-table :test #'equal)))
     (mapcar #'(lambda (product)
                 (let ((vendor (vendor product)))
-                  (when (servo.valid-string-p vendor)
+                  (when (valid-string-p vendor)
                     (sif (gethash vendor vendors)
                          (incf it)
                          (setf it 1)))))

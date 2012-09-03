@@ -23,7 +23,7 @@
   (let ((words (split-sequence:split-sequence #\, input-string)))
     (mapcar #'(lambda (w)
                 (let ((pure-tag (string-trim '(#\Space #\Tab #\Newline) w)))
-                  (when (servo.valid-string-p pure-tag)
+                  (when (valid-string-p pure-tag)
                     (setf (gethash (string-downcase pure-tag) tags) pure-tag))))
             words)))
 
@@ -105,7 +105,7 @@
        :collect art)))
 
 (defun get-articles-by-tags (articles-list &optional tags)
-  (if (not (servo.valid-string-p tags :unwanted-chars (list #\' #\" #\\ #\~ #\Newline)))
+  (if (not (valid-string-p tags :unwanted-chars (list #\' #\" #\\ #\~ #\Newline)))
       articles-list
       ;; else
       (let ((tags (split-sequence:split-sequence #\, tags)))
@@ -147,7 +147,7 @@
                    10)
       (default-page
           (soy.static:main
-           (list :menu (class-core.menu)
+           (list :menu (render.menu)
                  :breadcrumbs breadcrumbs
                  :subcontent  (soy.articles:articles-main
                                (list :menu menu
@@ -172,11 +172,11 @@
                                                               paginated)))))
                  :rightblock (soy.articles:r_b_articles
                               (list :articles (let ((arts (articles.sort (get-articles-by-tags (get-articles-list) "новости"))))
-                                                (articles-view-articles (list-filters.limit-end arts 5)))
+                                                (articles-view-articles (filters.limit-end arts 5)))
                                     :articles_1 (let ((arts (articles.sort (get-articles-by-tags (get-articles-list) "Акции"))))
-                                                  (articles-view-articles (list-filters.limit-end arts 5)))
+                                                  (articles-view-articles (filters.limit-end arts 5)))
                                     :articles_2 (let ((arts (articles.sort (get-articles-by-tags (get-articles-list) "обзоры"))))
-                                                  (articles-view-articles (list-filters.limit-end arts 5)))))))))))
+                                                  (articles-view-articles (filters.limit-end arts 5)))))))))))
 
 (defun get-article-breadcrumbs (article)
   (format nil "<a href=\"/\">Главная</a> /
@@ -194,7 +194,7 @@
                                                            (main-page-show-banner "line-text" (banner *main-page.storage*))))
                         :footer (soy.footer:footer)
                         :content  (soy.static:main
-                                   (list :menu (class-core.menu)
+                                   (list :menu (render.menu)
                                          :sharebuttons (soy.articles:share-buttons
                                                          (list :key (key object)))
                                          :breadcrumbs (bredcrumbs object)
@@ -213,7 +213,7 @@
                                                            (main-page-show-banner "line-text" (banner *main-page.storage*))))
                         :footer (soy.footer:footer)
                         :content (soy.static:main
-                                  (list :menu (class-core.menu)
+                                  (list :menu (render.menu)
                                         :breadcrumbs (get-article-breadcrumbs object)
                                         :subcontent  (soy.articles:article-big (list :sharebuttons (soy.articles:share-buttons
                                                                                                     (list :key (key object)))
@@ -235,15 +235,15 @@
                                                      (list :articles (let ((arts (articles.sort
                                                                                   (remove-if #'(lambda(v)(equal v object))
                                                                                              (get-articles-by-tags (get-articles-list) "новости")))))
-                                                                       (articles-view-articles (list-filters.limit-end arts 5)))
+                                                                       (articles-view-articles (filters.limit-end arts 5)))
                                                            :articles_1 (let ((arts (articles.sort
                                                                                     (remove-if #'(lambda(v)(equal v object))
                                                                                                (get-articles-by-tags (get-articles-list) "Акции")))))
-                                                                         (articles-view-articles (list-filters.limit-end arts 5)))
+                                                                         (articles-view-articles (filters.limit-end arts 5)))
                                                            :articles_2 (let ((arts (articles.sort
                                                                                     (remove-if #'(lambda(v)(equal v object))
                                                                                                (get-articles-by-tags (get-articles-list) "обзоры")))))
-                                                                         (articles-view-articles (list-filters.limit-end arts 5))))))))))
+                                                                         (articles-view-articles (filters.limit-end arts 5))))))))))
 
 (defmethod articles.show-landscape  ((object article))
 	(soy.index:main-landscape (list :keywords "" ;;keywords
@@ -254,6 +254,7 @@
 
 ;; отображение страницы статьи
 (defmethod restas:render-object ((designer eshop-render) (object article))
-  (cond ((equal (ctype object) "static") (articles.show-static object))
-        ((equal (ctype object) "article") (articles.show-article object))
-        ((equal (ctype object) "landscape") (articles.show-landscape object))))
+  (string-case (ctype object)
+    ("static" (articles.show-static object))
+    ("article" (articles.show-article object))
+    ("landscape" (articles.show-landscape object))))

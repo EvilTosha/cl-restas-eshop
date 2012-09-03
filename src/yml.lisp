@@ -31,9 +31,7 @@
        (price product)
        (plusp (price product))
        ;;для селективного исключения товаров по значению специальной опции
-       (let ((yml-show))
-         (with-option1 product "Secret" "YML"
-                       (setf yml-show (getf option :value)))
+       (let ((yml-show (get-option product "Secret" "YML")))
          (not (and yml-show
                    (string= "No" (stripper yml-show)))))))
 
@@ -49,7 +47,7 @@
   (loop
      :for v :being :the hash-values :in (daily *main-page.storage*)
      :thereis (and (equal (key v) (key product))
-                (< (date-start v) (get-universal-time) (date-finish v)))))
+                   (< (date-start v) (get-universal-time) (date-finish v)))))
 
 (defun yml.get-delivery-price (cart)
   (let ((result 300)
@@ -85,9 +83,7 @@
               (equal key "holodilniki-i-morozilniki")
               (equal key "duhovki")
 							(equal key "kondicioneri")
-              (let ((diagonal))
-                (with-option1 product "Экран" "Диагональ экрана, дюйм"
-                              (setf diagonal (getf option :value)))
+              (let ((diagonal (get-option product "Экран" "Диагональ экрана, дюйм")))
                 (if (equal diagonal "")
                     (setf diagonal nil))
                 (setf diagonal (ceiling (arnesi:parse-float diagonal)))
@@ -147,11 +143,11 @@
                                          0 ; если это вершина дерева
                                          (yml-id (parent obj))))))
          :offers (format nil "~{~a~}"
-                         (process-and-collect-storage
+                         (collect-storage
                           'product
                           ;;продукт должен находиться в группе маркированной как ymlshow
                           ;;быть активным и иметь не нулевую цену
-                          :when-func #'yml.yml-show-p
+                          :when-fn #'yml.yml-show-p
                           :func #'(lambda (product)
                                     (soy.yml:offer (list :articul (articul product)
                                                          :available (active product) ; если не active, то прошел available-for-order
@@ -162,9 +158,7 @@
                                                                                (articul product))))
                                                                     (when pics
                                                                       (encode-uri (car pics))))
-                                                         :name (let ((yml-name))
-                                                                 (with-option1 product "Secret" "Yandex"
-                                                                               (setf yml-name (getf option :value)))
+                                                         :name (let ((yml-name (get-option product "Secret" "Yandex")))
                                                                  (if (or (null yml-name)
                                                                          (string= ""
                                                                                   (stripper yml-name))
@@ -195,11 +189,11 @@
                                          0 ; если это вершина дерева
                                          (yml-id (parent obj))))))
          :offers (format nil "~{~a~}"
-                         (process-and-collect-storage
+                         (collect-storage
                           'product
                           ;;продукт должен находиться в группе маркированной как ymlshow
                           ;;быть активным и иметь не нулевую цену
-                          :when-func #'yml.yml-show-p
+                          :when-fn #'yml.yml-show-p
                           :func #'(lambda (product)
                                     (soy.yml:offer (list :articul (articul product)
                                                          :price (siteprice product)
@@ -210,22 +204,19 @@
                                                                                (articul product))))
                                                                     (when pics
                                                                       (encode-uri (car pics))))
-                                                         :name (let ((yml-name)
-                                                                     (parser-name))
-                                                                 (with-option1 product "Secret" "Yandex"
-                                                                               (setf yml-name (getf option :value)))
-                                                                 (with-option1 product "Secret" "Parser"
-                                                                               (setf parser-name (getf option :value)))
-                                                                 (if (or (null parser-name)
-                                                                         (string= "" parser-name))
+                                                         :name (let ((yml-name (get-option
+                                                                                product "Secret" "Yandex"))
+                                                                     (parser-name (get-option
+                                                                                   product "Secret" "Parser")))
+                                                                 (if (valid-string-p parser-name)
+                                                                     parser-name
                                                                      (if (or (null yml-name)
                                                                              (string= ""
                                                                                       (stripper yml-name))
                                                                              (string= "No"
                                                                                       (stripper yml-name)))
                                                                          (name product)
-                                                                         yml-name)
-                                                                     parser-name))
+                                                                         yml-name)))
                                                          :description nil))))))))
 
 
@@ -244,11 +235,11 @@
                                   (yml-id (parent obj)))))))
 
 (defun make-yml-offers()
-  (process-and-collect-storage
+  (collect-storage
    'product
    ;;продукт должен находиться в группе маркированной как ymlshow
    ;;быть активным и иметь не нулевую цену
-   :when-func #'yml.yml-show-p
+   :when-fn #'yml.yml-show-p
    :func #'(lambda (product)
              (soy.yml:offer (list :articul (articul product)
                                   :deliveryprice (yml.get-product-delivery-price1 product)
@@ -260,9 +251,7 @@
                                                          (articul product))))
                                               (when pics
                                                 (encode-uri (car pics))))
-                                  :name   (let ((yml-name))
-                                            (with-option1 product "Secret" "Yandex"
-                                                          (setf yml-name (getf option :value)))
+                                  :name   (let ((yml-name (get-option product "Secret" "Yandex")))
                                             (if (or (null yml-name)
                                                     (string= ""
                                                              (stripper yml-name))
@@ -323,8 +312,8 @@
   (declare ((or group null) group))
   (let ((products (if group
                       (storage.get-recursive-products group (complement #'active))
-                      (process-and-collect-storage 'product :when-func (complement #'active)))))
-      (count-if #'yml.available-for-order-p products)))
+                      (collect-storage 'product :when-fn (complement #'active)))))
+    (count-if #'yml.available-for-order-p products)))
 
 (defun yml.pretty-count-products-for-order ()
   "Count number of products, which are not active, with pretty print for all groups"
@@ -334,11 +323,11 @@
                               (key gr)
                               (yml.count-products-for-order gr)))
                   (sort
-                      (process-and-collect-storage 'group
-                                       :when-func
-                                       #'(lambda (gr)
-                                           (plusp (yml.count-products-for-order gr))))
-                      #'< :key #'yml.count-products-for-order))))
+                   (collect-storage 'group
+                                    :when-fn
+                                    #'(lambda (gr)
+                                        (plusp (yml.count-products-for-order gr))))
+                   #'< :key #'yml.count-products-for-order))))
 
 (defun yml.get-list-for-order (group)
   (declare (group group))

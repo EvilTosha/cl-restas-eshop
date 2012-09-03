@@ -5,11 +5,10 @@
 (defmacro with-sorted-paginator (get-products request-get-plist body)
   `(let* ((products ,get-products)
           (sorting  (getf ,request-get-plist :sort))
-          (sorted-products   (cond ((string= sorting "pt")
-                                    (sort products #'< :key #'siteprice))
-                                   ((string= sorting "pb")
-                                    (sort products #'> :key #'siteprice))
-                                   (t products))))
+          (sorted-products (string-case sorting
+                             ("pt" (sort products #'< :key #'siteprice))
+                             ("pb" (sort products #'> :key #'siteprice))
+                             (t products))))
      (multiple-value-bind (paginated pager)
          (paginator ,request-get-plist sorted-products)
        ,body)))
@@ -41,19 +40,9 @@
             ""
             (soy.catalog:seotext
              (list :text
-                   (class-core.get-group-seo-text
+                   (classes.get-group-seo-text
                     object
                     (getf parameters :vendor)))))))
-
-(defmacro with-option1 (product optgroup-name option-name body)
-  `(mapcar #'(lambda (optgroup)
-               (when (string= (getf optgroup :name) ,optgroup-name)
-                 (let ((options (getf optgroup :options)))
-                   (mapcar #'(lambda (option)
-                               (if (string= (getf option :name) ,option-name)
-                                   ,body))
-                           options))))
-           (optgroups ,product)))
 
 (defmacro f-price ()
   `(lambda (product request-plist filter-options)
@@ -62,7 +51,7 @@
            (value-x (siteprice product)))
        (unless value-f
          (setf value-f "0"))
-       (unless (servo.valid-string-p value-t)
+       (unless (valid-string-p value-t)
          (setf value-t "99999999"))
        (setf value-f (arnesi:parse-float (format nil "~as" value-f)))
        (setf value-t (arnesi:parse-float (format nil "~as" value-t)))
@@ -74,9 +63,9 @@
      (let ((value-f (getf request-plist (intern (string-upcase (format nil "~a-f" (symbol-name ,key))) :keyword)))
            (value-t (getf request-plist (intern (string-upcase (format nil "~a-t" (symbol-name ,key))) :keyword)))
            (value-x 0))
-       (with-option1 product
-         ,optgroup-name ,option-name
-         (setf value-x (getf option :value)))
+       ;; TOCHECK
+       (setf value-x (get-option product
+                                 ,optgroup-name ,option-name))
        (when (null value-x)
          (setf value-x "0"))
        (when (null value-f)
@@ -122,10 +111,9 @@
   (let ((number 0)
         (result-flag nil)
         (request-flag t)
-        (value-x nil))
-    (with-option1 product
-      option-group-name option-name
-      (setf value-x (getf option :value)))
+        (value-x
+         (get-option product
+                     option-group-name option-name)))
     (mapcar #'(lambda (option-value)
                 (let ((value-p (getf request-plist
                                      (intern (string-upcase
@@ -549,7 +537,8 @@
             (storage.get-recursive-products object))
     result-products))
 
-(defmethod vendor-filter-controller (product vendor)
+;; TODO: move to filters
+(defun vendor-filter-controller (product vendor)
   (let ((product-vendor (vendor product)))
     (string=
      (string-downcase (string-trim '(#\Space #\Tab #\Newline) product-vendor))
@@ -571,7 +560,7 @@
         ;; else
         breadcrumbs)))
 
-(defun string-convertion-for-title (title)
+(defun string-titlecase (title)
   "Make string starting with capital letter"
   (if title
       (format nil "~@(~A~)" title)
@@ -585,19 +574,40 @@
                 (closure-template:compile-template :common-lisp-backend pathname)))
           tmpl-name))
 
+(defun anything-to-keyword (anything)
+  "Convert anything that has print method to keyword; Case insensitive"
+  (intern (format nil "~:@(~A~)" anything) :keyword))
 
-(defun servo.anything-to-keyword (item)
-  (intern (format nil "~:@(~A~)" item) :keyword))
+(defun anything-to-symbol (anything)
+  "Convert anything that has print method to symbol; Case insensitive"
+  (intern (format nil "~:@(~A~)" anything)))
+
+(defun alistp (obj)
+  "Checks whether object is association list (e.g. list of conses)"
+  (when (listp obj) (every #'consp obj)))
+
+(deftype alist ()
+  `(satisfies alistp))
 
 (defun servo.alist-to-plist (alist)
-  (if (not (consp alist))
-      alist
-      ;;else
-      (loop
-         :for (key . value)
-         :in alist
-         :nconc (list (servo.anything-to-keyword key) value))))
+  "Non-recursive convertion from association list to property list"
+  (declare (alist alist))
+  (loop
+     :for (key . value)
+     :in alist
+     :collect (anything-to-keyword key)
+     :collect value))
 
+(defun servo.recursive-alist-to-plist (alist)
+  "Rcursive convertion from association list to property list"
+  (declare (alist alist))
+  (loop
+     :for (key . value)
+     :in alist
+     :collect (anything-to-keyword key)
+     :collect (if (alistp value)
+                  (servo.recursive-alist-to-plist value)
+                  value)))
 
 (defun servo.plist-to-unique (plist)
   "Remove duplacating keys"
@@ -641,28 +651,21 @@
       ;; else infinity
       999999))
 
-(defun servo.get-option (product opgroup optname)
-  (let ((res))
-    (with-option1 product
-      opgroup optname
-      (setf res (getf option :value)))
-    res))
-
 (defun servo.get-product-vendor (product)
-  (servo.get-option product
-                    "Общие характеристики"
-                    "Производитель"))
+  (get-option product
+              "Общие характеристики"
+              "Производитель"))
 
 (defun servo.find-relative-product-list (product &optional (coef 2))
   "Returns list of products from same group with similar vendor"
   (when (parent product)
-    (let* ((vendor (servo.get-product-vendor product))
+    (let* ((vendor (vendor product))
            (diff-list
             (remove-if #'(lambda (v) (or (equal 0 (siteprice (cdr v)))
                                          (not (active (cdr v)))))
                        (mapcar #'(lambda (a)
                                    (let ((diff
-                                          (if (equal (servo.get-product-vendor a) vendor)
+                                          (if (equal (vendor a) vendor)
                                               1
                                               coef)))
                                      (cons (* diff (servo.diff-price product a))
@@ -705,7 +708,12 @@
                    string))
    'string))
 
+<<<<<<< HEAD
+
+(defun valid-string-p (s &key (whitespace-check t)
+=======
 (defun servo.valid-string-p (s &key (whitespace-check t)
+>>>>>>> wolfor-dev-shop
                               (unwanted-chars (list #\Space #\Tab #\Newline))
                               (del-method :replace-all))
   (and s (string/= s "") (if whitespace-check
@@ -723,8 +731,16 @@
   "When obj is list return obj, otherwise return list with only element - obj"
   (if (consp obj) obj (list obj)))
 
-;; !! make properly working
-(defmacro case-test (test-func keyform &body cases)
-  "Works like usual case, but accepts function for test"
-  (sb-impl::case-body 'case-body keyform cases t test-func nil nil nil))
+(defun ensure-string (obj)
+  "If obj is string return obj, if obj is nil, convert to empty string, otherwise throw error"
+  ;; TODO: add printable types check
+  (etypecase obj
+    (string obj)
+    (null "")
+    (t (error "Object is niether string nor nil"))))
 
+(defun htmlize (string)
+  "Make string appropriate for viewing in html (replace newlines with <br />);
+Used for printing system info to browser"
+  (declare (string string))
+  (regex-replace-all "\\n" string "<br />"))

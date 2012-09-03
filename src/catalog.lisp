@@ -11,7 +11,7 @@
    (list
     :error404 error404
     :numproducts (count-storage 'product)
-    :menu (class-core.menu)
+    :menu (render.menu)
     :items (let ((res)
                  (roots (get-root-groups))
                  (exception "bytovaya-technika"))
@@ -31,7 +31,8 @@
                                                           (pics:style-for-resize width height 70)))))
                                           (list
                                            :other nil
-                                           :maingrouplink (format nil "<a href=\"/~a\">~a</a>~%" (key node) (name node))
+                                           :maingroupname (name node)
+                                           :maingroupurl (key node)
                                            :maingroupimg pic
                                            :imgstyle style
                                            :groups (mapcar #'(lambda (g)
@@ -54,6 +55,7 @@
    (soy.new-catalog:catalog-item
     (list
      :other t
-     :maingrouplink "Покупателям"
+     :maingroupname "Покупателям"
+     :maingroupurl nil
      :maingroupimg nil
      :other t))))
