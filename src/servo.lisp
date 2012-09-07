@@ -708,12 +708,7 @@
                    string))
    'string))
 
-<<<<<<< HEAD
-
 (defun valid-string-p (s &key (whitespace-check t)
-=======
-(defun servo.valid-string-p (s &key (whitespace-check t)
->>>>>>> wolfor-dev-shop
                               (unwanted-chars (list #\Space #\Tab #\Newline))
                               (del-method :replace-all))
   (and s (string/= s "") (if whitespace-check
