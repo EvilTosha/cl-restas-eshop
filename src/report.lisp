@@ -252,8 +252,7 @@
           product-list)
   "done")
 
-<<<<<<< HEAD
-=======
+;;TODO: rem
 (defun edit-marketing-filter (group key-suffix name func)
   (let* ((key (format nil "~A-~A" (key group) key-suffix))
          new-filter
@@ -368,7 +367,7 @@
                 "monitory"
                 "plity")))
 
->>>>>>> wolfor-dev-shop
+;; TODO: rem
 (defun report.convert-name (input-string)
   (string-trim (list #\Space #\Tab #\Newline)
                (format nil "~:(~a~)" input-string)))
