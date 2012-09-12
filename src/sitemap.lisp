@@ -17,10 +17,16 @@
                                (changefreq "daily") (priority "0.5"))
   ;; TODO: get rid of explicit url (move to global var?)
   ;; TOCHECK
-  (list :loc (format nil "http://www.320-8080.ru/~a" (hunchentoot:url-encode (key item)))
+  (let ((loc (if (typep item 'filter)
+              (format nil "http://www.320-8080.ru/~a/~a"
+                      (hunchentoot:url-encode (key (parent item)))
+                      (hunchentoot:url-encode (key item)))
+              (format nil "http://www.320-8080.ru/~a"
+                      (hunchentoot:url-encode (key item))))))
+  (list :loc loc
         :lastmod lastmod
         :changefreq changefreq
-        :priority priority))
+        :priority priority)))
 
 (defun sitemap.get-groups-routes ()
   (collect-storage
@@ -31,8 +37,7 @@
 
 (defun sitemap.get-products-routes ()
   (collect-storage
-   'product :func #'sitemap.get-item-route
-   :when-fn #'active))
+   'product :func #'sitemap.get-item-route))
 
 (defun sitemap.get-filters-routes ()
   (collect-storage 'filter :func #'sitemap.get-item-route))
