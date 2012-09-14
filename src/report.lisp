@@ -109,6 +109,30 @@ function get-storage is applicable"
 (report.register-standard-column
  'product-warranty #'(lambda (item) (get-option item "Дополнительная информация" "Гарантия")))
 
+;;; group functions
+(report.register-standard-column
+ 'group-name #'name)
+(report.register-standard-column
+ 'group-url
+ #'(lambda (item)
+     ;; TODO: use restas url designator
+     (format nil "http://www.320-8080.ru/~A" (key item))))
+(report.register-standard-column
+ 'group-active #'(lambda (item) (if (active item) "yes" "no")))
+(report.register-standard-column
+ 'group-seo-text
+ #'(lambda (item)
+     (if (valid-string-p (seo-text item)
+                         "yes" "no"))))
+(report.register-standard-column
+ 'group-count-products
+ #'(lambda (item)
+     (length (products item))))
+(report.register-standard-column
+ 'group-count-active-products
+ #'(lambda (item)
+     (count-if #'active (products item))))
+
 (defun report.product-report (stream)
   (report.write-report-with-standard-columns
    stream
@@ -136,15 +160,15 @@ function get-storage is applicable"
          (cons "гарантия" 'product-warranty))
    'product))
 
-;; (defun report.group-report (stream)
-;;   (report.write-report-with-standard-columns
-;;    stream
-;;    (list (cons "Название категории"
-;;          "url страницы"
-;;          "Active"
-;;          "seo-text"
-;;          "продуктов"
-;;          "активных"
+(defun report.group-report (stream)
+  (report.write-report-with-standard-columns
+   stream
+   (list (cons "Название категории" 'group-name)
+         (cons "url страницы" 'group-url)
+         (cons "Active" 'group-active)
+         (cons "seo-text" 'group-seo-text)
+         (cons "продуктов" 'group-count-products)
+         (cons "активных" 'group-count-active-products))))
 
 (defun valid-options (product)
   (declare (product product))
@@ -160,29 +184,6 @@ function get-storage is applicable"
             (remove "Secret" (optgroups product)  ; remove Secret group
                     :test #'equal :key #'(lambda (opt) (getf opt :name))))
     num))
-
-(defun write-groups (stream)
-  (format stream "~a;~a;~a;~a;~a;~a;~%"
-          "Название категории"
-          "url страницы"
-          "Active"
-          "seo-text"
-          "продуктов"
-          "активных")
-  (process-storage
-   #'(lambda (v)
-       (format stream "\"~a\";http://www.320-8080.ru/~a;~a;~a;~a;~a;~%"
-               (stripper (name v))
-               (key v)
-               (if (active v)
-                   "yes"
-                   "no")
-               (if (valid-string-p (seo-text v))
-                   "yes"
-                   "no")
-               (length (products v))
-               (count-if #'active (products v))))
-   'group))
 
 (defun write-groups-active-product-num (stream)
   (format stream "~a;~a;~a;~a;~%"
@@ -334,7 +335,7 @@ function get-storage is applicable"
 (defun report.do-seo-reports ()
   (let ((name (format nil "reports/seo-report-groups-~a.csv" (time.encode.backup-filename))))
     (log5:log-for info "Do groups SEO report")
-    (create-report name #'write-groups))
+    (create-report name #'report.group-report))
   (let ((name (format nil "reports/seo-report-vendors-~a.csv" (time.encode.backup-filename))))
     (log5:log-for info "Do vendors SEO report")
     (create-report name #'write-vendors))
