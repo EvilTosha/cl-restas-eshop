@@ -136,6 +136,16 @@ function get-storage is applicable"
          (cons "гарантия" 'product-warranty))
    'product))
 
+;; (defun report.group-report (stream)
+;;   (report.write-report-with-standard-columns
+;;    stream
+;;    (list (cons "Название категории"
+;;          "url страницы"
+;;          "Active"
+;;          "seo-text"
+;;          "продуктов"
+;;          "активных"
+
 (defun valid-options (product)
   (declare (product product))
   (let ((num 0))

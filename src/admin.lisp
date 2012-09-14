@@ -241,7 +241,7 @@
             (room))))
         ("report-products"
          (let ((name (format nil "reports/products-report-~a.csv" (time.encode.backup-filename))))
-           (create-report name #'write-products-report)
+           (create-report name #'report.product-report)
            "DO PRODUCTS REPORT"))
         ("proccess-pictures"
          (rename-convert-all)
