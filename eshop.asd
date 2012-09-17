@@ -21,8 +21,7 @@
              (:file "xls" :depends-on ("search"))  ;;необходима xls2csv | sudo apt-get install catdoc
              (:file "yml" :depends-on ("xls"))
              (:file "articles" :depends-on ("yml"))
-             (:file "report" :depends-on ("articles"))
-             (:file "sklonenie" :depends-on ("report"))
+             (:file "sklonenie" :depends-on ("articles"))
              (:file "newcart" :depends-on ("sklonenie"))
              (:file "sitemap" :depends-on ("newcart"))
              (:file "rename" :depends-on ("sitemap"))
@@ -43,6 +42,7 @@
              (:file "email" :depends-on ("gateway"))
              (:file "groupd" :depends-on ("email"))
              (:file "cartrige" :depends-on ("groupd"))
+             (:file "report" :depends-on ("cartrige"))
              (:module "cl-cron"
                       :components ((:file "packages")
                                    (:file "cl-cron"))
