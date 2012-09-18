@@ -67,6 +67,7 @@
 					(setf banner (gethash (caar (main-page-get-randoms-from-weight-list banners 1))
 																storage)))
 				;; (log5:log-for info-console "WARNING: No banner"))
+        )
 		(if banner
 				(list :url (format nil "~a"
 													 (servo.edit-get-param (encode-uri (nth 1 (opts banner))) "bannerType" type))
