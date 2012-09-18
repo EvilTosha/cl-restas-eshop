@@ -235,7 +235,7 @@
 
 ;;необходимо отдавать 404 ошибку для несуществеющих страниц
 (restas:define-route not-found-route ("*any")
-  (log5:log-for info "error 404: ~a" any)
+  ;; (log5:log-for info "error 404: ~a" any)
   (restas:abort-route-handler
    (babel:string-to-octets
     (default-page
