@@ -429,7 +429,7 @@
        :collect item)))
 
 (defmethod restas:render-object ((designer eshop-render) (object product))
-  (aif (servo.get-option object "Secret" "Дубль")
+  (aif (get-option object "Secret" "Дубль")
        (hunchentoot:redirect (concatenate 'string "/" it) :code 301))
   (let* ((pics (get-pics (articul object)))
          (diff-percent (servo.diff-percentage (price object) (siteprice object)))
