@@ -1,5 +1,6 @@
 ;;;; report.lisp
 
+;; TODO: move to new package report
 (in-package #:eshop)
 
 (defparameter *special-products* (make-hash-table :test #'equal))
@@ -14,77 +15,141 @@
   (when product
     (special-p (key product))))
 
-(defun write-products-report (stream)
-  (format stream "~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~a;~A~%"
-          "артикул" "цена магазина" "цена сайта" "имя" "имя real" "имя yml" "is-yml-show" "seo текст"
-          "фотографии" "характеристики" "активный" "группа" "родительская группа" "группа 2-го уровня"
-          "secret" "DTD" "vendor" "доставка" "серия" "direct-name" "дубль" "гарантия")
-  (process-storage
-   #'(lambda (v)
-       (let ((id "нет") (name "нет") (name-real "нет") (name-yml "нет")
-             (desc "нет") (img "нет") (options "нет") (active "нет")
-             (group-name "нет") (parent-group-name "нет") (secret "нет")
-             (seria "нет") (direct-name "нет") (double "-") (warranty "-"))
-         (setf id (articul v))
-         (setf name (stripper (name-provider v)))
-         (setf name-real (stripper (name-seo v)))
-         (with-option1 v "Secret" "Yandex"
-                       (setf name-yml (stripper (getf option :value))))
-         (setf desc (if (and (not (null (seo-text v)))
-                             (not (string= "" (stripper (seo-text v)))))
-                        "есть"
-                        "нет"))
-         (setf img (length (get-pics (articul v))))
-         (setf options (valid-options v))
-         (setf active (if (active v)
-                          "да"
-                          "нет"))
-         (setf group-name (when (parent v)
-                            (stripper (name (parent v)))))
-         (setf parent-group-name (when (and (parent v)
-                                            (parent (parent v)))
-                                   (stripper (name (parent (parent v))))))
-         (setf 2-group-name (when (and (parent v) (parent (parent v)))
-                              (stripper (name (get-2-lvl-group v)))))
-         (setf secret "Нет")
-         (with-option1 v "Secret" "Checked"
-                       (setf secret (getf option :value)))
-         (with-option1 v "Общие характеристики" "Серия"
-                       (setf seria (getf option :value)))
-         (with-option1 v "Secret" "Direct-name"
-                       (setf direct-name (stripper (getf option :value))))
-         (with-option1 v "Secret" "Дубль"
-                       (setf double (stripper (getf option :value))))
-         (with-option1 v "Дополнительная информация" "Гарантия"
-                       (setf warranty (stripper (getf option :value))))
-         (format stream "~a;~a;~a;\"~a\";\"~a\";\"~a\";~a;~a;~a;~a;~a;\"~a\";\"~a\";~a;~a;~a;~a;~a;\"~a\";\"~a\";\"~a\";\"~a\";~%"
-                 id (price v) (siteprice v) name name-real
-                 name-yml (yml.yml-show-p v) desc img options active group-name
-                 parent-group-name 2-group-name secret
-                 (gethash (articul v) *xls.product-table*)
-                 (vendor v)
-                 (yml.get-product-delivery-price1 v)
-                 seria
-                 direct-name
-                 double
-                 warranty)))
-   'product))
-
 (defun valid-options (product)
   (declare (product product))
   (let ((num 0))
     (mapcar #'(lambda (optgroup)
-                (setf num
-                      (+ num
-                         (count-if #'(lambda (option)
-                                       (and option
-                                            (valid-string-p (getf option :value))
-                                            (not (find (getf option :name)
-                                                       (list "Производитель" "Модель" "Гарантия" "Сайт производителя") :test #'equal))))
-                                   (getf optgroup :options)))))
-                      (remove "Secret" (optgroups product)  ; remove Secret group
-                              :test #'equal :key #'(lambda (opt) (getf opt :name))))
+                (incf num
+                      (count-if #'(lambda (option)
+                                    (and option
+                                         (valid-string-p (getf option :value))
+                                         (not (find (getf option :name)
+                                                    (list "Производитель" "Модель" "Гарантия" "Сайт производителя") :test #'equal))))
+                                (getf optgroup :options))))
+            (remove "Secret" (optgroups product)  ; remove Secret group
+                    :test #'equal :key #'(lambda (opt) (getf opt :name))))
     num))
+
+;;;; --------------------------- report mechanism -------------------------------
+(defvar report.*standard-report-column-funcs* (make-hash-table :test #'equal)
+  "Hash-table for storing standard functions for creating reports by ip.
+Key should be (unique) symbol, value - function")
+
+(defun report.register-standard-column (specifier func)
+  "Registers function that lately can be used in reports' creating API.
+Specifier should be symbol, func should be function.
+Result of each function must be formatable (e.g. (format nil \"~A\") must be applicable to it)"
+  (declare (symbol specifier) (function func))
+  (setf (gethash specifier report.*standard-report-column-funcs*) func))
+
+(defun report.get-standard-column-func (specifier)
+  (gethash specifier report.*standard-report-column-funcs*))
+
+(defun report.write-report (stream column-headers column-funcs items)
+  "Writes report in .csv format to given stream. Each row is set of column functions
+applied to item from given item set."
+  (declare (stream stream) (list column-headers column-funcs items))
+  ;; write headers
+  (format stream "~{~A;~}~%" column-headers)
+  ;; write other rows
+  (mapcar #'(lambda (item)
+              (format stream "~{~A;~}~%"
+                      (mapcar #'(lambda (func)
+                                  (funcall func item))
+                              column-funcs)))
+          items))
+
+(defun report.write-report-with-standard-columns (stream columns-data storage-specifier)
+  "Writes report using only registered columns functions. Column data should be
+list of conses (column-header . column-specifier). Storage-specifier should be symbol, to which
+function get-storage is applicable"
+  (declare (stream stream) (list columns-data) (symbol storage-specifier))
+  (loop
+     :for (header . specifier) :in columns-data
+     :collect header :into headers
+     :collect (report.get-standard-column-func specifier) :into funcs
+     :finally (report.write-report stream headers funcs (collect-storage storage-specifier))))
+
+
+;;;; register standard columns
+;;; product functions
+(report.register-standard-column 'product-articul #'articul)
+(report.register-standard-column 'product-price #'price)
+(report.register-standard-column 'product-siteprice #'siteprice)
+(report.register-standard-column 'product-name #'name-provider)
+(report.register-standard-column 'product-name-real #'name-seo)
+(report.register-standard-column
+ 'product-yml-name
+ #'(lambda (item) (get-option item "Secret" "Yandex")))
+(report.register-standard-column 'product-yml-show #'yml.yml-show-p)
+(report.register-standard-column
+ 'product-seo-text-exist
+ #'(lambda (item) (if (valid-string-p (seo-text item)) "есть" "нет")))
+(report.register-standard-column
+ 'product-num-pics
+ #'(lambda (item) (length (get-pics (articul item)))))
+(report.register-standard-column 'product-valid-options #'valid-options)
+(report.register-standard-column
+ 'product-active
+ #'(lambda (item) (if (active item) "да" "нет")))
+(report.register-standard-column
+ 'product-group
+ #'(lambda (item) (when (parent item) (name (parent item)))))
+(report.register-standard-column
+ 'product-grandparent
+ #'(lambda (item) (when (and (parent item) (parent (parent item)))
+                   (name (parent (parent item))))))
+;; return name of 2 level group(counting from root, root group has 1 level),
+;; which is ancestor of given item
+(report.register-standard-column
+ 'product-2-lvl-group
+ #'(lambda (item) (loop
+                     :for cur := (parent item) :then (parent cur)
+                     :while (and cur (parent cur) (parent (parent cur)))
+                     :finally (return (when (and cur (parent cur)) (name cur))))))
+(report.register-standard-column
+ 'product-secret #'(lambda (item) (get-option item "Secret" "Checked")))
+(report.register-standard-column
+ 'product-dtd
+ #'(lambda (item)
+            (gethash (articul item) *xls.product-table*)))
+(report.register-standard-column 'product-vendor #'vendor)
+(report.register-standard-column 'product-delivery #'yml.get-product-delivery-price1)
+(report.register-standard-column
+ 'product-seria #'(lambda (item) (get-option item "Общие характеристики" "Серия")))
+(report.register-standard-column
+ 'product-direct-name #'(lambda (item) (get-option item "Secret" "Direct-name")))
+(report.register-standard-column
+ 'product-double #'(lambda (item) (get-option item "Secret" "Дубль")))
+(report.register-standard-column
+ 'product-warranty #'(lambda (item) (get-option item "Дополнительная информация" "Гарантия")))
+
+(defun report.product-report (stream)
+  (report.write-report-with-standard-columns
+   stream
+   (list (cons "артикул" 'product-articul)
+         (cons "цена магазина" 'product-price)
+         (cons "цена сайта" 'product-siteprice)
+         (cons "имя" 'product-name)
+         (cons "имя real" 'product-name-real)
+         (cons "имя yml" 'product-yml-name)
+         (cons "is-yml-show" 'product-yml-show)
+         (cons "seo текст" 'product-seo-text-exist)
+         (cons "фотографии" 'product-num-pics)
+         (cons "характеристики" 'product-valid-options)
+         (cons "активный" 'product-active)
+         (cons "группа" 'product-group)
+         (cons "родительская группа" 'product-grandparent)
+         (cons "группа 2-го уровня" 'product-2-lvl-group)
+         (cons "secret" 'product-secret)
+         (cons "DTD" 'product-dtd)
+         (cons "vendor" 'product-vendor)
+         (cons "доставка" 'product-delivery)
+         (cons "серия" 'product-seria)
+         (cons "direct-name" 'product-direct-name)
+         (cons "дубль" 'product-double)
+         (cons "гарантия" 'product-warranty))
+   'product))
 
 (defun write-groups (stream)
   (format stream "~a;~a;~a;~a;~a;~a;~%"
@@ -252,122 +317,6 @@
           product-list)
   "done")
 
-;;TODO: rem
-(defun edit-marketing-filter (group key-suffix name func)
-  (let* ((key (format nil "~A-~A" (key group) key-suffix))
-         new-filter
-         (filter (aif (find key (filters group) :test #'equal :key #'key)
-                      it
-                      (progn
-                        (setf new-filter t)
-                        (setobj key (make-instance 'filter))))))
-    (setf (name filter) name)
-    (setf (func filter) func)
-    (setf (key filter) key)
-    (setf (parents filter) (list group))
-    (when new-filter
-      (push filter (filters group)))
-    filter))
-
-(defun create-sale-filter (group)
-  (edit-marketing-filter
-   group "sale" "Товары для гениев!" #'groupd.is-groupd))
-
-(defun create-bestprice-filter (group)
-  (edit-marketing-filter
-   group "bestprice" "Горячий уик-энд скидок"
-   #'(lambda (object) (plusp (delta-price object)))))
-
-(defun create-ipad3-filter (group)
-  (edit-marketing-filter
-   group "ipad3" "IPad 3"
-   #'(lambda (p)
-       (let (opts)
-         (with-option1 p "Общие характеристики" "Модель"
-                       (setf opts (getf option :value)))
-         (string= (format nil "~(~A~)" opts) "ipad new")))))
-
-(defun create-man-sale-filter (group)
-  (edit-marketing-filter
-   group "23feb" "Подарки к 23 февраля" #'groupd.man.is-groupd))
-
-(defun create-woman-sale-filter (group)
-  (edit-marketing-filter
-   group "8mart" "Подарки к 8 марта" #'groupd.woman.is-groupd))
-
-(defun report.set-man-salefilter ()
-  (process-storage #'create-man-sale-filter 'group))
-
-(defun report.set-woman-salefilter ()
-  (process-storage #'create-woman-sale-filter 'group))
-
-
-(defun report.set-filters (groups filter-func name filter-key)
-  (mapcar #'(lambda (gr)
-              (edit-marketing-filter gr filter-key name filter-func))
-          groups))
-
-(defun report.create-marketing-filters ()
-	(create-ipad3-filter (getobj "planshetnie-komputery" 'group))
-	(report.set-filters (list (getobj "noutbuki" 'group))
-											#'(lambda (product)
-													(let ((opts))
-														(with-option1 product
-															"Общие характеристики" "Тип устройства"
-															(setf opts (getf option :value)))
-														(equal opts "Ультрабук")))
-											"Ультрабуки"
-											"ultrabooks")
-  ;; TODO: убрать костыль
-	(report.set-filters (process-and-collect-storage 'group)
-											#'groupd.holiday.is-groupd
-											"Для отдыха"
-											"holidays")
-  (report.set-filters `(,(getobj "noutbuki" 'group))
-                      #'(lambda (pr) (plusp (delta-price pr)))
-                      "Лучшие цены"
-                      "bestprice"))
-
-(defun report.set-salefilter ()
-  (mapcar #'(lambda (v)
-              (create-sale-filter (getobj (format nil "~a" v) 'group)))
-          (list "netbuki"
-                "noutbuki"
-                "planshetnie-komputery"
-                "cifrovye-fotoapparaty"
-                "lcd-televizory"
-                "monitory"
-                "printery"
-                "mfu"
-                "myshki"
-                "klaviatury"
-                "holodilniki-i-morozilniki"
-                "stiralnie-mashiny"
-                "mobilephones"
-                "gps-navigatory"
-                "komputery"
-                "pylesosy"
-                "shveinye-mashiny"
-                "elektrochainiki-i-termopoty"
-                "feny"
-                "hlebopechki"
-                "kofevarki"
-                "mikrovolnovye-pechi"
-                "britvy"
-                "avtomagnitoli"
-                "avtomobilnie-televizori"
-                "videoregistratori"
-                "avtomobilnie-subvuferi"
-                "melkaya-bitovaya-tehnika"
-                "autoelectronica"
-                "akusticheskie-sistemy"
-                "mp3-pleery"
-                "krasota-i-zdorovie"
-                "avtomobilnie-kolonki"
-                "monitory"
-                "plity")))
-
-;; TODO: rem
 (defun report.convert-name (input-string)
   (string-trim (list #\Space #\Tab #\Newline)
                (format nil "~:(~a~)" input-string)))
