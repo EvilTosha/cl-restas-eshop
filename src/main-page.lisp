@@ -87,6 +87,7 @@
         (setf item (gethash (caar (main-page-get-randoms-from-weight-list items 1))
                             storage))
         ;; (log5:log-for info-console "WARNING: No banner"))
+        )
     (list :name (key item)
           :review (name item)
           :ico (nth 0 (opts item))
