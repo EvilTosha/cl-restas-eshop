@@ -47,23 +47,27 @@ Result of each function must be formatable (e.g. (format nil \"~A\") must be app
 
 (defun report.write-report (stream column-headers column-funcs items)
   "Writes report in .csv format to given stream. Each row is set of column functions
-applied to item from given item set."
-  (declare (stream stream) (list column-headers column-funcs items))
+applied to item from given item set.
+   NOTE: stream could be T & NIL"
+  (declare (list column-headers column-funcs items))
   ;; write headers
-  (format stream "~{~A;~}~%" column-headers)
+  (format stream "~{\"~A\";~}~%" column-headers)
   ;; write other rows
   (mapcar #'(lambda (item)
-              (format stream "~{~A;~}~%"
+              (format stream "~{\"~A\";~}~%"
                       (mapcar #'(lambda (func)
-                                  (funcall func item))
+                                  (servo.string-replace-chars
+                                   (format nil "~a" (funcall func item))
+                                   '(#\" #\;)))
                               column-funcs)))
           items))
 
 (defun report.write-report-with-standard-columns (stream columns-data storage-specifier)
   "Writes report using only registered columns functions. Column data should be
 list of conses (column-header . column-specifier). Storage-specifier should be symbol, to which
-function get-storage is applicable"
-  (declare (stream stream) (list columns-data) (symbol storage-specifier))
+function get-storage is applicable.
+ NOTE: stream could be T & NIL"
+  (declare (list columns-data) (symbol storage-specifier))
   (loop
      :for (header . specifier) :in columns-data
      :collect header :into headers
@@ -273,6 +277,7 @@ function get-storage is applicable"
                   (setobj v p)
                   (setf (gethash v *special-products*) p))))
           (list
+           "555555"
            "666616"
            "999888"
            "711265"
