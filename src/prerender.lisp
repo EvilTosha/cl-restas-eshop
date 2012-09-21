@@ -5,6 +5,17 @@
 
 (in-package #:eshop)
 
+(defun pic-path (articul pic-name &optional (size "big"))
+  "Compose path to pic (on hard drive) from pic's name and parent product's articul.
+Path will be like path-to-pics/size/123/123456/picname.jpg
+\(where 123456 - product's articul, and size is one of: big(default), goods, middle, minigoods, small)"
+  (merge-pathnames (format nil "~A/~A/~A"
+                           size
+                           (ppcre:regex-replace "(\\d{1,3})(\\d{0,})"
+                                                articul "\\1/\\1\\2")
+                           pic-name)
+                   (config.get-option "PATHS" "path-to-pics")))
+
 ;;составление строки по данным аргументам
 (defun prerender-args-to-html (args)
   (let* ((type (string-trim '(#\Space) (nth 0 args))))
@@ -13,9 +24,6 @@
       ((string= type "pic")
        (let* ((size (string-trim '(#\Space) (nth 1 args)))
               (articul (string-trim '(#\Space) (nth 2 args)))
-              (path-art  (ppcre:regex-replace  "(\\d{1,3})(\\d{0,})"
-                                               (format nil "~a" articul)
-                                               "\\1/\\1\\2" ))
               (number (- (parse-integer
                           (string-trim '(#\Space) (nth 3 args))) 1))
               (product (getobj articul 'product))
@@ -32,13 +40,11 @@
          (when (and (not picname) (get-pics articul))
            (setf picname (car (get-pics articul))))
          (when (and product (name-seo product) picname)
-           (let* ((path (format nil "~a/~a/~a" size articul picname))
-                  (path* (format nil "~a/~a/~a" size path-art picname)))
+           (let ((path (format nil "~a/~a/~a" size articul picname)))
              (when (and (not height) (not width))
-               (multiple-value-bind
-                     (width height)
-                   (pics:get-dimensions (format nil "~a/~a" (config.get-option "PATHS" "path-to-pics") path*))
-                 (setf style (pics:style-for-resize width height 600))))
+               (let ((dimensions (pics:get-dimensions (pic-path articul picname size))))
+                 (setf style (pics:style-for-resize (getf dimensions :width)
+                                                    (getf dimensions :height) 600))))
              (format nil "<a href=\"/~a\" title=\"~a\">~%
                                    <img src=\"/pic/~a\" alt=\"~a\" style=\"~a\"/>~%
                                 </a>~%"
