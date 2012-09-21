@@ -8,7 +8,7 @@
                                           (list "-format" "%w %h" (format nil "~A" path-to-image)) :wait nil :output :stream)))
             (with-open-stream (in (sb-ext:process-output proc))
               (read-line in))))
-         (dimensions (split-sequence:split-sequence #\Space string)))
+         (dimensions (split-sequence:split-sequence #\Space string :test #'char=)))
     (list :width (parse-integer (first dimensions))
           :height (parse-integer (second dimensions)))))
 
