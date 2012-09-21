@@ -131,19 +131,6 @@ function get-storage is applicable.
    'product-double (rcurry #'get-option "Secret" "Дубль"))
   (%report.rsc
    'product-warranty (rcurry #'get-option "Дополнительная информация" "Гарантия"))
-
-  ;; ;; group functions
-
-  ;; (%report.rsc (stripper (name v))
-  ;;              (key v)
-  ;;              (if (active v)
-  ;;                  "yes"
-  ;;                  "no")
-  ;;              (if (valid-string-p (seo-text v))
-  ;;                  "yes"
-  ;;                  "no")
-  ;;              (length (products v))
-  ;;              (count-if #'active (products v))))
 )
 
 (report.register-standart-columns)
@@ -161,8 +148,8 @@ function get-storage is applicable.
 (report.register-standard-column
  'group-seo-text
  #'(lambda (item)
-     (if (valid-string-p (seo-text item)
-                         "yes" "no"))))
+     (if (valid-string-p (seo-text item))
+         "yes" "no")))
 (report.register-standard-column
  'group-count-products
  #'(lambda (item)
@@ -199,23 +186,16 @@ function get-storage is applicable.
          (cons "гарантия" 'product-warranty))
    'product))
 
-
-
-
-
-(defun write-groups (stream)
-  ;; (format stream "~a;~a;~a;~a;~a;~a;~%"
-  ;;         "Название категории"
-  ;;         "url страницы"
-  ;;         "Active"
-  ;;         "seo-text"
-  ;;         "продуктов"
-  ;;         "активных")
-  ;; (process-storage
-  ;;  #'(lambda (v)
-  ;;      (format stream "\"~a\";http://www.320-8080.ru/~a;~a;~a;~a;~a;~%"
-  ;;  'group)))
-  )
+(defun report.group-report (stream)
+  (report.write-report-with-standard-columns
+   stream
+   (list (cons "Название категории" 'group-name)
+         (cons "url страницы" 'group-url)
+         (cons "Active" 'group-active)
+         (cons "seo-text" 'group-seo-text)
+         (cons "продуктов" 'group-count-products)
+         (cons "активных" 'group-count-active-products))
+   'group))
 
 (defun write-products (stream)
   (let ((vendor-name)
@@ -272,7 +252,7 @@ function get-storage is applicable.
                                 (hunchentoot:url-encode (key v))
                                 (hunchentoot:url-encode (stripper vendor))
                                 "yes"
-                                (if (class-core.has-vendor-seo-text v vendor)
+                                (if (classes.has-vendor-seo-text v vendor)
                                     "yes"
                                     "no")
                                 (length products)
