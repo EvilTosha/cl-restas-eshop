@@ -75,76 +75,91 @@ function get-storage is applicable.
      :collect (report.get-standard-column-func specifier) :into funcs
      :finally (report.write-report stream headers funcs (collect-storage storage-specifier))))
 
-(defmacro %report.rsc (symbol func)
-  `(report.register-standard-column ,symbol ,func))
+(defun report.%rsc (symbol func)
+  (report.register-standard-column symbol func))
 
 ;; register standard columns
 (defun report.register-standart-columns ()
   ;; product functions
-  (%report.rsc 'product-articul #'articul)
-  (%report.rsc 'product-price #'price)
-  (%report.rsc 'product-siteprice #'siteprice)
-  (%report.rsc 'product-name #'name-provider)
-  (%report.rsc 'product-name-real #'name-seo)
-  (%report.rsc
+  (report.%rsc 'product-articul #'articul)
+  (report.%rsc 'product-price #'price)
+  (report.%rsc 'product-siteprice #'siteprice)
+  (report.%rsc 'product-name #'name-provider)
+  (report.%rsc 'product-name-real #'name-seo)
+  (report.%rsc
    'product-yml-name
    (rcurry #'get-option "Secret" "Yandex"))
-  (%report.rsc 'product-yml-show #'yml.yml-show-p)
-  (%report.rsc
-   'product-seo-text-exist
+  (report.%rsc 'product-yml-show #'yml.yml-show-p)
+  (report.%rsc
+   'product-seo-text-exists
    #'(lambda (item) (if (valid-string-p (seo-text item)) "есть" "нет")))
-  (%report.rsc
+  (report.%rsc
    'product-num-pics
    #'(lambda (item) (length (get-pics (articul item)))))
-  (%report.rsc 'product-valid-options #'valid-options)
-  (%report.rsc
+  (report.%rsc 'product-valid-options #'valid-options)
+  (report.%rsc
    'product-active
    #'(lambda (item) (if (active item) "да" "нет")))
-  (%report.rsc
+  (report.%rsc
    'product-group
    #'(lambda (item) (when (parent item) (name (parent item)))))
-  (%report.rsc
+  (report.%rsc
    'product-grandparent
    #'(lambda (item) (when (and (parent item) (parent (parent item)))
                       (name (parent (parent item))))))
   ;; return name of 2 level group(counting from root, root group has 1 level),
   ;; which is ancestor of given item
-  (%report.rsc
+  (report.%rsc
    'product-2-lvl-group
    #'(lambda (item) (loop
                        :for cur := (parent item) :then (parent cur)
                        :while (and cur (parent cur) (parent (parent cur)))
                        :finally (return (when (and cur (parent cur)) (name cur))))))
-  (%report.rsc
+  (report.%rsc
    'product-secret (rcurry #'get-option "Secret" "Checked"))
-  (%report.rsc
+  (report.%rsc
    'product-dtd
    #'(lambda (item)
        (gethash (articul item) *xls.product-table*)))
-  (%report.rsc 'product-vendor #'vendor)
-  (%report.rsc 'product-delivery #'yml.get-product-delivery-price1)
-  (%report.rsc
+  (report.%rsc 'product-vendor #'vendor)
+  (report.%rsc 'product-delivery #'yml.get-product-delivery-price1)
+  (report.%rsc
    'product-seria (rcurry #'get-option "Общие характеристики" "Серия"))
-  (%report.rsc
+  (report.%rsc
    'product-direct-name (rcurry #'get-option "Secret" "Direct-name"))
-  (%report.rsc
+  (report.%rsc
    'product-double (rcurry #'get-option "Secret" "Дубль"))
-  (%report.rsc
+  (report.%rsc
    'product-warranty (rcurry #'get-option "Дополнительная информация" "Гарантия"))
+  (report.%rsc
+   'product-url
+   #'(lambda (item)
+       ;; TODO: use restas url designator
+       (format nil "http://www.320-8080.ru/~A" (key item))))
 
-  ;; ;; group functions
-
-  ;; (%report.rsc (stripper (name v))
-  ;;              (key v)
-  ;;              (if (active v)
-  ;;                  "yes"
-  ;;                  "no")
-  ;;              (if (valid-string-p (seo-text v))
-  ;;                  "yes"
-  ;;                  "no")
-  ;;              (length (products v))
-  ;;              (count-if #'active (products v))))
-)
+;;; group functions
+  (report.%rsc
+   'group-name #'name)
+  (report.%rsc
+   'group-url
+   #'(lambda (item)
+       ;; TODO: use restas url designator
+       (format nil "http://www.320-8080.ru/~A" (key item))))
+  (report.%rsc
+   'group-active #'(lambda (item) (if (active item) "yes" "no")))
+  (report.%rsc
+   'group-seo-text
+   #'(lambda (item)
+       (if (valid-string-p (seo-text item))
+           "yes" "no")))
+  (report.%rsc
+   'group-count-products
+   #'(lambda (item)
+       (length (products item))))
+  (report.%rsc
+   'group-count-active-products
+   #'(lambda (item)
+       (count-if #'active (products item)))))
 
 (report.register-standart-columns)
 
@@ -158,7 +173,7 @@ function get-storage is applicable.
          (cons "имя real" 'product-name-real)
          (cons "имя yml" 'product-yml-name)
          (cons "is-yml-show" 'product-yml-show)
-         (cons "seo текст" 'product-seo-text-exist)
+         (cons "seo текст" 'product-seo-text-exists)
          (cons "фотографии" 'product-num-pics)
          (cons "характеристики" 'product-valid-options)
          (cons "активный" 'product-active)
@@ -175,54 +190,27 @@ function get-storage is applicable.
          (cons "гарантия" 'product-warranty))
    'product))
 
+(defun report.group-report (stream)
+  (report.write-report-with-standard-columns
+   stream
+   (list (cons "Название категории" 'group-name)
+         (cons "url страницы" 'group-url)
+         (cons "Active" 'group-active)
+         (cons "seo-text" 'group-seo-text)
+         (cons "продуктов" 'group-count-products)
+         (cons "активных" 'group-count-active-products))
+   'group))
 
-
-
-
-(defun write-groups (stream)
-  ;; (format stream "~a;~a;~a;~a;~a;~a;~%"
-  ;;         "Название категории"
-  ;;         "url страницы"
-  ;;         "Active"
-  ;;         "seo-text"
-  ;;         "продуктов"
-  ;;         "активных")
-  ;; (process-storage
-  ;;  #'(lambda (v)
-  ;;      (format stream "\"~a\";http://www.320-8080.ru/~a;~a;~a;~a;~a;~%"
-  ;;  'group)))
-  )
-
-(defun write-products (stream)
-  (let ((vendor-name)
-        (desc))
-    (format stream "~a;~a;~a;~a;~a;~a;~%"
-            "Название категории"
-            "Брэнд"
-            "Название товара"
-            "url страницы"
-            "Active"
-            "seo-text")
-    (process-storage
-     #'(lambda (v)
-         (setf vendor-name "Нет")
-         (setf vendor-name (vendor v))
-         (setf desc (if (valid-string-p (seo-text v))
-                        "yes"
-                        "no"))
-         (format stream "\"~a\";\"~a\";\"~a\";http://www.320-8080.ru/~a;~a;~a;~%"
-                 (if (parent v)
-                     (stripper (name (parent v)))
-                     "Нет категории")
-                 (stripper vendor-name)
-                 (stripper (name-seo v))
-                 (articul v)
-                 (if (active v)
-                     "yes"
-                     "no")
-                 desc))
-     'product)))
-
+(defun report.product-vendor-report (stream)
+  (report.write-report-with-standard-columns
+   stream
+   (list (cons "Название категории" 'product-group)
+         (cons "Брэнд" 'product-vendor)
+         (cons "Название товара" 'product-name-real)
+         (cons "url страницы" 'product-url)
+         (cons "Active" 'product-active)
+         (cons "seo-text" 'product-seo-text-exists))
+   'product))
 
 (defun write-vendors (stream)
   (format stream "~a;~a;~a;~a;~a;~a;~a;~%"
@@ -248,7 +236,7 @@ function get-storage is applicable.
                                 (hunchentoot:url-encode (key v))
                                 (hunchentoot:url-encode (stripper vendor))
                                 "yes"
-                                (if (class-core.has-vendor-seo-text v vendor)
+                                (if (classes.has-vendor-seo-text v vendor)
                                     "yes"
                                     "no")
                                 (length products)
@@ -325,13 +313,13 @@ function get-storage is applicable.
 (defun report.do-seo-reports ()
   (let ((name (format nil "reports/seo-report-groups-~a.csv" (time.encode.backup-filename))))
     (log5:log-for info "Do groups SEO report")
-    (create-report name #'write-groups))
+    (create-report name #'report.group-report))
   (let ((name (format nil "reports/seo-report-vendors-~a.csv" (time.encode.backup-filename))))
     (log5:log-for info "Do vendors SEO report")
     (create-report name #'write-vendors))
   (let ((name (format nil "reports/seo-report-products-~a.csv" (time.encode.backup-filename))))
     (log5:log-for info "Do products SEO report")
-    (create-report name #'write-products)))
+    (create-report name #'report.product-vendor-report)))
 
 
 (defun report.write-alias (&optional (stream *standard-output*))
