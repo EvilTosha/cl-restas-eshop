@@ -15,6 +15,21 @@
   (when product
     (special-p (key product))))
 
+(defun valid-options (product)
+  (declare (product product))
+  (let ((num 0))
+    (mapcar #'(lambda (optgroup)
+                (incf num
+                      (count-if #'(lambda (option)
+                                    (and option
+                                         (valid-string-p (getf option :value))
+                                         (not (find (getf option :name)
+                                                    (list "Производитель" "Модель" "Гарантия" "Сайт производителя") :test #'equal))))
+                                (getf optgroup :options))))
+            (remove "Secret" (optgroups product)  ; remove Secret group
+                    :test #'equal :key #'(lambda (opt) (getf opt :name))))
+    num))
+
 ;;;; --------------------------- report mechanism -------------------------------
 (defvar report.*standard-report-column-funcs* (make-hash-table :test #'equal)
   "Hash-table for storing standard functions for creating reports by ip.
@@ -160,30 +175,28 @@ function get-storage is applicable"
          (cons "гарантия" 'product-warranty))
    'product))
 
-(defun report.group-report (stream)
-  (report.write-report-with-standard-columns
-   stream
-   (list (cons "Название категории" 'group-name)
-         (cons "url страницы" 'group-url)
-         (cons "Active" 'group-active)
-         (cons "seo-text" 'group-seo-text)
-         (cons "продуктов" 'group-count-products)
-         (cons "активных" 'group-count-active-products))))
-
-(defun valid-options (product)
-  (declare (product product))
-  (let ((num 0))
-    (mapcar #'(lambda (optgroup)
-                (incf num
-                      (count-if #'(lambda (option)
-                                    (and option
-                                         (valid-string-p (getf option :value))
-                                         (not (find (getf option :name)
-                                                    (list "Производитель" "Модель") :test #'equal))))
-                                (getf optgroup :options))))
-            (remove "Secret" (optgroups product)  ; remove Secret group
-                    :test #'equal :key #'(lambda (opt) (getf opt :name))))
-    num))
+(defun write-groups (stream)
+  (format stream "~a;~a;~a;~a;~a;~a;~%"
+          "Название категории"
+          "url страницы"
+          "Active"
+          "seo-text"
+          "продуктов"
+          "активных")
+  (process-storage
+   #'(lambda (v)
+       (format stream "\"~a\";http://www.320-8080.ru/~a;~a;~a;~a;~a;~%"
+               (stripper (name v))
+               (key v)
+               (if (active v)
+                   "yes"
+                   "no")
+               (if (valid-string-p (seo-text v))
+                   "yes"
+                   "no")
+               (length (products v))
+               (count-if #'active (products v))))
+   'group))
 
 (defun write-groups-active-product-num (stream)
   (format stream "~a;~a;~a;~a;~%"

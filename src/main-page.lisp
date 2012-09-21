@@ -51,7 +51,7 @@
         (setf daily-list (main-page-get-randoms-from-weight-list full-daily-list num))
         ;; если не хватает
         (progn
-          (log5:log-for info-console "WARNING: Main page daily ~a products" (length full-daily-list))
+          ;; (log5:log-for info-console "WARNING: Main page daily ~a products" (length full-daily-list))
           (setf daily-list (main-page-get-randoms-from-weight-list full-daily-list num))))
     (mapcar #'(lambda (v) (main-page-view-product (car v) storage))
             daily-list)))
@@ -66,7 +66,8 @@
 					;; выбираем случайный товаров баннер с учетом их веса
 					(setf banner (gethash (caar (main-page-get-randoms-from-weight-list banners 1))
 																storage)))
-				(log5:log-for info-console "WARNING: No banner"))
+				;; (log5:log-for info-console "WARNING: No banner"))
+        )
 		(if banner
 				(list :url (format nil "~a"
 													 (servo.edit-get-param (encode-uri (nth 1 (opts banner))) "bannerType" type))
@@ -85,7 +86,8 @@
         ;; выбираем случайный товаров баннер с учетом их веса
         (setf item (gethash (caar (main-page-get-randoms-from-weight-list items 1))
                             storage))
-        (log5:log-for info-console "WARNING: No banner"))
+        ;; (log5:log-for info-console "WARNING: No banner"))
+        )
     (list :name (key item)
           :review (name item)
           :ico (nth 0 (opts item))

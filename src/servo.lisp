@@ -578,9 +578,9 @@
   "Convert anything that has print method to keyword; Case insensitive"
   (intern (format nil "~:@(~A~)" anything) :keyword))
 
-(defun anything-to-symbol (anything)
+(defun anything-to-symbol (anything &optional (package (find-package :eshop)))
   "Convert anything that has print method to symbol; Case insensitive"
-  (intern (format nil "~:@(~A~)" anything)))
+  (intern (format nil "~:@(~A~)" anything) package))
 
 (defun alistp (obj)
   "Checks whether object is association list (e.g. list of conses)"
