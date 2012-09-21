@@ -38,7 +38,9 @@
                                      (list :numpos counter
                                            :count cnt
                                            :name (name-seo product)
-                                           :price price
+                                           :price (if (zerop price)
+                                                      ""
+                                                      price)
                                            :group (aif (car (parents product))
                                                        (name it)
                                                        "Без группы")
