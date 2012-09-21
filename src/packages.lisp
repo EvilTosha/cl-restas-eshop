@@ -20,6 +20,7 @@
      :string-case)
   (:import-from :arnesi :parse-float)
   (:import-from :alexandria :read-file-into-string)
+  (:import-from :alexandria :rcurry)
   (:export :config.parse-config
            :config.get-option
            :config.set-option
