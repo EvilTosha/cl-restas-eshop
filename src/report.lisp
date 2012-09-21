@@ -47,82 +47,106 @@ Result of each function must be formatable (e.g. (format nil \"~A\") must be app
 
 (defun report.write-report (stream column-headers column-funcs items)
   "Writes report in .csv format to given stream. Each row is set of column functions
-applied to item from given item set."
-  (declare (stream stream) (list column-headers column-funcs items))
+applied to item from given item set.
+   NOTE: - stream could be T & NIL
+         - remove all #\" & #\; for compatibility csv"
+  (declare (list column-headers column-funcs items))
   ;; write headers
-  (format stream "~{~A;~}~%" column-headers)
+  (format stream "~{\"~A\";~}~%" column-headers)
   ;; write other rows
   (mapcar #'(lambda (item)
-              (format stream "~{~A;~}~%"
+              (format stream "~{\"~A\";~}~%"
                       (mapcar #'(lambda (func)
-                                  (funcall func item))
+                                  (servo.string-replace-chars
+                                   (format nil "~a" (funcall func item))
+                                   '(#\" #\;)))
                               column-funcs)))
           items))
 
 (defun report.write-report-with-standard-columns (stream columns-data storage-specifier)
   "Writes report using only registered columns functions. Column data should be
 list of conses (column-header . column-specifier). Storage-specifier should be symbol, to which
-function get-storage is applicable"
-  (declare (stream stream) (list columns-data) (symbol storage-specifier))
+function get-storage is applicable.
+ NOTE: stream could be T & NIL"
+  (declare (list columns-data) (symbol storage-specifier))
   (loop
      :for (header . specifier) :in columns-data
      :collect header :into headers
      :collect (report.get-standard-column-func specifier) :into funcs
      :finally (report.write-report stream headers funcs (collect-storage storage-specifier))))
 
+(defmacro %report.rsc (symbol func)
+  `(report.register-standard-column ,symbol ,func))
 
-;;;; register standard columns
-;;; product functions
-(report.register-standard-column 'product-articul #'articul)
-(report.register-standard-column 'product-price #'price)
-(report.register-standard-column 'product-siteprice #'siteprice)
-(report.register-standard-column 'product-name #'name-provider)
-(report.register-standard-column 'product-name-real #'name-seo)
-(report.register-standard-column
- 'product-yml-name
- #'(lambda (item) (get-option item "Secret" "Yandex")))
-(report.register-standard-column 'product-yml-show #'yml.yml-show-p)
-(report.register-standard-column
- 'product-seo-text-exist
- #'(lambda (item) (if (valid-string-p (seo-text item)) "есть" "нет")))
-(report.register-standard-column
- 'product-num-pics
- #'(lambda (item) (length (get-pics (articul item)))))
-(report.register-standard-column 'product-valid-options #'valid-options)
-(report.register-standard-column
- 'product-active
- #'(lambda (item) (if (active item) "да" "нет")))
-(report.register-standard-column
- 'product-group
- #'(lambda (item) (when (parent item) (name (parent item)))))
-(report.register-standard-column
- 'product-grandparent
- #'(lambda (item) (when (and (parent item) (parent (parent item)))
-                   (name (parent (parent item))))))
-;; return name of 2 level group(counting from root, root group has 1 level),
-;; which is ancestor of given item
-(report.register-standard-column
- 'product-2-lvl-group
- #'(lambda (item) (loop
-                     :for cur := (parent item) :then (parent cur)
-                     :while (and cur (parent cur) (parent (parent cur)))
-                     :finally (return (when (and cur (parent cur)) (name cur))))))
-(report.register-standard-column
- 'product-secret #'(lambda (item) (get-option item "Secret" "Checked")))
-(report.register-standard-column
- 'product-dtd
- #'(lambda (item)
-            (gethash (articul item) *xls.product-table*)))
-(report.register-standard-column 'product-vendor #'vendor)
-(report.register-standard-column 'product-delivery #'yml.get-product-delivery-price1)
-(report.register-standard-column
- 'product-seria #'(lambda (item) (get-option item "Общие характеристики" "Серия")))
-(report.register-standard-column
- 'product-direct-name #'(lambda (item) (get-option item "Secret" "Direct-name")))
-(report.register-standard-column
- 'product-double #'(lambda (item) (get-option item "Secret" "Дубль")))
-(report.register-standard-column
- 'product-warranty #'(lambda (item) (get-option item "Дополнительная информация" "Гарантия")))
+;; register standard columns
+(defun report.register-standart-columns ()
+  ;; product functions
+  (%report.rsc 'product-articul #'articul)
+  (%report.rsc 'product-price #'price)
+  (%report.rsc 'product-siteprice #'siteprice)
+  (%report.rsc 'product-name #'name-provider)
+  (%report.rsc 'product-name-real #'name-seo)
+  (%report.rsc
+   'product-yml-name
+   (rcurry #'get-option "Secret" "Yandex"))
+  (%report.rsc 'product-yml-show #'yml.yml-show-p)
+  (%report.rsc
+   'product-seo-text-exist
+   #'(lambda (item) (if (valid-string-p (seo-text item)) "есть" "нет")))
+  (%report.rsc
+   'product-num-pics
+   #'(lambda (item) (length (get-pics (articul item)))))
+  (%report.rsc 'product-valid-options #'valid-options)
+  (%report.rsc
+   'product-active
+   #'(lambda (item) (if (active item) "да" "нет")))
+  (%report.rsc
+   'product-group
+   #'(lambda (item) (when (parent item) (name (parent item)))))
+  (%report.rsc
+   'product-grandparent
+   #'(lambda (item) (when (and (parent item) (parent (parent item)))
+                      (name (parent (parent item))))))
+  ;; return name of 2 level group(counting from root, root group has 1 level),
+  ;; which is ancestor of given item
+  (%report.rsc
+   'product-2-lvl-group
+   #'(lambda (item) (loop
+                       :for cur := (parent item) :then (parent cur)
+                       :while (and cur (parent cur) (parent (parent cur)))
+                       :finally (return (when (and cur (parent cur)) (name cur))))))
+  (%report.rsc
+   'product-secret (rcurry #'get-option "Secret" "Checked"))
+  (%report.rsc
+   'product-dtd
+   #'(lambda (item)
+       (gethash (articul item) *xls.product-table*)))
+  (%report.rsc 'product-vendor #'vendor)
+  (%report.rsc 'product-delivery #'yml.get-product-delivery-price1)
+  (%report.rsc
+   'product-seria (rcurry #'get-option "Общие характеристики" "Серия"))
+  (%report.rsc
+   'product-direct-name (rcurry #'get-option "Secret" "Direct-name"))
+  (%report.rsc
+   'product-double (rcurry #'get-option "Secret" "Дубль"))
+  (%report.rsc
+   'product-warranty (rcurry #'get-option "Дополнительная информация" "Гарантия"))
+
+  ;; ;; group functions
+
+  ;; (%report.rsc (stripper (name v))
+  ;;              (key v)
+  ;;              (if (active v)
+  ;;                  "yes"
+  ;;                  "no")
+  ;;              (if (valid-string-p (seo-text v))
+  ;;                  "yes"
+  ;;                  "no")
+  ;;              (length (products v))
+  ;;              (count-if #'active (products v))))
+)
+
+(report.register-standart-columns)
 
 ;;; group functions
 (report.register-standard-column
@@ -175,47 +199,23 @@ function get-storage is applicable"
          (cons "гарантия" 'product-warranty))
    'product))
 
+
+
+
+
 (defun write-groups (stream)
-  (format stream "~a;~a;~a;~a;~a;~a;~%"
-          "Название категории"
-          "url страницы"
-          "Active"
-          "seo-text"
-          "продуктов"
-          "активных")
-  (process-storage
-   #'(lambda (v)
-       (format stream "\"~a\";http://www.320-8080.ru/~a;~a;~a;~a;~a;~%"
-               (stripper (name v))
-               (key v)
-               (if (active v)
-                   "yes"
-                   "no")
-               (if (valid-string-p (seo-text v))
-                   "yes"
-                   "no")
-               (length (products v))
-               (count-if #'active (products v))))
-   'group))
-
-(defun write-groups-active-product-num (stream)
-  (format stream "~a;~a;~a;~a;~%"
-          "Название категории"
-          "url страницы"
-          "Active"
-          "кол-во товаров")
-  (process-storage
-   #'(lambda (v)
-       (format stream "\"~a\";http://www.320-8080.ru/~a;~a;~a;~%"
-               (stripper (name v))
-               (key v)
-               (if (active v)
-                   "yes"
-                   "no")
-               (length (storage.get-recursive-products v #'active))))
-   'group))
-
-
+  ;; (format stream "~a;~a;~a;~a;~a;~a;~%"
+  ;;         "Название категории"
+  ;;         "url страницы"
+  ;;         "Active"
+  ;;         "seo-text"
+  ;;         "продуктов"
+  ;;         "активных")
+  ;; (process-storage
+  ;;  #'(lambda (v)
+  ;;      (format stream "\"~a\";http://www.320-8080.ru/~a;~a;~a;~a;~a;~%"
+  ;;  'group)))
+  )
 
 (defun write-products (stream)
   (let ((vendor-name)
@@ -297,6 +297,7 @@ function get-storage is applicable"
                   (setobj v p)
                   (setf (gethash v *special-products*) p))))
           (list
+           "555555"
            "666616"
            "999888"
            "711265"

@@ -249,11 +249,6 @@
         ("dtd"
          (dtd)
          "DO DTD")
-        ("report"
-         (let ((name (format nil "reports/write-groups-active-product-num-~A.csv"
-                             (time.encode.backup-filename))))
-           (create-report name #'write-groups-active-product-num)
-           "DO REPORT"))
         ("articles-restore"
          (articles.restore)
          "RESTORE ARTICLES")
