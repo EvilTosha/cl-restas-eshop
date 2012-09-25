@@ -25,6 +25,16 @@
                                   ,(getf field :disabled)))
                 slot-list))))
 
+(defmethod print-object ((group group) stream)
+   (print-unreadable-object (group stream :type t :identity t)
+     (format stream "~a" (key group))))
+
+(defmacro class-core.define-print-method (name)
+  `(defmethod print-object ((object ,name) stream)
+     "NOTE: object must contain a slot named key"
+     (print-unreadable-object (object stream :type t :identity t)
+       (format stream "~a" (key object)))))
+
 (defgeneric make-instance-from-post-data (type)
   (:documentation "Method for creating and initializing instance of class
 from post data from admin panel.
@@ -288,6 +298,7 @@ such as pointer to storage, serialize flag, etc.")
      (class-core.define-view-method ,name ,slot-list)
      (class-core.define-edit-method ,name ,slot-list)
      (class-core.define-post-data-create ,name ,slot-list)
+     (class-core.define-print-method ,name)
      ,@(when make-storage
              `(;; set :storage property if class as pointer to real storage
                (setf (getf (gethash ',name *classes*) :storage)
