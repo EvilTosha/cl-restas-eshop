@@ -35,7 +35,7 @@
                                        (key it))
                        :groupname (aif parent
                                        (name it))
-                       :pic (car (get-pics (articul p)))))
+                       :pic (car (get-pics (key p)))))
          (button-add (list :buttonaddcart (soy.buttons:add-product-cart p-list))))
     (append p-list button-add)))
 

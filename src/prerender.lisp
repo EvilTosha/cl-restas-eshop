@@ -5,17 +5,6 @@
 
 (in-package #:eshop)
 
-(defun pic-path (articul pic-name &optional (size "big"))
-  "Compose path to pic (on hard drive) from pic's name and parent product's articul.
-Path will be like path-to-pics/size/123/123456/picname.jpg
-\(where 123456 - product's articul, and size is one of: big(default), goods, middle, minigoods, small)"
-  (merge-pathnames (format nil "~A/~A/~A"
-                           size
-                           (ppcre:regex-replace "(\\d{1,3})(\\d{0,})"
-                                                articul "\\1/\\1\\2")
-                           pic-name)
-                   (config.get-option "PATHS" "path-to-pics")))
-
 ;;составление строки по данным аргументам
 (defun prerender-args-to-html (args)
   (let* ((type (string-trim '(#\Space) (nth 0 args))))

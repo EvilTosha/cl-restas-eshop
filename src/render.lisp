@@ -197,7 +197,7 @@
                                                                               cartrige-printer)
                                                                      (soy.catalog:printer-view (list
                                                                                                 :articul printer-articul
-                                                                                                :pic (car (get-pics printer-articul))
+                                                                                                :pic (car (get-pics (format nil "~A" printer-articul)))
                                                                                                 :name (name-seo storage-printer)
                                                                                                 :key (key storage-printer)
                                                                                                 :price (if (active storage-printer)
@@ -241,7 +241,7 @@
     (let* ((articul (articul prod))
            (name (name-seo prod))
            (group (parent prod))
-           (pic (car (get-pics articul)))
+           (pic (car (get-pics (key prod))))
            (siteprice (siteprice prod)))
       (list
        ;;TODO: :rating
@@ -278,7 +278,7 @@
 
 
 (defmethod render.view ((object product))
-  (let ((pics (get-pics (articul object))))
+  (let ((pics (get-pics (key object))))
     (let ((group (parent object)))
       (list :articul (articul object)
             :name (name-seo object)
@@ -321,7 +321,7 @@
                                                                :pic (if (null pics) nil (car pics))
                                                                :deliveryprice (delivery-price object)
                                                                :siteprice (price object)
-                                                               :price (siteprice object))))))))
+                                                               :price (siteprice object))))))))0
 
 
 (defun render.render-optgroups (optgroups)
@@ -431,7 +431,7 @@
 (defmethod restas:render-object ((designer eshop-render) (object product))
   (aif (get-option object "Secret" "Дубль")
        (hunchentoot:redirect (concatenate 'string "/" it) :code 301))
-  (let* ((pics (get-pics (articul object)))
+  (let* ((pics (get-pics (key object)))
          (diff-percent (servo.diff-percentage (price object) (siteprice object)))
          (is-available (yml.available-for-order-p object))
          (is-vintage (not (or (active object) is-available)))

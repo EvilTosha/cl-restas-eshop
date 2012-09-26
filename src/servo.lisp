@@ -736,3 +736,17 @@
 Used for printing system info to browser"
   (declare (string string))
   (regex-replace-all "\\n" string "<br />"))
+
+
+(defun translit-char (char)
+  "Convert russian letter to english transcription"
+  (declare (character char))
+  (let ((letters (list "a" "b" "v" "g" "d" "e"
+                       "zh" "z" "i" "y" "k" "l" "m"
+                       "n" "o" "p" "r" "s" "t" "u"
+                       "f" "h" "ts" "ch" "sh" "shch"
+                       "" "y" "" "e" "yu" "ya"))
+        (code (char-code char)))
+    (if (not (<= 1072 code 1103))
+        (string char)
+        (nth (- code 1072) letters))))

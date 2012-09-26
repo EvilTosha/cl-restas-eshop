@@ -9,22 +9,6 @@
 (defgeneric rename-remove-product-pics (product)
     (:documentation "Remove allsize pics from images dirs"))
 
-(defun rename-translit-char (char)
-  (let ((letters (list "a" "b" "v" "g" "d" "e"
-                       "zh" "z" "i" "y" "k" "l" "m"
-                       "n" "o" "p" "r" "s" "t" "u"
-                       "f" "h" "ts" "ch" "sh" "shch"
-                       "" "y" "" "e" "yu" "ya"))
-        (code (char-code char)))
-    (if (not (<= 1072 code 1103))
-        (string char)
-        (nth (- code 1072) letters))))
-
-(defun rename.make-articul-subpath (articul)
-  "Makes subpath like 129/129343 for storing pictures.
-   Reason: ext3 filesystem restrictions for max number of files in directory"
-  (ppcre:regex-replace  "(\\d{1,3})(\\d{0,})"  (format nil "~a" articul)  "\\1/\\1\\2"))
-
 (defun rename-new-name (name &optional number)
   "Make image name using SEO name of product"
   (when name
@@ -42,7 +26,7 @@
     (let ((result ""))
       (dotimes (i (length name))
         (let ((char (char name i)))
-          (setf result (concatenate 'string result (rename-translit-char char)))))
+          (setf result (concatenate 'string result (translit-char char)))))
       (if (and number (numberp number))
           (format nil "~a_~2,'0d" result number)
           result))))
@@ -72,7 +56,7 @@
   "Rename all pictures of product"
   (unless (rename-check product)
     (let* ((articul (articul product))
-           (path-art (rename.make-articul-subpath articul)))
+           (path-art (pics.make-articul-subpath articul)))
       (loop
          :for folder :in (list "big" "goods" "middle" "minigoods" "small")
          :do (rename-in-folder product
@@ -81,7 +65,7 @@
 
 (defun rename-force-product-all-pics (product)
   (let* ((articul (articul product))
-         (path-art (rename.make-articul-subpath articul)))
+         (path-art (pics.make-articul-subpath articul)))
     (loop
        :for folder
        :in (list "big" "goods" "middle" "minigoods" "small")
@@ -94,7 +78,7 @@
   (if (directory-exists-p path-to-folder)
       (let* ((articul (articul product))
              (name (name-seo product))
-             (path-art (rename.make-articul-subpath articul)))
+             (path-art (pics.make-articul-subpath articul)))
         (log5:log-for info "Start converting images for product ~a from folder ~a" articul path-to-folder)
         (loop
            :for pic :in (directory (format nil "~a/*.jpg" path-to-folder))
@@ -206,7 +190,9 @@
                        (when product
                          (rename-convert-from-folder product path)
                          (rename-copy-folder path (format nil "~a~a/" backup articul))
-                         (rename-remove-folder path)))))))
+                         (rename-remove-folder path)
+                         ;; update pics cache for product
+                         (drop-pics-cache (key product))))))))
       ;;else
       (log5:log-for warning "Folder ~a or ~a doesn't exist!" from backup)))
 
@@ -226,7 +212,7 @@
 (defmethod rename-remove-product-pics ((product product))
   (let* ((articul (articul product))
          (dirs (list "big" "goods" "middle" "minigoods" "small"))
-         (path-art (rename.make-articul-subpath articul)))
+         (path-art (pics.make-articul-subpath articul)))
     (loop
        :for dir
        :in dirs
