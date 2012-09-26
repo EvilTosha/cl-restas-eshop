@@ -38,7 +38,9 @@
                                      (list :numpos counter
                                            :count cnt
                                            :name (name-seo product)
-                                           :price price
+                                           :price (if (zerop price)
+                                                      ""
+                                                      price)
                                            :group (aif (car (parents product))
                                                        (name it)
                                                        "Без группы")
@@ -313,7 +315,9 @@
                                   :family ""
                                   :addr addr
                                   :isdelivery (string-case delivery-type
-                                                ("express" "Доставка")
+                                                ("express" (if (search "PICKPOINT" courier_comment)
+                                                               "PickPoint"
+                                                               "Доставка"))
                                                 ("pickup" "Самовывоз")
                                                 (t delivery-type))
                                   :phone phone

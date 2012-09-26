@@ -73,6 +73,8 @@
       (setf products (remove-if #'null lst))
       (setf count cnt)
       (setf pricesum sm))
+    (when (zerop pricesum)
+        (setf pricesum ""))
     (setf client-mail
           (soy.sendmail:clientmail
            (list :datetime (time.get-date-time)
@@ -257,6 +259,8 @@
       (setf (articul answer) articul
             (total answer) (siteprice it)
             (name answer) (name-seo it)
-            (group answer) (name (car (parents it)))
+            (group answer) (aif (car (parents it))
+                                (name it)
+                                "")
             (price answer) (siteprice it)))
     (json:encode-json-to-string answer)))

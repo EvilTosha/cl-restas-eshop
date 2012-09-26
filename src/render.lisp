@@ -315,7 +315,7 @@
             :oneclickbutton  (unless (preorder object)
                                (soy.buttons:add-one-click (list :articul (articul object))))
             :addbutton (if (preorder object)
-                           (soy.buttons:add-predzakaz (list :articul (articul object)))
+                           (soy.buttons:add-product-rasp (list :articul (articul object)))
                            (soy.buttons:add-product-cart (list :articul (articul object)
                                                                :name (name-seo object)
                                                                :pic (if (null pics) nil (car pics))
@@ -449,7 +449,9 @@
                              :bonuscount (when (and (bonuscount object)
                                                     (plusp (bonuscount object)))
                                            (* 10 (bonuscount object)))
-                             :formatsiteprice (get-format-price (siteprice object))
+                             :formatsiteprice  (if (= 0 (siteprice object))
+                                                     nil
+                                                     (get-format-price (siteprice object)))
                              :formatstoreprice (get-format-price
                                                 (+ (siteprice object)
                                                    (delta-price object)))
@@ -501,7 +503,7 @@
                              :seotextflag (valid-string-p (seo-text object))
                              :predzakaz (preorder object)
                              :addproductcart (if (preorder object)
-                                                 (soy.buttons:add-predzakaz (list :articul (articul object)))
+                                                 (soy.buttons:add-product-rasp (list :articul (articul object)))
                                                  (soy.buttons:add-product-cart (list :articul (articul object)
                                                                                      :name (name-seo object)
                                                                                      :pic (if (null pics) nil (car pics))
