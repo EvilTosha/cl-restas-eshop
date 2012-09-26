@@ -26,11 +26,11 @@
                                                       (pic node)))
                                                (style (when pic
                                                         (let ((dimensions
-                                                               (pics:get-dimensions
+                                                               (get-dimensions
                                                                 (format nil "~a/htimgs~a" *path-to-dropbox* (pic node)))))
-                                                          (pics:style-for-resize (getf dimensions :width)
-                                                                                 (getf dimensions :height)
-                                                                                 70)))))
+                                                          (style-for-resize (getf dimensions :width)
+                                                                            (getf dimensions :height)
+                                                                            70)))))
                                           (list
                                            :other nil
                                            :maingroupname (name node)

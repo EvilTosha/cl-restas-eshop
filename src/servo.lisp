@@ -313,25 +313,6 @@
        :while pos)))
 
 
-(defun cut (cnt lst)
-  (values (loop
-             :for elt :in lst
-             :repeat cnt
-             :collect
-             (pop lst))
-          lst))
-
-(defun get-pics (articul)
-  (let* ((articul-str (format nil "~a" articul))
-         (path-art  (ppcre:regex-replace  "(\\d{1,3})(\\d{0,})"  articul-str  "\\1/\\1\\2" ))
-         (path (format nil "~a/big/~a/*.jpg" (config.get-option "PATHS" "path-to-pics") path-art)))
-    (loop
-       :for pic
-       :in (ignore-errors (directory path))
-       :collect (format nil "~a.~a"
-                        (pathname-name pic)
-                        (pathname-type pic)))))
-
 (defun get-format-price (p)
   (format nil "~,,' ,3:d" p))
 

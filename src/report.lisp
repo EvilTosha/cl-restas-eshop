@@ -230,8 +230,7 @@ function get-storage is applicable.
        (mapcar
         #'(lambda (pic)
             (let* ((pic-path (pic-path (key product) pic))
-                   (dimensions (pics:get-dimensions
-                                pic-path))
+                   (dimensions (get-dimensions pic-path))
                    (size (with-open-file (file pic-path) (file-length file))))
               (format stream "~{~A;~}~%"
                       (list (key product)

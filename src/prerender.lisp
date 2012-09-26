@@ -42,9 +42,9 @@ Path will be like path-to-pics/size/123/123456/picname.jpg
          (when (and product (name-seo product) picname)
            (let ((path (format nil "~a/~a/~a" size articul picname)))
              (when (and (not height) (not width))
-               (let ((dimensions (pics:get-dimensions (pic-path articul picname size))))
-                 (setf style (pics:style-for-resize (getf dimensions :width)
-                                                    (getf dimensions :height) 600))))
+               (let ((dimensions (get-dimensions (pic-path articul picname size))))
+                 (setf style (style-for-resize (getf dimensions :width)
+                                               (getf dimensions :height) 600))))
              (format nil "<a href=\"/~a\" title=\"~a\">~%
                                    <img src=\"/pic/~a\" alt=\"~a\" style=\"~a\"/>~%
                                 </a>~%"
