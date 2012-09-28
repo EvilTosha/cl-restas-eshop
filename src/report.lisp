@@ -306,8 +306,10 @@ function get-storage is applicable.
   (let ((rs))
     (process-storage
      #'(lambda (v)
-         (when (and (active v)
-                    (zerop (siteprice v)))
+         (when (and
+                (active v)
+                (not (preorder v))
+                (zerop (siteprice v)))
            (push v rs)
            (setf (active v) nil)))
      'product)

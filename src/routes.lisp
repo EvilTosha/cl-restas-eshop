@@ -270,3 +270,27 @@
 					:header (soy.header:header (append (list :cart (soy.index:cart))
 																			 (main-page-show-banner "line" (banner *main-page.storage*))))
 					:footer (soy.footer:footer))))
+
+
+
+(defvar *current-route*)
+
+(defclass proxy-route.timer (routes:proxy-route) ())
+
+(defun @proxy-route.timer (route)
+  (make-instance 'proxy-route.timer :target route))
+
+(defmethod restas:process-route :around ((route proxy-route.timer) bindings)
+ (let ((*current-route* route))
+   (sb-impl::call-with-timing #'log.timer #'call-next-method)))
+
+(restas:define-route test-after ("/around" :decorators '(@proxy-route.timer))
+  (log5:log-for info-console "~&~A:RENDER~%" (time.get-full-human-time))
+  "<h1>Test Decorator Timer!</h1>")
+
+
+(defun log.timer (&key real-time-ms user-run-time-us system-run-time-us
+                  gc-run-time-ms processor-cycles eval-calls
+                  lambdas-converted page-faults bytes-consed
+                  aborted)
+  (log5:log-for info-console "~&~A||~A real-time: ~A~%" (time.get-full-human-time) *current-route* real-time-ms))
