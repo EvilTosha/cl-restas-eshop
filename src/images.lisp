@@ -33,8 +33,7 @@ Uses file operations, ignore cache"
   (let* ((path-art (pics.make-articul-subpath key))
          (path (format nil "~A/big/~A/*.jpg" (config.get-option "PATHS" "path-to-pics") path-art)))
     (loop
-       :for pic
-       :in (ignore-errors (directory path))
+       :for pic :in (ignore-errors (directory path))
        :collect (format nil "~A.~A"
                         (pathname-name pic)
                         (pathname-type pic)))))
@@ -86,8 +85,10 @@ Firstly tries to get value from cache (checking for fresh)"
 
 (defun get-dimensions (path-to-image)
   (let* ((string
-          (let ((proc (sb-ext:run-program "/usr/bin/identify"
-                                          (list "-format" "%w %h" (format nil "~A" path-to-image)) :wait nil :output :stream)))
+          (let ((proc (sb-ext:run-program
+                       "/usr/bin/identify"
+                       (list "-format" "%w %h"
+                             (format nil "~A" path-to-image)) :wait nil :output :stream)))
             (with-open-stream (in (sb-ext:process-output proc))
               (read-line in))))
          (dimensions (split-sequence #\Space string :test #'char=)))

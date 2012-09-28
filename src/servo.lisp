@@ -738,7 +738,7 @@ Used for printing system info to browser"
   (regex-replace-all "\\n" string "<br />"))
 
 
-(defun translit-char (char)
+(defun translit-russian-char (char)
   "Convert russian letter to english transcription"
   (declare (character char))
   (let ((letters (list "a" "b" "v" "g" "d" "e"
