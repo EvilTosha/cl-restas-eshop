@@ -43,8 +43,6 @@
 		(restas:debug-mode-on)
 		(restas:debug-mode-off))
 (setf hunchentoot:*catch-errors-p* (eshop:config.get-option "START_OPTIONS" "catch-errors"))
-;; запуск Restas
-(restas:start '#:eshop :port (eshop:config.get-option "START_OPTIONS" "server-port"))
 
 (let ((*package* (find-package :eshop)))
 	;;; content
@@ -73,3 +71,6 @@
 (print (format nil "ESHOP load finished. Time : ~A" (eshop::time.msecs-to-hms (get-internal-real-time))))
 (print "Server info: ")
 (room)
+
+;; запуск Restas
+(restas:start '#:eshop :port (eshop:config.get-option "START_OPTIONS" "server-port"))
