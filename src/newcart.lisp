@@ -52,7 +52,8 @@
                                            :url (format nil "/~a" articul)
                                            :firstpic (car (get-pics articul))
                                            ;;для sendmail
-                                           :cnt cnt)))))
+                                           :cnt cnt
+                                           :sum (* cnt price))))))
                            alist))
     (values-list (list res-list sum-counter sum bonuscount))))
 
@@ -216,15 +217,18 @@
         (bankaccount     (newcart-get-data-from-alist :bankaccount user)) ;; реквизиты банковского перевода
         (discount-cart   (newcart-get-data-from-alist :discount-card user)) ;; карта ЕКК (true | false)
         (discount-cart-number   (newcart-get-data-from-alist :DISCOUNT-CARD-NUMBER user)) ;; номер карты
+        (pickpoint-address (newcart-get-data-from-alist :pickpoint-address user)) ;; адрес постамата
         (ekk nil))
     ;; проставление значений по умолчанию
     (if (string= delivery-type "") (setf delivery-type "pickup"))
     (if (string= payment "") (setf payment "payment_method-1"))
+    (if (string= pickpoint-address "") (setf pickpoint-address "Постамат не выбран."))
     ;;Выставляем адрес доставки для филиалов
     (when (string= delivery-type "pickup")
       (setf addr (string-case pickup
                    ("pickup-1" "Левашовский пр., д.12")
                    ("pickup-2" "Петергоф, ул. Ботаническая, д.18, к.3")
+                   ("pickup-3" pickpoint-address)
                    (t "Левашовский пр., д.12")))) ;; по умолчанию главный магазин
     (if (or (equal discount-cart t)
             (valid-string-p discount-cart))
@@ -273,6 +277,9 @@
             ;; существует два вида доставки: курьером и самовывоз (express | pickup)
             (if  (string= delivery-type "express")
                  (setf deliverysum (yml.get-delivery-price (newcart-cart-products cart))))
+            (if  (and (string= delivery-type "pickup")
+                      (string= pickup "pickup-3"))
+                 (setf deliverysum 100))
             (setf client-mail
                   (soy.sendmail:clientmail
                    (list :datetime (time.get-date-time)
@@ -315,10 +322,10 @@
                                   :family ""
                                   :addr addr
                                   :isdelivery (string-case delivery-type
-                                                ("express" (if (search "PICKPOINT" courier_comment)
+                                                ("express" "Доставка")
+                                                ("pickup" (if (string= "pickup-3" pickup)
                                                                "PickPoint"
-                                                               "Доставка"))
-                                                ("pickup" "Самовывоз")
+                                                               "Самовывоз"))
                                                 (t delivery-type))
                                   :phone phone
                                   :email email
@@ -370,6 +377,7 @@
                                      :bonusname (if bonuscount
                                                     (nth (skls.get-count-skls bonuscount)
                                                          (list "бонус" "бонуса" "бонусов")))
+                                     :pickup pickup
                                      :courier (equal delivery-type "express")
                                      :oplata (string-case payment
                                                ("payment_method-1"
