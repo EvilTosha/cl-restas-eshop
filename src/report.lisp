@@ -277,8 +277,7 @@ function get-storage is applicable.
          (when (and
                 (active v)
                 (not (preorder v))
-                (zerop (siteprice v))
-                    )
+                (zerop (siteprice v)))
            (push v rs)
            (setf (active v) nil)))
      'product)
