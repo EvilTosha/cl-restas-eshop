@@ -263,7 +263,6 @@ function get-storage is applicable.
           (list
            "555555"
            "666616"
-           "999888"
            "711265"
            "834786"
            "938111"
