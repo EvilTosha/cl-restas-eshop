@@ -471,11 +471,8 @@
 (defun filter-element (elt request-get-plist)
   (let* ((key (string-downcase (format nil "~a" (nth 0 elt))))
          (name (nth 1 elt))
-         (showflag nil)
+         ;; (showflag nil)
          (ishidden (search '(:hidden) elt))
-         (start (search '(:start) elt))
-         (end (search '(:end) elt))
-         (step (search '(:step) elt))
          (contents
           (cond ((equal :range (nth 2 elt))
                  (soy.fullfilter:range
@@ -483,9 +480,6 @@
                         :key key
                         :name name
                         :ishidden ishidden
-                        :start start
-                        :end end
-                        :step step
                         :from (getf request-get-plist
                                     (intern (string-upcase (format nil "~a-f" key)) :keyword))
                         :to (getf request-get-plist
@@ -495,11 +489,18 @@
                   (list :unit (nth 3 elt)
                         :key key
                         :name name
+                        :start (nth 4 elt)
+                        :end (nth 5 elt)
+                        :step (nth 6 elt)
                         :ishidden ishidden
-                        :from (getf request-get-plist
+                        :from (aif (getf request-get-plist
                                     (intern (string-upcase (format nil "~a-f" key)) :keyword))
-                        :to (getf request-get-plist
-                                  (intern (string-upcase (format nil "~a-t" key)) :keyword)))))
+                                   it
+                                   (nth 4 elt))
+                        :to (aif (getf request-get-plist
+                                  (intern (string-upcase (format nil "~a-t" key)) :keyword))
+                                 it
+                                 (nth 5 elt)))))
                 ((equal :radio (nth 2 elt))
                  (soy.fullfilter:box
                   (list :key key
