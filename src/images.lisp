@@ -42,7 +42,7 @@ Uses file operations, ignore cache"
   ;; TODO: make common cache freshness check (not only for pics)
   "Check whether timestamp is in range specified in config"
   (declare (number cache-timestamp))
-  (> (get-universal-time) (+ cache-timestamp
+  (< (get-universal-time) (+ cache-timestamp
                              (config.get-option "OTHER_OPTIONS" "pics-cache-update-time"))))
 
 (defun drop-pics-cache (key)
