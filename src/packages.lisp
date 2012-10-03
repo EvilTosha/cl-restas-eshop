@@ -1,10 +1,5 @@
 ;;;; packages.lisp
 
-(defpackage :pics
-  (:use :cl :anaphora)
-  (:export :get-dimensions
-           :style-for-resize))
-
 ;;; TODO: make separated package eshop-core (class-core, slots, backup, etc.)
 ;;; TODO: why not defpackage? Edit if needed
 (restas:define-module #:eshop

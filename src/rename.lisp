@@ -7,23 +7,10 @@
   (:documentation "Get pics from backup folder and convert it to working directories"))
 
 (defgeneric rename-remove-product-pics (product)
-    (:documentation "Remove allsize pics from images dirs"))
+  (:documentation "Remove allsize pics from images dirs"))
 
-(defun rename-translit-char (char)
-  (let ((letters (list "a" "b" "v" "g" "d" "e"
-                       "zh" "z" "i" "y" "k" "l" "m"
-                       "n" "o" "p" "r" "s" "t" "u"
-                       "f" "h" "ts" "ch" "sh" "shch"
-                       "" "y" "" "e" "yu" "ya"))
-        (code (char-code char)))
-    (if (not (<= 1072 code 1103))
-        (string char)
-        (nth (- code 1072) letters))))
-
-(defun rename.make-articul-subpath (articul)
-  "Makes subpath like 129/129343 for storing pictures.
-   Reason: ext3 filesystem restrictions for max number of files in directory"
-  (ppcre:regex-replace  "(\\d{1,3})(\\d{0,})"  (format nil "~a" articul)  "\\1/\\1\\2"))
+(defparameter *pics-dir-names* (list "big" "goods" "middle" "minigoods" "small")
+  "Names of folders for different pics sizes")
 
 (defun rename-new-name (name &optional number)
   "Make image name using SEO name of product"
@@ -42,7 +29,7 @@
     (let ((result ""))
       (dotimes (i (length name))
         (let ((char (char name i)))
-          (setf result (concatenate 'string result (rename-translit-char char)))))
+          (setf result (concatenate 'string result (translit-russian-char char)))))
       (if (and number (numberp number))
           (format nil "~a_~2,'0d" result number)
           result))))
@@ -50,9 +37,8 @@
 
 (defun rename-check (product)
   "Check picture names for product, return nil if one or more don't match"
-  (let* ((articul (articul product))
-         (name (name-seo product))
-         (pics (get-pics articul)))
+  (let ((name (name-seo product))
+        (pics (get-pics (key product))))
     (loop
        :for pic :in pics
        :for i :from 1
@@ -71,20 +57,17 @@
 (defun rename-product-all-pics (product)
   "Rename all pictures of product"
   (unless (rename-check product)
-    (let* ((articul (articul product))
-           (path-art (rename.make-articul-subpath articul)))
+    (let ((path-art (pics.make-articul-subpath (key product))))
       (loop
-         :for folder :in (list "big" "goods" "middle" "minigoods" "small")
+         :for folder :in *pics-dir-names*
          :do (rename-in-folder product
                                (format nil "~a/~a/~a" (config.get-option "PATHS" "path-to-pics") folder path-art))))))
 
 
 (defun rename-force-product-all-pics (product)
-  (let* ((articul (articul product))
-         (path-art (rename.make-articul-subpath articul)))
+  (let ((path-art (pics.make-articul-subpath (key product))))
     (loop
-       :for folder
-       :in (list "big" "goods" "middle" "minigoods" "small")
+       :for folder :in *pics-dir-names*
        :do (rename-in-folder product
                              (format nil "~a/~a/~a" (config.get-option "PATHS" "path-to-pics") folder path-art)))))
 
@@ -92,10 +75,10 @@
 (defun rename-convert-from-folder (product path-to-folder)
   "Get pics from given folder and convert it to five working folders"
   (if (directory-exists-p path-to-folder)
-      (let* ((articul (articul product))
+      (let* ((key (key product))
              (name (name-seo product))
-             (path-art (rename.make-articul-subpath articul)))
-        (log5:log-for info "Start converting images for product ~a from folder ~a" articul path-to-folder)
+             (path-art (pics.make-articul-subpath key)))
+        (log5:log-for info "Start converting images for product ~a from folder ~a" key path-to-folder)
         (loop
            :for pic :in (directory (format nil "~a/*.jpg" path-to-folder))
            :for counter :from 1
@@ -103,7 +86,7 @@
            (log5:log-for info-console "Converting file ~a" pic)
            (let ((new-name (rename-new-name name counter)))
              (loop
-                :for folder :in (list "big" "goods" "middle" "minigoods" "small")
+                :for folder :in *pics-dir-names*
                 :for size-w :in (list nil 225 200 70 100)
                 :for size-h :in (list nil nil 160 70 120)
                 :do
@@ -174,8 +157,7 @@
             (len (length from))
             (counter 0))
         (loop
-           :for file-or-dir
-           :in files-list
+           :for file-or-dir :in files-list
            :do
            (let ((new-to (format nil "~a~a" to (subseq (format nil "~a" file-or-dir) len))))
              (ensure-directories-exist new-to)
@@ -197,8 +179,7 @@
       (progn
         (log5:log-for info "Start converting from \"~a\"  Backup folder : \"~a\"" from backup)
         (loop
-           :for folder
-           :in (directory (format nil "~a*" from))
+           :for folder :in (directory (format nil "~a*" from))
            :do (let* ((path (format nil "~a" folder)))
                  (if (directory-exists-p path)
                      (let* ((articul (car (last (split "/" path))))
@@ -206,15 +187,16 @@
                        (when product
                          (rename-convert-from-folder product path)
                          (rename-copy-folder path (format nil "~a~a/" backup articul))
-                         (rename-remove-folder path)))))))
+                         (rename-remove-folder path)
+                         ;; update pics cache for product
+                         (drop-pics-cache (key product))))))))
       ;;else
       (log5:log-for warning "Folder ~a or ~a doesn't exist!" from backup)))
 
 (defun rename-remove-folder (path)
   (log5:log-for info "Start removing folder ~a" path)
   (let ((proc (sb-ext:run-program "/bin/rm"
-                                  (list "-r"
-                                        path)
+                                  (list "-r" path) ; args
                                   :wait nil :output :stream)))
     (with-open-stream (in (sb-ext:process-output proc))
       (loop
@@ -224,12 +206,9 @@
   (log5:log-for info "Finish removing folder"))
 
 (defmethod rename-remove-product-pics ((product product))
-  (let* ((articul (articul product))
-         (dirs (list "big" "goods" "middle" "minigoods" "small"))
-         (path-art (rename.make-articul-subpath articul)))
+  (let ((path-art (pics.make-articul-subpath (key product))))
     (loop
-       :for dir
-       :in dirs
+       :for dir :in *pics-dir-names*
        :do (rename-remove-folder (format nil "~a/~a/~a" (config.get-option "PATHS" "path-to-pics") dir path-art)))))
 
 

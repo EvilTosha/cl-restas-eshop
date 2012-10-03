@@ -28,7 +28,12 @@ path-to-big-images-backup = source-big-images-bkps/
 path-to-main-page = eshop-dev/mainPage/
 path-to-seo = eshop-dev/seo/
 
-[CRITICAL] #should be different for dev and release servers
+[CRITICAL] # should be different for dev and release servers
 path-to-conf = eshop-dev/htconf/
 path-to-sitemap = eshop-dev/htconf/
 path-to-dropbox-backup = Dropbox/eshop-backups/
+
+
+[OTHER_OPTIONS]
+# 24 hours in seconds
+pics-cache-update-time = 86400

@@ -313,25 +313,6 @@
        :while pos)))
 
 
-(defun cut (cnt lst)
-  (values (loop
-             :for elt :in lst
-             :repeat cnt
-             :collect
-             (pop lst))
-          lst))
-
-(defun get-pics (articul)
-  (let* ((articul-str (format nil "~a" articul))
-         (path-art  (ppcre:regex-replace  "(\\d{1,3})(\\d{0,})"  articul-str  "\\1/\\1\\2" ))
-         (path (format nil "~a/big/~a/*.jpg" (config.get-option "PATHS" "path-to-pics") path-art)))
-    (loop
-       :for pic
-       :in (ignore-errors (directory path))
-       :collect (format nil "~a.~a"
-                        (pathname-name pic)
-                        (pathname-type pic)))))
-
 (defun get-format-price (p)
   (format nil "~,,' ,3:d" p))
 
@@ -756,3 +737,17 @@
 Used for printing system info to browser"
   (declare (string string))
   (regex-replace-all "\\n" string "<br />"))
+
+
+(defun translit-russian-char (char)
+  "Convert russian letter to english transcription"
+  (declare (character char))
+  (let ((letters (list "a" "b" "v" "g" "d" "e"
+                       "zh" "z" "i" "y" "k" "l" "m"
+                       "n" "o" "p" "r" "s" "t" "u"
+                       "f" "h" "ts" "ch" "sh" "shch"
+                       "" "y" "" "e" "yu" "ya"))
+        (code (char-code char)))
+    (if (not (<= 1072 code 1103))
+        (string char)
+        (nth (- code 1072) letters))))

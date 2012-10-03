@@ -8,7 +8,7 @@
                                    (:file "parse")))
              (:file "packages" :depends-on ("patch-closure-templates"))
              (:file "images" :depends-on ("packages")) ;; imagemagic
-             (:file "config" :depends-on ("packages"))
+             (:file "config" :depends-on ("images"))
              (:file "time" :depends-on ("config"))
              (:file "eshop-config" :depends-on ("time"))
              (:file "errors" :depends-on ("eshop-config"))

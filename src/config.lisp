@@ -87,5 +87,7 @@
   (config.config-option-processing "CRITICAL" "path-to-conf" "path")
   (config.config-option-processing "CRITICAL" "path-to-sitemap" "path")
   (config.config-option-processing "CRITICAL" "path-to-dropbox-backup" "path")
+  ;; OTHER_OPTIONS section
+  (config.config-option-processing "OTHER_OPTIONS" "pics-cache-update-time" "int")
   t)
 

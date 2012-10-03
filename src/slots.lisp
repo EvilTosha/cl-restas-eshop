@@ -327,12 +327,13 @@ Type: ~A" type))
   (slots.%decode-from-string 'textedit string))
 
 ;;textedit-hashtable, string-string hashtable
+;; TODO: write proper methods
 (defmethod slots.%view ((type (eql 'textedit-hashtable)) value name disabled)
-  (object-fields.string-field-view value name disabled))
+  (slots.%view 'undefined value name disabled))
 
 (defmethod slots.%get-data ((type (eql 'textedit-hashtable)) string)
   (declare (string string))
-  (object-fields.string-field-get-data string))
+  (slots.%get-data 'undefined string))
 
 (defmethod slots.%encode-to-string ((type (eql 'textedit-hashtable)) hashtable)
   (let ((res-list))

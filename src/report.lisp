@@ -45,23 +45,30 @@ Result of each function must be formatable (e.g. (format nil \"~A\") must be app
 (defun report.get-standard-column-func (specifier)
   (gethash specifier report.*standard-report-column-funcs*))
 
+(defun report.write-item (stream column-funcs item)
+  "Writes single report row to stream"
+  (format stream "~{\"~A\";~}~%"
+          (mapcar #'(lambda (func)
+                      (servo.string-replace-chars
+                       (format nil "~a" (funcall func item))
+                       '(#\" #\;)))
+                  column-funcs)))
+
+(defun report.write-header (stream column-headers)
+  "Write headers for columns to header"
+  (declare (list column-headers))
+  (format stream "~{\"~A\";~}~%" column-headers))
+
 (defun report.write-report (stream column-headers column-funcs items)
   "Writes report in .csv format to given stream. Each row is set of column functions
 applied to item from given item set.
-   NOTE: - stream could be T & NIL
+   NOTE: - stream could be T
          - remove all #\" & #\; for compatibility csv"
   (declare (list column-headers column-funcs items))
   ;; write headers
-  (format stream "~{\"~A\";~}~%" column-headers)
+  (report.write-header stream column-headers)
   ;; write other rows
-  (mapcar #'(lambda (item)
-              (format stream "~{\"~A\";~}~%"
-                      (mapcar #'(lambda (func)
-                                  (servo.string-replace-chars
-                                   (format nil "~a" (funcall func item))
-                                   '(#\" #\;)))
-                              column-funcs)))
-          items))
+  (mapcar (alexandria:curry #'report.write-item stream column-funcs) items))
 
 (defun report.write-report-with-standard-columns (stream columns-data storage-specifier)
   "Writes report using only registered columns functions. Column data should be
@@ -136,7 +143,6 @@ function get-storage is applicable.
    #'(lambda (item)
        ;; TODO: use restas url designator
        (format nil "http://www.320-8080.ru/~A" (key item))))
-
 ;;; group functions
   (report.%rsc
    'group-name #'name)
@@ -211,6 +217,32 @@ function get-storage is applicable.
          (cons "Active" 'product-active)
          (cons "seo-text" 'product-seo-text-exists))
    'product))
+
+(defun report.pics-report (stream &optional (products nil products-supplied-p))
+  (report.write-header stream
+                       (list "Продукт"
+                             "имя"
+                             "ширина"
+                             "высота"
+                             "размер (Кб)"))
+  (mapcar
+   #'(lambda (product)
+       (mapcar
+        #'(lambda (pic)
+            (let* ((pic-path (pic-path (key product) pic))
+                   (dimensions (get-dimensions pic-path))
+                   (size (with-open-file (file pic-path) (file-length file))))
+              (format stream "~{~A;~}~%"
+                      (list (key product)
+                            pic
+                            (getf dimensions :width)
+                            (getf dimensions :height)
+                            (floor size 1000))))) ; in Kb
+        (get-pics (key product))))
+   (if products-supplied-p
+       products
+       (collect-storage 'product)))
+  (values))
 
 (defun write-vendors (stream)
   (format stream "~a;~a;~a;~a;~a;~a;~a;~%"
