@@ -5,7 +5,7 @@
 							(push (truename (merge-pathnames lib-name *path-to-libs*)) asdf:*central-registry*))
 					(list
 					 ;; "slime-2011-09-01" ;; актуальный swank
-					 "slime-archimag" ;; SWANK
+           "slime-archimag" ;; SWANK
 					 "alexandria"     ;; hunch
 					 "bordeaux-threads" ;; hunch
 					 "usocket-0.5.2" ;; hunch
@@ -46,5 +46,8 @@
 					 ;; "cl-cron" ;; http://www.trailoflight.net/cl-cron/
 					 "py-configparser-1.0.3"
            "string-case"
+           "cl-csv"
+           "cl-interpol-0.2.1"
+           "cl-unicode-0.1.4"
            )))
 
