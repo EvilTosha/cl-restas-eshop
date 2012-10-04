@@ -28,12 +28,13 @@
                   lambdas-converted page-faults bytes-consed
                   aborted))
   (log5:log-for request-log "~A"
-                (list (time.encode.backup)
-                      (+ user-run-time-us system-run-time-us)
-                      processor-cycles
-                      (hunchentoot:request-uri*)
-                      (hunchentoot:user-agent)
-                      (hunchentoot:referer))))
+                (cl-csv:write-csv-row
+                 (list (time.encode.backup)
+                       (+ user-run-time-us system-run-time-us)
+                       processor-cycles
+                       (hunchentoot:request-uri*)
+                       (hunchentoot:user-agent)
+                       (hunchentoot:referer)))))
 
 
 (defmacro define-tracing-route (name (template &rest args) &body body)
