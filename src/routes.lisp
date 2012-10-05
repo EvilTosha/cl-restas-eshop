@@ -24,11 +24,15 @@
 (defun make-proxy-route-timer (route)
   (make-instance 'proxy-route-timer :target route))
 
+(defvar *current-route-symbol* nil)
+
 (defmethod restas:process-route :around ((route proxy-route-timer) bindings)
   "log timing and additional data for current route processing and
    update current thread information"
-   (update-route-thread)
-   (sb-impl::call-with-timing #'log.timer #'call-next-method))
+  (let ((*current-route-symbol*
+         (restas:route-symbol (routes:proxy-route-target route))))
+    (update-route-thread)
+    (sb-impl::call-with-timing #'log.timer #'call-next-method)))
 
 (defun log.timer (&key real-time-ms user-run-time-us system-run-time-us
                   gc-run-time-ms processor-cycles eval-calls
@@ -39,13 +43,15 @@
                   lambdas-converted page-faults bytes-consed
                   aborted))
   (request-log-message "~A"
-                (cl-csv:write-csv-row
-                 (list (time.encode.backup)
-                       (+ user-run-time-us system-run-time-us)
-                       processor-cycles
-                       (hunchentoot:request-uri*)
-                       (hunchentoot:user-agent)
-                       (hunchentoot:referer)))))
+                       (cl-csv:write-csv-row
+                        (list (time.encode.backup)
+                              (+ user-run-time-us system-run-time-us)
+                              processor-cycles
+                              *current-route-symbol*
+                              (tbnl:request-uri*)
+                              (tbnl:remote-addr*)
+                              (tbnl:user-agent)
+                              (tbnl:referer)))))
 
 
 (defmacro define-tracing-route (name (template &rest args) &body body)
