@@ -42,7 +42,7 @@
 					 "esrap" ;; closure-template | packrat parser http://nikodemus.github.com/esrap/
 					 "log5" ;; логирование | logging framework http://common-lisp.net/project/log5/
 					 ;; "cl-store" ;; сохранение данных | Serialization Package http://common-lisp.net/project/cl-store/
-					 "drakma-1.2.4" ;;http клиент для тестов
+					 "drakma-1.2.8" ;;http клиент для тестов
 					 ;; "cl-cron" ;; http://www.trailoflight.net/cl-cron/
 					 "py-configparser-1.0.3"
            "string-case"

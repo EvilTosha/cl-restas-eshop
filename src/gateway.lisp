@@ -2,6 +2,7 @@
 
 (in-package #:eshop)
 
+(defparameter *current-gateway* nil)
 (defparameter *single-history* nil)
 
 (defparameter *load-list* nil)
@@ -17,22 +18,15 @@
           (cond ((string= "0" (hunchentoot:get-parameter "num"))
                  ;; Обработка последнего пакета
                  (progn
-                   ;; Делаем все продукты неактивными
                    (push raw *load-list*)
                    (push (hunchentoot:get-parameter "num") *order*)
-                   ;; Обрабатываем все сохраненные пакеты
-                   (let ((data))
-                     (loop :for packet :in (reverse *load-list*)
-                        :do (setf data (append (json:decode-json-from-string
-                                                (sb-ext:octets-to-string packet :external-format :cp1251)) data))))
-                   ;;создаем новый yml файл
-                   ;;(create-yml-file)
-                   ;; Заполняем siteprice если он равен 0
-                   ;; (copy-price-to-siteprice)
-                   ;; Сохраняем *load-list* и *order* для истории
-                   (gateway.store-history (list (list (time.get-date-time) *order* *load-list*)))
+                   (bt:make-thread #L(let((*order* *order*)
+                                          (*load-list* *load-list*))
+                                       (log5:log-for info-console "~A" "Do gateway.store-history")
+                                       (gateway.store-history (list (list (time.get-date-time) *order* *load-list*)))
+                                       (gateway.restore-history)
+                                       ) :name "gateway.store-history")
                    ;; Обнуляем *load-list* и *order* (если приходит 1 пакет, то он num=0)
-                   (post-proccess-gateway)
                    (setf *load-list* nil)
                    (setf *order* nil)
                    "last"))
@@ -298,6 +292,7 @@
                :for line = (read-line file nil 'EOF)
                :until (eq line 'EOF)
                :do (setf data (append (json:decode-json-from-string line) data))))
+          (setf *current-gateway* lastgateway-ts)
           (gateway.process-products1 data)
           (gateway.update-actives data)
           (gateway.restore-singles1 lastgateway-ts timestamp)

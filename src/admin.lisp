@@ -6,7 +6,7 @@
   (restas:redirect 'admin/-route))
 
 (restas:define-route admin/-route ("/administration-super-panel/")
-  (show-admin-page))
+  (show-admin-page "info"))
 
 (restas:define-route admin-actions-key-route ("/administration-super-panel/actions" :method :post)
   (show-admin-page "actions"))
@@ -81,7 +81,14 @@
   (admin-compile-templates))
 
 (defun admin.get-info ()
-  (list (format nil "~{~a<br>~}" (mapcar #'(lambda (v) (sb-thread:thread-name v)) (sb-thread:list-all-threads)))
+  ;; (setf (bt:thread-name (bt:current-thread)) "test")
+  (list (format nil "~A<br>~{~{~@[~A~]~^: ~}<br>~}"
+                (concatenate 'string "<b>Последняя выгрузка: "
+                                     (time.encode.backup *current-gateway*)
+                                     "</b>")
+                (mapcar #'(lambda (v) (let ((thread-name (bt:thread-name v)))
+                                        (list thread-name (gethash thread-name *route-threads*))))
+                                  (sb-thread:list-all-threads)))
         (regex-replace-all "\\n" (with-output-to-string (*standard-output*) (room)) "<br>")))
 
 

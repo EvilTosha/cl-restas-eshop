@@ -8,6 +8,15 @@
 
 (clear)
 
+(defvar *route-threads* (make-hash-table :test #'equal))
+
+(defun update-route-thread ()
+  "link current thread name -> current request uri"
+  (let ((thread-name (bt:thread-name (bt:current-thread)))
+        (request-uri (hunchentoot:request-uri*))
+        (remote-addr (hunchentoot:remote-addr*)))
+    (setf (gethash thread-name *route-threads*) (list request-uri remote-addr))))
+
 ;;;; Request tracking decoration
 
 (defclass proxy-route-timer (routes:proxy-route) ())
@@ -16,7 +25,9 @@
   (make-instance 'proxy-route-timer :target route))
 
 (defmethod restas:process-route :around ((route proxy-route-timer) bindings)
-  "log timing and additional data for current route processing"
+  "log timing and additional data for current route processing and
+   update current thread information"
+   (update-route-thread)
    (sb-impl::call-with-timing #'log.timer #'call-next-method))
 
 (defun log.timer (&key real-time-ms user-run-time-us system-run-time-us
@@ -27,7 +38,7 @@
                   gc-run-time-ms eval-calls
                   lambdas-converted page-faults bytes-consed
                   aborted))
-  (log5:log-for request-log "~A"
+  (request-log-message "~A"
                 (cl-csv:write-csv-row
                  (list (time.encode.backup)
                        (+ user-run-time-us system-run-time-us)
