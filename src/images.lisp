@@ -43,7 +43,7 @@ Uses file operations, ignore cache"
   "Check whether timestamp is in range specified in config"
   (declare (number cache-timestamp))
   (< (get-universal-time) (+ cache-timestamp
-                             (config.get-option "OTHER_OPTIONS" "pics-cache-TTL"))))
+                             (config.get-option "OTHER_OPTIONS" "pics-cache-ttl"))))
 
 (defun drop-pics-cache (key)
   "Drops last-update time for pics cache for product to zero;

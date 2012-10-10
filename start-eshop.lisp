@@ -68,6 +68,8 @@
     (eshop::groupd.holiday.restore)
     (eshop::marketing-filters.create-all-filters)))
 
+(setf cl-csv:*newline* (string #\Newline))
+
 (print (format nil "ESHOP load finished. Time : ~A" (eshop::time.msecs-to-hms (get-internal-real-time))))
 (print "Server info: ")
 (room)

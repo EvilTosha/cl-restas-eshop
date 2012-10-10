@@ -88,6 +88,6 @@
   (config.config-option-processing "CRITICAL" "path-to-sitemap" "path")
   (config.config-option-processing "CRITICAL" "path-to-dropbox-backup" "path")
   ;; OTHER_OPTIONS section
-  (config.config-option-processing "OTHER_OPTIONS" "pics-cache-TTL" "int")
+  (config.config-option-processing "OTHER_OPTIONS" "pics-cache-ttl" "int")
   t)
 
