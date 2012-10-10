@@ -29,6 +29,9 @@
 (restas:define-route admin-parenting-key-route ("/administration-super-panel/parenting" :method :post)
   (show-admin-page "parenting"))
 
+(restas:define-route admin-vendor-seo-route ("/administration-super-panel/vendor-seo" :method :post)
+  (show-admin-page "vendor-seo"))
+
 (restas:define-route admin-key-route ("/administration-super-panel/:key")
   (show-admin-page key))
 
@@ -303,6 +306,21 @@
            :length (length unparented-products)
            :groups (slots.%view 'group-list nil "GROUPS" nil)))))
 
+(defun admin.vendor-seo-upload (post-data)
+  (let* ((get-params (servo.alist-to-plist (hunchentoot:get-parameters hunchentoot:*request*)))
+         (group-key (getf post-data :group))
+         (vendor-key (getf post-data :vendor))
+         (new-text (getf post-data :text)))
+    (debug-slime-format "~A ~A" post-data get-params)
+    (cond
+      ((and new-text (not (and group-key vendor-key))) "Error: please specify vendor and group")
+      ((and new-text (not (getobj group-key 'group))) "Error: group not found")
+      ((and new-text (not (getobj vendor-key 'vendor))) "Error: vendor not found")
+      (t (when new-text
+           (setf (gethash group-key (seo-texts (getobj vendor-key 'vendor))) new-text))
+         (soy.admin:vendor-seo-upload (list :text (awhen (getobj vendor-key 'vendor)
+                                                    (gethash group-key (seo-texts it)))))))))
+
 (defun show-admin-page (&optional (key ""))
   (let ((post-data (servo.alist-to-plist (hunchentoot:post-parameters hunchentoot:*request*))))
     (soy.admin:main
@@ -312,9 +330,9 @@
              ("actions" (soy.admin:action-buttons (list :post post-data
                                                         :info (admin.do-action
                                                                (getf post-data :action)))))
-             ("edit" (admin.edit-content post-data))
              ("parenting" (admin.parenting-content post-data))
              ("pics" (admin.pics-deleting post-data))
              ("templates" (admin.compile-template post-data))
              ("backup" (admin.make-backup post-data))
+             ("vendor-seo" (admin.vendor-seo-upload post-data))
              (t "Админка в разработке"))))))
