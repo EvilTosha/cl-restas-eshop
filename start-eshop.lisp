@@ -68,6 +68,7 @@
     (eshop::groupd.holiday.restore)
     (eshop::marketing-filters.create-all-filters)))
 
+;; csv parameters
 (setf cl-csv:*newline* (string #\Newline)
       cl-csv:*separator* #\;)
 

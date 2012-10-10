@@ -43,6 +43,8 @@ result)
 
 - Write format directives in uppercase for make them stand out from lowercase text surrounding. Example: (format nil "~&Number ~D~%" num)
 
+- Know format directives! For example for printing string with enclosing commas, use ~S directive, not "\"~A\"".
+
 - When you want to iterate a list and check its elements with some predicate use every, some, notany and notevery directives instead of explicit mapcar or remove-if
 
 - Use short commands for simple number and type checks, such as evenp, oddp, plusp, zerop, stringp, numberp, etc.
