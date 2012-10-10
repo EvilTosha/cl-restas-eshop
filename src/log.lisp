@@ -13,8 +13,6 @@
 
 (log5:defoutput human-time (time.get-full-human-time))
 
-(defvar *message-lock* (bt:make-lock "message-lock"))
-
 (log5:start-sender 'general-file
                    (log5:stream-sender :location (merge-pathnames "general.log" (config.get-option "PATHS" "path-to-logs")))
                    :category-spec '(or info warn+)

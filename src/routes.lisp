@@ -143,7 +143,6 @@
             (gethash key static-pages.*storage*))))
 
 (define-tracing-route storage-object-route  ("/:key" :requirement #'test-route-storage-object)
-  (bordeaux-threads:make-thread #'bar :name "bar thread")
   (route-storage-object key))
 
 (define-tracing-route storage-object/-route  ("/:key/" :requirement #'test-route-storage-object)
