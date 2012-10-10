@@ -155,7 +155,7 @@
                                                          :price (siteprice product)
                                                          :category (yml-id (parent product))
                                                          :picture (let ((pics (get-pics
-                                                                               (articul product))))
+                                                                               (key product))))
                                                                     (when pics
                                                                       (encode-uri (car pics))))
                                                          :name (let ((yml-name (get-option product "Secret" "Yandex")))

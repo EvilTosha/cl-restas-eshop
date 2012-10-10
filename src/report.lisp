@@ -94,7 +94,7 @@ function get-storage is applicable.
    #'(lambda (item) (if (valid-string-p (seo-text item)) "есть" "нет")))
   (report.%rsc
    'product-num-pics
-   #'(lambda (item) (length (get-pics (articul item)))))
+   #'(lambda (item) (length (get-pics (key item)))))
   (report.%rsc 'product-valid-options #'valid-options)
   (report.%rsc
    'product-active
