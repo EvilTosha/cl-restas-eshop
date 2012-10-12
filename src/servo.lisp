@@ -751,3 +751,10 @@ Used for printing system info to browser"
     (if (not (<= 1072 code 1103))
         (string char)
         (nth (- code 1072) letters))))
+
+(defun float-string->int (string)
+  "Parse float and convert to smallest integer not less than original number give back nil input is nil"
+  (declare ((or string t) string))
+  (aif string
+       (ceiling (arnesi:parse-float it))
+       nil))

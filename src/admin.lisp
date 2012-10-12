@@ -84,7 +84,9 @@
   ;; (setf (bt:thread-name (bt:current-thread)) "test")
   (list (format nil "~A<br>~{~{~@[~A~]~^: ~}<br>~}"
                 (concatenate 'string "<b>Последняя выгрузка: "
-                                     (time.encode.backup *current-gateway*)
+                                     (time.encode.backup (date *gateway.loaded-dump*))
+                                     " || продуктов: "
+                                     (write-to-string (product-num *gateway.loaded-dump*))
                                      "</b>")
                 (mapcar #'(lambda (v) (let ((thread-name (bt:thread-name v)))
                                         (list thread-name (gethash thread-name *route-threads*))))
@@ -278,7 +280,7 @@
          (report.do-alias-reports)
          action)
         ("gateway-restore"
-         (gateway.restore-history)
+         (gateway.load-dump)
          "GATEWAY-RESTORE")
         (t (format nil "DON't know action ~a" action)))
     (error (e) (format  nil "ERROR:~%~a" e))))

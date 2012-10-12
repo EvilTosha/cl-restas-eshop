@@ -24,7 +24,7 @@
            :dtd
            :sklonenie.restore
            :class-core.unserialize-all
-           :gateway.restore-history
+           :gateway.load
            :static-pages.restore
            :articles.restore
            :main-page.restore

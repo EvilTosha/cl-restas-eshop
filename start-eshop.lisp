@@ -49,7 +49,7 @@
   (when (eshop:config.get-option "START_OPTIONS" "load-storage")
     (eshop:sklonenie.restore)
 		(eshop:class-core.unserialize-all)
-		(eshop:gateway.restore-history))
+		(eshop:gateway.load))
 	(when (eshop:config.get-option "START_OPTIONS" "load-xls")
 		(eshop:dtd)
     (eshop:cartrige.restore))
