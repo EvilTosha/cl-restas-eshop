@@ -91,17 +91,11 @@
 (defun %gateway.decode-json-from-file (pathname)
   "Read file and decode json data to appended list"
   (declare (pathname pathname))
-  (let ((result))
-    (with-open-file (file pathname)
+  (with-open-file (file pathname)
       (loop
-         :for i :from 0
-         :for line = (read-line file nil 'EOF)
+         :for line := (read-line file nil 'EOF)
          :until (eq line 'EOF)
-         :do (let ((data (json:decode-json-from-string line)))
-                 (if (zerop i)
-                     (setf result data)
-                     (nconc result data)))))
-    result))
+         :nconc (json:decode-json-from-string line))))
 
  (defun %product-update-name (product name)
   "Update product field name"
@@ -231,15 +225,10 @@
 (defun %gateway.load-dump (&optional (dump *gateway.dump*))
   "Load products from dump"
   (declare (gateway.erp-data-dump dump))
-  (let ((last-dump)
-         (last-dump-ts (date dump)))
-    (loop
-       :for i :from 0
-       :for line :in (list-raw-data dump)
-       :do (let ((data (json:decode-json-from-string line)))
-             (if (zerop i)
-                 (setf last-dump data)
-                 (nconc last-dump data))))
+  (let ((last-dump (loop
+                      :for line :in (list-raw-data dump)
+                      :nconc (json:decode-json-from-string line)))
+        (last-dump-ts (date dump)))
     (%gateway.load-data last-dump last-dump-ts)))
 
 (defun gateway.load (&optional (timestamp (get-universal-time)))
@@ -284,14 +273,13 @@
 (defun gateway-page ()
   "GP"
   (setf (hunchentoot:content-type*) "text/html; charset=utf-8")
-  (let ((raw (hunchentoot:raw-post-data))
-        (num (hunchentoot:get-parameter "num"))
+  (let ((num (hunchentoot:get-parameter "num"))
         (single (hunchentoot:get-parameter "single")))
-    (aif raw
+    (aif (hunchentoot:raw-post-data)
          (string-case num
-           ("1" (%gateway.processing-fist-package raw))
-           ("0" (%gateway.processing-last-package raw))
+           ("1" (%gateway.processing-fist-package it))
+           ("0" (%gateway.processing-last-package it))
            (t (string-case single
-                ("single" (%gateway.processing-single-package raw))
-                (t (%gateway.processing-package raw)))))
+                ("single" (%gateway.processing-single-package it))
+                (t (%gateway.processing-package it)))))
         "NIL")))
