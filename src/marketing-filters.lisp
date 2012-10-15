@@ -33,8 +33,11 @@
 (defmethod marketing-filters.get-filters ((filters hash-table) (products list))
   (loop
      :for filter :being :the hash-values :in filters
-     :for num := (filters.count filter :obj-set products)
-     :when (plusp num)
+     :for num := 0
+     :when (progn
+             (when (active filter)
+               (setf num (filters.count filter :obj-set products)))
+             (plusp num))
      :collect (cons filter num)))
 
 ;;; marketing filters
@@ -83,6 +86,7 @@ Filter's key is concatenated group's and default-filter's keys"
   (let* ((key (format nil "~A-sale-filter" (key group)))
          (filter (make-instance 'filter
                                 :key key
+                                :active nil
                                 :parents (list group)
                                 :default-set 'product
                                 :data (list :name "Акционные товары!")
@@ -94,7 +98,7 @@ Filter's key is concatenated group's and default-filter's keys"
                                        :func-text
                                        "#'(lambda (obj &optional params)
                                            (declare (ignore params))
-                                           (and (groupd.is-groupd obj) nil))")
+                                           (groupd.is-groupd obj))")
           ;; add filter to group's filters slot
           (gethash key (filters group)) filter)
     (setobj key filter 'filter)))
@@ -103,6 +107,7 @@ Filter's key is concatenated group's and default-filter's keys"
   (let* ((key (format nil "~A-bestprice-filter" (key group)))
          (filter (make-instance 'filter
                                 :key key
+                                :active nil
                                 :parents (list group)
                                 :default-set 'product
                                 :data (list :name "Лучшие цены!")
