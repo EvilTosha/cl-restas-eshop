@@ -85,8 +85,8 @@
                         :external-format :utf-8)
     (mapcar #'(lambda (data)
                 (format file "~&~A~%"
-                        (%gateway.prepare-raw-data data))))
-    (reverse (list-raw-data dump))))
+                        (%gateway.prepare-raw-data data)))
+            (reverse (list-raw-data dump)))))
 
 (defun %gateway.decode-json-from-file (pathname)
   "Read file and decode json data to appended list"
@@ -127,6 +127,7 @@
              oldprice
              (zerop (delta-price product))
              (plusp oldprice))
+    (log5:log-for info-console "old: ~A" product)
     (setf (delta-price product) (- oldprice (siteprice product)))))
 
 (defun %product-update-bonuscount (product bonuscount)
@@ -163,7 +164,7 @@
         (setf (articul product) (fl@ :id))
         (%product-update-name product (@ :name))
         (%product-update-prices product
-                                (fl@ :price--site) (fl@ :price) (fl@ :price-old))
+                                (fl@ :price--site) (fl@ :price) (fl@ :price--old))
         (%product-update-bonuscount product (fl@ :bonuscount))
         (%product-update-counts product (fl@ :count--total) (fl@ :count--transit))
         (setf (active product) (plusp (count-total product)))
@@ -265,7 +266,7 @@
 (defun %gateway.processing-single-package (raw)
   "Обработка одиночного изменения, для экстренного внесения изменений на небольшое количество товаров"
   (let ((data (%gateway.prepare-raw-data raw)))
-    (gateway.store-singles data)
+    (gateway.store-single-gateway data)
     (%gateway.process-products-dump-data (json:decode-json-from-string data))
     ;; возможно тут необходимо пересчитать списки активных товаров или еще что-то
     "single"))
