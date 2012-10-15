@@ -36,4 +36,4 @@ path-to-dropbox-backup = Dropbox/eshop-backups/
 
 [OTHER_OPTIONS]
 # 24 hours in seconds
-pics-cache-update-time = 86400
+pics-cache-ttl = 86400

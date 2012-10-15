@@ -758,3 +758,15 @@ Used for printing system info to browser"
   (aif string
        (ceiling (arnesi:parse-float it))
        nil))
+
+(defmacro with-getter ((getter-sym object &optional use-slot-value) &body body)
+  "Allows to write shorter code without repeating object name;
+Example: (with-getter (@ (compute-object)) (setf (@ field1) (@ field2)))
+instead of: (let ((object (compute-object))) (setf (field1 object) (field2 object)))"
+  (let ((var (gensym)))
+    `(let ((,var ,object))
+       (macrolet ((,getter-sym (slot)
+                    ,(if use-slot-value
+                         ``(slot-value ,',var ',slot)
+                         ``(,slot ,',var))))
+         ,@body))))
