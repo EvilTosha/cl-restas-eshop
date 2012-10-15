@@ -85,7 +85,7 @@ Filter's key is concatenated group's and default-filter's keys"
                                 :key key
                                 :parents (list group)
                                 :default-set 'product
-                                :data (list :name "Товары для гениев!")
+                                :data (list :name "Акционные товары!")
                                 :serialize nil)))
     ;; setup basic filters
     ;; TODO: get rid of gensym
@@ -94,7 +94,7 @@ Filter's key is concatenated group's and default-filter's keys"
                                        :func-text
                                        "#'(lambda (obj &optional params)
                                            (declare (ignore params))
-                                           (groupd.is-groupd obj))")
+                                           (and (groupd.is-groupd obj) nil))")
           ;; add filter to group's filters slot
           (gethash key (filters group)) filter)
     (setobj key filter 'filter)))
