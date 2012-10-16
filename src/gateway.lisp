@@ -21,7 +21,7 @@
 (defun %gateway.clear-dump (&optional (dump *gateway.dump*))
   "Init dump with new class gateway.erp-data-dump instance"
   (declare (gateway.erp-data-dump dump))
-  (setf dump (make-instance 'gateway.erp-data-dump)))
+  (setf (list-raw-data dump) nil))
 
 (defun %gateway.add-data->dump (data &optional (dump *gateway.dump*))
   "Add raw ERP products data to dump"
@@ -75,9 +75,9 @@
   (slots.string-delete-newlines
    (sb-ext:octets-to-string raw :external-format :cp1251)))
 
-(defun gateway.flush-dump (&optional (dump *gateway.dump*) (timestamp (get-universal-time)))
+(defun gateway.flush-dump (raw &optional (timestamp (get-universal-time)))
   "Flush dump data list to file"
-  (declare (gateway.erp-data-dump dump) (number timestamp))
+  (declare (number timestamp))
   (with-open-file (file (gateway.make-dump-pathname timestamp)
                         :direction :output
                         :if-exists :supersede
@@ -86,7 +86,7 @@
     (mapcar #'(lambda (data)
                 (format file "~&~A~%"
                         (%gateway.prepare-raw-data data)))
-            (reverse (list-raw-data dump)))))
+            (reverse raw))))
 
 (defun %gateway.decode-json-from-file (pathname)
   "Read file and decode json data to appended list"
@@ -127,7 +127,7 @@
              oldprice
              (zerop (delta-price product))
              (plusp oldprice))
-    (log5:log-for info-console "old: ~A" product)
+    ;; (log5:log-for info-console "old: ~A" product)
     (setf (delta-price product) (- oldprice (siteprice product)))))
 
 (defun %product-update-bonuscount (product bonuscount)
@@ -136,6 +136,14 @@
   ;;TODO:(возможно нужно пересчитывать когда приходит новая цена)
   (when bonuscount
     (setf (bonuscount product) bonuscount)))
+
+(defun %product-update-erp (product erp-price erp-class)
+  "Update product fields erp-price erp-class"
+  (declare (product product) ((or number t) erp-price erp-class))
+  (when erp-price
+    (setf (erp-price product) erp-price))
+  (when erp-class
+    (setf (erp-class product) erp-class)))
 
 (defun %product-update-counts (product count-total count-transit)
   "Update product fields count-total count-transit"
@@ -167,6 +175,7 @@
                                 (fl@ :price--site) (fl@ :price) (fl@ :price--old))
         (%product-update-bonuscount product (fl@ :bonuscount))
         (%product-update-counts product (fl@ :count--total) (fl@ :count--transit))
+        (%product-update-erp product (fl@ :iprice) (@ :cat))
         (setf (active product) (plusp (count-total product)))
         (unless old-product
           (setobj (key product) product))))))
@@ -208,29 +217,33 @@
            :until (eq line 'EOF)
            :when (@validp line)
            :do (progn
-                 (log5:log-for info-console "single: ~A" line)
                  (setf data (json:decode-json-from-string (@json line)))
                  (%gateway.process-products-dump-data data)))))))
+
+(defun gateway.%process-data (data last-dump-ts &optional (timestamp (get-universal-time)))
+  "Process products data and do post proccess"
+  (declare (number last-dump-ts timestamp))
+  (setf (date *gateway.loaded-dump*) last-dump-ts)
+  (setf (product-num *gateway.loaded-dump*) (length data))
+  (%gateway.process-products-dump-data data)
+  (%gateway.update-actives data)
+  (gateway.restore-singles last-dump-ts timestamp)
+  (post-proccess-gateway))
 
 (defun %gateway.load-data (last-dump last-dump-ts &optional (timestamp (get-universal-time)))
   "Load product data from decoded alists"
   (declare (number last-dump-ts timestamp))
-   (let ((data (%gateway.decode-json-from-file last-dump)))
-    (setf (date *gateway.loaded-dump*) last-dump-ts)
-    (setf (product-num *gateway.loaded-dump*) (length data))
-    (%gateway.process-products-dump-data data)
-    (%gateway.update-actives data)
-    (gateway.restore-singles last-dump-ts timestamp)
-    (post-proccess-gateway)))
+  (let ((data (%gateway.decode-json-from-file last-dump)))
+    (gateway.%process-data data last-dump-ts)))
 
-(defun %gateway.load-dump (&optional (dump *gateway.dump*))
-  "Load products from dump"
-  (declare (gateway.erp-data-dump dump))
-  (let ((last-dump (loop
-                      :for line :in (list-raw-data dump)
-                      :nconc (json:decode-json-from-string line)))
-        (last-dump-ts (date dump)))
-    (%gateway.load-data last-dump last-dump-ts)))
+(defun gateway.%load-dump (raw)
+  "Load products from raw"
+  (let ((data (loop
+                 :for line :in raw
+                 :nconc (json:decode-json-from-string
+                         (%gateway.prepare-raw-data line))))
+        (last-dump-ts (get-universal-time)))
+    (gateway.%process-data data last-dump-ts)))
 
 (defun gateway.load (&optional (timestamp (get-universal-time)))
   "Load products from file dump"
@@ -239,18 +252,18 @@
     (awhen last-dump
       (%gateway.load-data last-dump last-dump-ts timestamp))))
 
-(defun %gateway.store-and-processed-dump (&optional (dump *gateway.dump*))
+(defun gateway.%store-and-processed-dump (raw)
   "Store data, load and processed data"
-  (declare (gateway.erp-data-dump dump))
-  (gateway.flush-dump dump)
-  (%gateway.load-dump dump))
+  (gateway.flush-dump raw)
+  (gateway.%load-dump raw))
 
 (defun %gateway.processing-last-package (data &optional (dump *gateway.dump*))
   "Finish data collecting, start separate proccess to store and load dump give back answer"
   (%gateway.add-data->dump data dump)
   (setf (date dump) (get-universal-time))
-  (bt:make-thread #L(%gateway.store-and-processed-dump dump)
-                  :name "store-and-processed-dump")
+  (let ((raw (list-raw-data dump)))
+        (bt:make-thread #L(gateway.%store-and-processed-dump raw)
+                        :name "store-and-processed-dump"))
   (%gateway.clear-dump)
   "last")
 
@@ -274,8 +287,8 @@
 (defun gateway-page ()
   "GP"
   (setf (hunchentoot:content-type*) "text/html; charset=utf-8")
-  (let ((num (hunchentoot:get-parameter "num"))
-        (single (hunchentoot:get-parameter "single")))
+  (let ((num (format nil "~A" (hunchentoot:get-parameter "num")))
+        (single (format nil "~A" (hunchentoot:get-parameter "single"))))
     (aif (hunchentoot:raw-post-data)
          (string-case num
            ("1" (%gateway.processing-fist-package it))
@@ -283,4 +296,4 @@
            (t (string-case single
                 ("single" (%gateway.processing-single-package it))
                 (t (%gateway.processing-package it)))))
-        "NIL")))
+         "NIL")))

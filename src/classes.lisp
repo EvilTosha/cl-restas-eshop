@@ -9,6 +9,8 @@
   (:name name-provider     :initform ""                     :disabled nil   :type string      :serialize t)
   (:name name-seo          :initform ""                     :disabled nil   :type string      :serialize t)
   (:name siteprice         :initform 0                      :disabled nil   :type int         :serialize t)
+  (:name erp-price         :initform 0                      :disabled t     :type int         :serialize t)
+  (:name erp-class         :initform ""                     :disabled t     :type string      :serialize t)
   (:name delta-price       :initform 0                      :disabled nil   :type int         :serialize t)
   (:name bonuscount        :initform 0                      :disabled nil   :type int         :serialize t)
   (:name delivery-price    :initform nil                    :disabled nil   :type int         :serialize t)
