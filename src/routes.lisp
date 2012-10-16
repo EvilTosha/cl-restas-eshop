@@ -8,15 +8,6 @@
 
 (clear)
 
-(defvar *route-threads* (make-hash-table :test #'equal))
-
-(defun update-route-thread ()
-  "link current thread name -> current request uri"
-  (let ((thread-name (bt:thread-name (bt:current-thread)))
-        (request-uri (hunchentoot:request-uri*))
-        (remote-addr (hunchentoot:remote-addr*)))
-    (setf (gethash thread-name *route-threads*) (list request-uri remote-addr))))
-
 ;;;; Request tracking decoration
 
 (defclass proxy-route-timer (routes:proxy-route) ())
@@ -31,7 +22,6 @@
    update current thread information"
   (let ((*current-route-symbol*
          (restas:route-symbol (routes:proxy-route-target route))))
-    (update-route-thread)
     (sb-impl::call-with-timing #'log.timer #'call-next-method)))
 
 (defun log.timer (&key real-time-ms user-run-time-us system-run-time-us
@@ -49,7 +39,7 @@
                               processor-cycles
                               *current-route-symbol*
                               (tbnl:request-uri*)
-                              (tbnl:remote-addr*)
+                              (tbnl:real-remote-addr)
                               (tbnl:user-agent)
                               (tbnl:referer)))))
 
@@ -315,6 +305,7 @@
   (oneclickcart.make-common-order (request-get-plist)))
 
 (define-tracing-route compare-route ("/compare")
+  (debug-slime-format "IP:~A" (tbnl:real-remote-addr))
 	 (soy.compare:compare-page
 		(list :keywords "" ;;keywords
 					:description "" ;;description
