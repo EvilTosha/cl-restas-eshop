@@ -56,6 +56,32 @@ Filter's key is concatenated group's and default-filter's keys"
     (setf (gethash key (filters group)) filter)
     (setobj key filter 'filter)))
 
+
+(defun marketing-filters.%create-util-filter (group discount)
+  "Creating \"util\" default filter"
+  (let* ((key (format nil "~A-util-~A-filter" (key group) discount))
+         (filter (make-instance 'filter
+                                :key key
+                                ;; :active t
+                                :parents (list group)
+                                :default-set 'product
+                                :data (list :name (format nil "Скидка ~Aр по акции!" discount))
+                                :serialize nil)))
+    ;; setup basic filters
+    ;; TODO: get rid of gensym
+    (setf (gethash (gensym) (filters filter))
+          (filters.create-basic-filter
+           'function-filter
+           :func-text
+           (format nil "#'(lambda (obj &optional params)
+                             (declare (ignore params))
+                             (search \"~A\"
+                                  (get-option obj \"Secret\" \"Продающий текст\")))" discount))
+          ;; add filter to group's filters slot
+          (gethash key (filters group)) filter)
+    (setobj key filter 'filter)))
+
+
 ;; TODO: make recreating/restoring methos(s)
 (defun marketing-filters.create-all-filters ()
   "Creating all marketing filters in system"
@@ -65,6 +91,9 @@ Filter's key is concatenated group's and default-filter's keys"
        (marketing-filters.set-holiday-filter group))
    'group)
   ;; TODO: убрать костыль
+  (marketing-filters.%create-util-filter (getobj "komputery" 'group) 1000)
+  (marketing-filters.%create-util-filter (getobj "komputery" 'group) 2000)
+  (marketing-filters.%create-util-filter (getobj "komputery" 'group) 5000)
   (mapcar #'(lambda (group-key)
               (marketing-filters.create-sale-filter (getobj group-key 'group)))
           (list "netbuki"
