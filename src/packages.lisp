@@ -12,7 +12,9 @@
      :cl-ppcre
      :json
      :cl-fad
-     :string-case)
+     :string-case
+     ;; :sendmail
+     )
   (:import-from :arnesi :parse-float)
   (:import-from :alexandria :read-file-into-string)
   (:import-from :alexandria :rcurry)

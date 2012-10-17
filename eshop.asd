@@ -48,5 +48,4 @@
                                    (:file "cl-cron"))
                       :depends-on ("classes"))
              (:file "cron" :depends-on ("cl-cron"))
-             (:file "debug" :depends-on ("packages"))
-             ))))
+             (:file "debug" :depends-on ("packages"))))))

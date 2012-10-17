@@ -49,5 +49,7 @@
            "cl-csv"
            "cl-interpol-0.2.1"
            "cl-unicode-0.1.4"
-           )))
+           "cl-base64-3.3.3"
+           "cl-mime"
+           "cl-qprint")))
 
