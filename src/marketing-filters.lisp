@@ -204,7 +204,7 @@ Filter's key is concatenated group's and default-filter's keys"
                                     :parents (list group)
                                     :default-set 'product
                                     :data (list :name name)
-                                    :serialize nil))
+                                    :serialize t))
         ;; setup basic filters
         ;; TODO: get rid of gensym
         (setf (gethash (gensym) (filters filter))
@@ -232,9 +232,9 @@ Filter's key is concatenated group's and default-filter's keys"
   "Creating all marketing filters in system"
   (process-storage
    #'(lambda (group)
+       ;; (marketing-filters.%create-serias-marketing-filters group)
        (marketing-filters.create-bestprice-filter group)
-       (marketing-filters.set-holiday-filter group)
-       (marketing-filters.%create-serias-marketing-filters group))
+       (marketing-filters.set-holiday-filter group))
    'group)
   ;; TODO: убрать костыль
   (marketing-filters.%create-util-filter (getobj "komputery" 'group) 1000)
