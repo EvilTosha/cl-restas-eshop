@@ -243,15 +243,16 @@
                                        words))
                          (key (car skls)))
                     (when key
-                      (incf num)
-                      (setf (gethash num storage)
-                            (make-instance 'main-page-product
+                      (let ((offer (make-instance 'main-page-product
                                            :key key
                                            :name (nth 1 skls)
                                            :date-start (time.article-decode-date (nth 2 skls))
                                            :date-finish  (time.article-decode-date (nth 3 skls))
                                            :weight (parse-integer (aif (nth 4 skls) it "0"))
                                            :opts (nthcdr 5 skls)
-                                           :banner-type (nth 5 skls)))))))))
+                                           :banner-type (nth 5 skls))))
+                        (when (< 0 (weight offer))
+                          (incf num)
+                          (setf (gethash num storage) offer)))))))))
     (setf *main-page.storage* t-storage)
     (log5:log-for info "Finish main-page.restore...")))
