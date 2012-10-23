@@ -90,9 +90,11 @@
                                      (time.encode.backup (date *gateway.loaded-dump*))
                                      " || продуктов: "
                                      (write-to-string (product-num *gateway.loaded-dump*))
+                                     " || выключенных: "
+                                     (write-to-string (hash-table-count *bad-products*))
                                      "</b>")
                 (mapcar #'(lambda (v) (let ((thread-name (bt:thread-name v)))
-                                        (list thread-name (gethash thread-name *route-threads*))))
+                                        (list thread-name)))
                                   (sb-thread:list-all-threads)))
         (regex-replace-all "\\n" (with-output-to-string (*standard-output*) (room)) "<br>")))
 
@@ -151,6 +153,7 @@
   (let* ((key (hunchentoot:post-parameter "key"))
          (type (anything-to-symbol (hunchentoot:post-parameter "type")))
          (item (getobj key)))
+    (debug-slime-format "~A" (hunchentoot:post-parameters*))
     (if (not (class-exist-p type))
         ;; return error
         (admin.standard-ajax-response nil "Unknown type")

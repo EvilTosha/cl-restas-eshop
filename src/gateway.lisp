@@ -150,11 +150,12 @@
   (declare (product product) ((or number t) count-total count-transit))
   (aif count-total
        (setf (count-total product) it)
-       (if (and count-transit
-                (zerop count-transit)
-                (= (count-total product)
-                   (count-transit product)))
-           0))
+       (when (and count-transit
+                  (zerop count-transit)
+                  (= (count-total product)
+                     (count-transit product)))
+         (t.%save-bad-product product)
+         (setf (count-total product) 0)))
   (when count-transit
     (setf (count-transit  product) count-transit)))
 
@@ -297,3 +298,24 @@
                 ("single" (%gateway.processing-single-package it))
                 (t (%gateway.processing-package it)))))
          "NIL")))
+
+
+
+(defvar *bad-products* (make-hash-table :test #'equal))
+
+(defun t.%save-bad-product (product)
+  (debug-slime-format "~A: ~A ~A" (time.encode.backup) product (name-seo product))
+  (setf (gethash (key product) *bad-products*) product))
+
+(defun t.%kill-bad-products ()
+  (maphash #'(lambda (key pr)
+               (declare (ignore key))
+               (set-option pr "Secret" "YML" "No")
+               (setf (active pr) nil))
+           *bad-products*))
+
+(defun t.%report-bad-products ()
+  (format t "~&артикул;название товара; название группы;~%")
+  (maphash #'(lambda (key pr)
+               (format t "~&~A;~A;~A;~%" key (name-seo pr) (name (parent pr))))
+           *bad-products*))
