@@ -41,7 +41,7 @@
   (:name ymlshow             :initform nil                             :disabled nil   :type bool                      :serialize t)
   (:name pic                 :initform nil                             :disabled nil   :type string                    :serialize t)
   (:name icon                :initform nil                             :disabled nil   :type string                    :serialize t)
-  (:name delivery-price      :initform nil                             :disabled nil   :type int                       :serialize t)
+  (:name delivery-price      :initform nil                             :disabled nil   :type int?                      :serialize t)
   (:name groups              :initform nil                             :disabled t     :type group-list                :serialize nil)
   (:name products            :initform nil                             :disabled t     :type product-list              :serialize nil)
   (:name filters             :initform (make-hash-table :test #'equal) :disabled t     :type undefined                 :serialize nil)

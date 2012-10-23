@@ -136,6 +136,30 @@ Type: ~A" type))
   (declare (string string))
   (parse-integer string))
 
+;;int? Nullable int. To allow nil. Named like nullable types in Kotlin
+;; http://confluence.jetbrains.net/display/Kotlin/Null-safety
+;; This type can be usefull with dilivery-price slot
+(defmethod slots.%view ((type (eql 'int?)) value name disabled)
+  (soy.class_forms:nullable-integer-field
+   (list :name name :disabled disabled :value value)))
+
+(defmethod slots.%get-data ((type (eql 'int?)) post-data-string)
+  (declare (string post-data-string))
+  (let ((int? (decode-json-from-string post-data-string)))
+    (if (or (integerp int?)
+            (not int?))
+        int?
+        (error "Error: value ~A is not nullable-integer" int?))))
+
+(defmethod slots.%encode-to-string ((type (eql 'int?)) value)
+  (format nil "~A" value))
+
+(defmethod slots.%decode-from-string ((type (eql 'int?)) string)
+  (declare (string string))
+  (if (read-from-string string)
+      (parse-integer string)
+      nil))
+
 ;; string-plist, property list of strings
 ;; Note: all digits in keys should be separated by hyphens:
 ;; (list :foo1 "bar" :foo2bar "baz") - Bad
