@@ -117,6 +117,8 @@
                              (marketing-filters.render-filters object showall)
                              ;;fullfilter
                              (let ((ret (rightblocks object parameters)))
+                               (awhen (getobj (string-downcase (getf parameters :vendor)) 'vendor)
+                                 (push (marketing-filters.render-vendor-filters object it showall) ret))
                                (when (fullfilter object)
                                  (push (render.render (fullfilter object) parameters) ret))
                                ret))
@@ -572,6 +574,7 @@
          (group (parent object))
          (group-name (name group))
          (showall (getf request-get-plist :showall))
+         (vendor (tbnl:parameter "vendor"))
          (group-children (marketing-filters.group-children group showall))
          (products-list (filters.filter object :obj-set group-children)))
     (if (null (getf request-get-plist :sort))
@@ -591,7 +594,9 @@
                  :menu (render.menu object)
                  :rightblocks (append
                                (marketing-filters.render-filters group showall)
-                               (rightblocks group request-get-plist))
+                               (awhen (getobj (string-downcase vendor) 'vendor)
+                                 (list (marketing-filters.render-vendor-filters group it showall)))
+                               (rightblocks object request-get-plist))
                  :subcontent (soy.catalog:centerproduct
                               (list
                                :sorts (sorts request-get-plist)
