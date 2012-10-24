@@ -349,9 +349,8 @@
             (mapcar #'(lambda (email)
                         (send-mail (list email) client-mail filename tks-mail order-id))
                     *conf.emails.cart*)
-            ;; сделать валидацию пользовательского email
-            (unless (string= email "")
-              (send-client-mail (list email) client-mail order-id))
+            (when (email.valid-email-p email)
+              (email.send-client-mail email order-id client-mail))
             (soy.newcart:fullpage
              (list :head (soy.newcart:newcart-head
                           (list :thanks

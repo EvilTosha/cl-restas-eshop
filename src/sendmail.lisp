@@ -1,36 +1,11 @@
 ;;;; sendmail.lisp
 
-;;; Class mail-output-stream.
-;;;
-;;; FIXME: This information belongs in documentation strings
-;;; somewhere. But where? Possibly distributed in various
-;;; :documentation slots.
-;;;
-;;; The mail-output-stream is a class of stream (therefore depending
-;;; on the Gray Stream extension) that, on close, sends its
-;;; accumulated content by mail.
-;;;
-;;; Slots:
-;;;
-;;; * real-stream: contains the stream that the print- functions
-;;; actually print to;
-;;;
-;;; * string-strm: contains the string-strm that is used on
-;;; close. This is the same as the real-stream if no stream is
-;;; initially supplied; if one is supplied, real-stream is a
-;;; broadcast-stream to both the supplied stream and the
-;;; string-strm;
-;;;
-;;; * to, cc, bcc: lists of strings, one per e-mail address;
-;;;
-;;; * other-headers: A list of strings, one per header.
+;; depends-on :alexandria
 
-
-;; depends-on: alexandria
 (defpackage :sendmail
-  (:use :cl :sb-gray :sb-unix :sb-ext :sb-bsd-sockets :cl-mime #:cl-base64)
-  (:export :mailer-program-error
-           :email
+  (:use :cl :sb-unix :sb-ext :cl-mime)
+  (:export :email
+           ;; accessors
            :body
            :to
            :cc
@@ -38,26 +13,34 @@
            :subject
            :content-type
            :attachments
-           :other-headers))
+           :other-headers
+           ;; functions
+           :send-email
+           :send-email-with-template))
 
 
 (in-package :sendmail)
 
-(defparameter *sendmail-bin* "/usr/lib/sendmail")
-(defparameter *mail-newline* (coerce (list #\Return #\Newline) 'string))
-
+(sb-int:defconstant-eqx +sendmail-bin+
+    (find-if #'probe-file
+             (list "/usr/lib/sendmail"
+                   "/usr/bin/sendmail"
+                   "/usr/sbin/sendmail"))
+  #'string-equal
+  "Path to executable sendmail file")
 
 (defclass email ()
-  ((body            :initarg :body          :accessor body            :initform "")
-   (subject         :initarg :subject       :accessor subject         :initform "")
+  ((from            :initarg :from          :accessor from            :initform nil)
    (to              :initarg :to            :accessor to              :initform nil)
-   (from            :initarg :from          :accessor from            :initform nil)
    (reply-to        :initarg :reply-to      :accessor reply-to        :initform nil)
+   (subject         :initarg :subject       :accessor subject         :initform "")
+   (body            :initarg :body          :accessor body            :initform "")
    (cc              :initarg :cc            :accessor cc              :initform nil)
    (bcc             :initarg :bcc           :accessor bcc             :initform nil)
    (content-type    :initarg :type          :accessor content-type    :initform "text")
    (content-subtype :initarg :subtype       :accessor content-subtype :initform "plain")
    (attachments     :initarg :attachments   :accessor attachments     :initform nil)
+   ;; list of strings, one per header
    (other-headers   :initarg :other-headers :accessor other-headers   :initform nil)))
 
 
@@ -65,51 +48,43 @@
   (print-unreadable-object (object stream :type t :identity t)
     (format stream "to ~A regarding ~A" (to object) (subject object))))
 
-(defmacro ensure-list (form)
-  "If form is list return it, else return (list form)"
-  (let ((var (gensym)))
-    `(let ((,var ,form))
-       (if (listp ,var)
-           ,var
-           (list ,var)))))
+(defun get-user ()
+  (sb-unix:uid-username (sb-unix:unix-getuid)))
 
-(defmacro ensure-list-setf (form)
-  "If form is list, return its value, else return (list form) and evaluate (setf form (list form))"
-  `(setf ,form (ensure-list ,form)))
-
-(defun send-email (email)
-  (ensure-list-setf (to email))
-  (ensure-list-setf (cc email))
-  (ensure-list-setf (bcc email))
+(defun send-email (&key (from (get-user)) to reply-to (subject "") (body "") cc bcc (content-type "text")
+                   (content-subtype "plain") attachments other-headers)
+  "Sends semail with specified parameters"
+  (declare (string from subject body content-type content-subtype)
+           ((or string list) to reply-to cc bcc)
+           (list attachments other-headers)
+           (ignore other-headers))
   (let ((sendmail (sb-unix::process-input
-                   (sb-ext:run-program *sendmail-bin*
-                                       `("-f" ,(or (from email)
-                                                   (sb-unix:uid-username
-                                                    (sb-unix:unix-getuid)))
-                                              ,@(to email)
-                                              ,@(cc email)
-                                              ,@(bcc email))
+                   (sb-ext:run-program +sendmail-bin+
+                                       `("-f" ,from
+                                              ,@(alexandria:ensure-list to)
+                                              ,@(alexandria:ensure-list cc)
+                                              ,@(alexandria:ensure-list bcc))
                                        :input :stream
                                        :wait nil)))
-        (mime (when (attachments email)
+        (mime (when attachments
                 (make-instance
                  'multipart-mime
                  :subtype "mixed"
                  :content
                  ;; Firstly the text input
                  (cons (make-instance
-                        (if (string-equal "text" (content-type email))
+                        (if (string-equal "text" content-type)
                             'text-mime
                             'mime)
-                        :type (content-type email)
-                        :subtype (content-subtype email)
-                        :content (body email)
+                        :type content-type
+                        :subtype content-subtype
+                        :content body
                         :disposition "inline")
                        ;; The attachments themselves
                        (mapcar
                         #'(lambda (attachment)
                             (multiple-value-bind (type subtype)
-                                (cl-mime::lookup-mime attachment)
+                                (cl-mime:lookup-mime attachment)
                               (make-instance
                                'mime
                                :type (or type "application")
@@ -119,29 +94,42 @@
                                :encoding :base64
                                :disposition "attachment"
                                :disposition-parameters
-                               `((:filename
-                                  ,(format nil "~A~@[.~A~]"
-                                           (pathname-name
-                                            (pathname attachment))
-                                           (pathname-type
-                                            (pathname attachment))))))))
-                        (attachments email)))))))
+                               `((:filename ,(file-namestring attachment))))))
+                        attachments))))))
     (mapc #'(lambda (header value)
               (when value
-                (format sendmail "~A: ~{~A~^,~}~%" header (ensure-list value))))
+                (format sendmail "~A: ~{~A~^,~}~%" header (alexandria:ensure-list value))))
           (list "To" "Cc" "From" "Reply-To" "Subject")
-          (list (to email)
-                (cc email)
-                (from email)
-                (reply-to email)
-                (subject email)))
+          (list  to   cc   from   reply-to   subject))
     (if mime
-        (cl-mime::print-mime sendmail mime t t)
+        (cl-mime:print-mime sendmail mime t t)
         (progn
           (format sendmail "MIME-Version: 1.0~%Content-Type: ~A/~A~%~%"
-                  (content-type email)
-                  (content-subtype email))
-          (princ (body email) sendmail)))
+                  content-type content-subtype)
+          (princ body sendmail)))
     (close sendmail)))
+
+(defun send-email-with-template (template-email
+                                 &key (from (get-user) from-supplied-p)
+                                 (to nil to-supplied-p) (reply-to nil reply-to-supplied-p)
+                                 (subject "" subject-supplied-p)
+                                 (body "" body-supplied-p)
+                                 (cc nil cc-supplied-p) (bcc nil bcc-supplied-p)
+                                 (content-type "text" content-type-supplied-p)
+                                 (content-subtype "plain" content-subtype-supplied-p)
+                                 (attachments nil attachments-supplied-p)
+                                 (other-headers nil other-headers-supplied-p))
+  (send-email
+   :from            (if from-supplied-p            from            (from template-email))
+   :to              (if to-supplied-p              to              (to template-email))
+   :reply-to        (if reply-to-supplied-p        reply-to        (reply-to template-email))
+   :subject         (if subject-supplied-p         subject         (subject template-email))
+   :body            (if body-supplied-p            body            (body template-email))
+   :cc              (if cc-supplied-p              cc              (cc template-email))
+   :bcc             (if bcc-supplied-p             bcc             (bcc template-email))
+   :content-type    (if content-type-supplied-p    content-type    (content-type template-email))
+   :content-subtype (if content-subtype-supplied-p content-subtype (content-subtype template-email))
+   :attachments     (if attachments-supplied-p     attachments     (attachments template-email))
+   :other-headers   (if other-headers-supplied-p   other-headers   (other-headers template-email))))
 
 
