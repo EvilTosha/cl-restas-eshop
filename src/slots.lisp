@@ -397,6 +397,10 @@ Type: ~A" type))
   (soy.class_forms:bool-field
    (list :name name :checked value :disabled disabled)))
 
+(defmethod slots.%serialize-p ((type (eql 'bool)) value &optional initform)
+    (and (valid-string-p (format nil "~A" value))
+         (not (equal value (eval initform)))))
+
 (defmethod slots.%get-data ((type (eql 'bool)) post-data-string)
   (declare (string post-data-string))
   (let ((bool (decode-json-from-string post-data-string)))
