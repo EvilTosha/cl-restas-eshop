@@ -322,8 +322,8 @@
                                                                :name (name-seo object)
                                                                :pic (if (null pics) nil (car pics))
                                                                :deliveryprice (yml.get-product-delivery-price1 object)
-                                                               :siteprice (price object)
-                                                               :price (siteprice object))))))))0
+                                                               :siteprice (siteprice object)
+                                                               :price (price object))))))))
 
 
 (defun render.render-optgroups (optgroups)
