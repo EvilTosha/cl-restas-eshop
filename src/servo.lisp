@@ -45,7 +45,6 @@
                     (getf parameters :vendor)))))))
 
 (defmethod rightblocks ((object filter) (parameters list))
-  (debug-slime-format "~A" object)
   (list (soy.catalog:rightblock1)
         (soy.catalog:rightblock2)
         (soy.catalog:seotext
