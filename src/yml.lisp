@@ -35,14 +35,6 @@
          (not (and yml-show
                    (string= "No" (stripper yml-show)))))))
 
-(defun yml.get-product-delivery-price (product)
-  (let ((parent (parent product)))
-    (if (delivery-price product)
-        (delivery-price product)
-        (if (and parent (delivery-price parent))
-            (delivery-price parent)
-            300))))
-
 (defun yml.is-daily-product (product)
   (loop
      :for v :being :the hash-values :in (daily *main-page.storage*)
