@@ -115,6 +115,7 @@
                                :type (or type "application")
                                :subtype (or subtype "octet-stream")
                                :content (alexandria:read-file-into-byte-vector attachment)
+                               :id (cl-mime:make-content-id)
                                :encoding :base64
                                :disposition "attachment"
                                :disposition-parameters

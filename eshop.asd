@@ -1,12 +1,17 @@
 (defsystem eshop
-  :depends-on (#:restas #:cl-json #:arnesi #:closure-template #:log5 #:py-configparser #:string-case #:alexandria #:cl-csv)
+  :depends-on (#:restas #:cl-json #:arnesi #:closure-template #:log5 #:py-configparser #:string-case #:alexandria #:cl-csv :cl-mime)
   :components
   ((:module "src"
             :components
-            ((:module "patch-closure-templates"
-                      :components ((:file "common-lisp-backend")
-                                   (:file "parse")))
-             (:file "packages" :depends-on ("patch-closure-templates"))
+            ((:module "patches"
+                      :components
+                      ((:module "closure-templates"
+                                :components
+                                ((:file "common-lisp-backend")
+                                 (:file "parse")))
+                       (:module "cl-mime"
+                                :components ((:file "encoding")))))
+             (:file "packages" :depends-on ("patches"))
              (:file "images" :depends-on ("packages")) ;; imagemagic
              (:file "config" :depends-on ("images"))
              (:file "time" :depends-on ("config"))
@@ -39,6 +44,7 @@
              (:file "static-pages" :depends-on ("images" "log"))
              (:file "admin" :depends-on ("filters" "cron"))
              (:file "gateway" :depends-on ("admin"))
+             (:file "sendmail" :depends-on ("gateway"))
              (:file "email" :depends-on ("gateway"))
              (:file "groupd" :depends-on ("email"))
              (:file "cartrige" :depends-on ("groupd"))
