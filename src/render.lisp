@@ -321,7 +321,7 @@
                            (soy.buttons:add-product-cart (list :articul (articul object)
                                                                :name (name-seo object)
                                                                :pic (if (null pics) nil (car pics))
-                                                               :deliveryprice (delivery-price object)
+                                                               :deliveryprice (yml.get-product-delivery-price1 object)
                                                                :siteprice (price object)
                                                                :price (siteprice object))))))))0
 
