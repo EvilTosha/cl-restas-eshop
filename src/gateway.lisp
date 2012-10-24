@@ -169,7 +169,7 @@
         (setf product (aif old-product
                            it
                            (make-instance 'product :articul (@ :id))))
-        (setf (key product) (@ :id))
+        (setf (key product) (write-to-string (fl@ :id)))
         (setf (articul product) (fl@ :id))
         (%product-update-name product (@ :name))
         (%product-update-prices product
@@ -295,7 +295,7 @@
            ("1" (%gateway.processing-fist-package it))
            ("0" (%gateway.processing-last-package it))
            (t (string-case single
-                ("single" (%gateway.processing-single-package it))
+                ("1" (%gateway.processing-single-package it))
                 (t (%gateway.processing-package it)))))
          "NIL")))
 
