@@ -44,6 +44,13 @@
                     object
                     (getf parameters :vendor)))))))
 
+(defmethod rightblocks ((object filter) (parameters list))
+  (debug-slime-format "~A" object)
+  (list (soy.catalog:rightblock1)
+        (soy.catalog:rightblock2)
+        (soy.catalog:seotext
+         (list :text (seo-text object)))))
+
 (defmacro f-price ()
   `(lambda (product request-plist filter-options)
      (let ((value-f (getf request-plist :price-f))
@@ -752,6 +759,13 @@ Used for printing system info to browser"
         (string char)
         (nth (- code 1072) letters))))
 
+(defun float-string->int (string)
+  "Parse float and convert to smallest integer not less than original number give back nil input is nil"
+  (declare ((or string t) string))
+  (aif string
+       (ceiling (arnesi:parse-float it))
+       nil))
+
 (defmacro with-getter ((getter-sym object &optional use-slot-value) &body body)
   "Allows to write shorter code without repeating object name;
 Example: (with-getter (@ (compute-object)) (setf (@ field1) (@ field2)))
@@ -763,4 +777,3 @@ instead of: (let ((object (compute-object))) (setf (field1 object) (field2 objec
                          ``(slot-value ,',var ',slot)
                          ``(,slot ,',var))))
          ,@body))))
-

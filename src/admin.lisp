@@ -6,7 +6,7 @@
   (restas:redirect 'admin/-route))
 
 (restas:define-route admin/-route ("/administration-super-panel/")
-  (show-admin-page))
+  (show-admin-page "info"))
 
 (restas:define-route admin-actions-key-route ("/administration-super-panel/actions" :method :post)
   (show-admin-page "actions"))
@@ -84,7 +84,18 @@
   (admin-compile-templates))
 
 (defun admin.get-info ()
-  (list (format nil "~{~a<br>~}" (mapcar #'(lambda (v) (sb-thread:thread-name v)) (sb-thread:list-all-threads)))
+  ;; (setf (bt:thread-name (bt:current-thread)) "test")
+  (list (format nil "~A<br>~{~{~@[~A~]~^: ~}<br>~}"
+                (concatenate 'string "<b>Последняя выгрузка: "
+                                     (time.encode.backup (date *gateway.loaded-dump*))
+                                     " || продуктов: "
+                                     (write-to-string (product-num *gateway.loaded-dump*))
+                                     " || выключенных: "
+                                     (write-to-string (hash-table-count *bad-products*))
+                                     "</b>")
+                (mapcar #'(lambda (v) (let ((thread-name (bt:thread-name v)))
+                                        (list thread-name)))
+                                  (sb-thread:list-all-threads)))
         (regex-replace-all "\\n" (with-output-to-string (*standard-output*) (room)) "<br>")))
 
 
@@ -142,6 +153,7 @@
   (let* ((key (hunchentoot:post-parameter "key"))
          (type (anything-to-symbol (hunchentoot:post-parameter "type")))
          (item (getobj key)))
+    (debug-slime-format "~A" (hunchentoot:post-parameters*))
     (if (not (class-exist-p type))
         ;; return error
         (admin.standard-ajax-response nil "Unknown type")
@@ -274,7 +286,7 @@
          (report.do-alias-reports)
          action)
         ("gateway-restore"
-         (gateway.restore-history)
+         (gateway.load-dump)
          "GATEWAY-RESTORE")
         (t (format nil "DON't know action ~a" action)))
     (error (e) (format  nil "ERROR:~%~a" e))))

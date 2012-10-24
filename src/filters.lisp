@@ -5,6 +5,8 @@
 (class-core.make-class-and-methods
  filter
  ((:name key          :initform ""                                     :disabled t    :type string             :serialize t)
+  (:name active       :initform t                                      :disabled nil  :type bool               :serialize t)
+  (:name seo-text     :initform ""                                     :disabled nil  :type textedit           :serialize t)
   ;; hashtable of other filters and basic filters, for consequentally applying
   ;; Note: keys should be symbols
   (:name filters      :initform (make-hash-table :test #'equal)        :disabled nil  :type filters-hash-table :serialize t)

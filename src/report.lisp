@@ -8,6 +8,9 @@
 (defgeneric special-p (product)
   (:documentation "Checks whether product is in *special-products*"))
 
+(defgeneric report.write-report-with-standard-columns (stream columns-data objects)
+  (:documentation "Write report with standart columns"))
+
 (defmethod special-p ((product string))
   (not (null (gethash product *special-products*))))
 
@@ -62,17 +65,26 @@ applied to item from given item set.
            items)
    :stream stream))
 
-(defun report.write-report-with-standard-columns (stream columns-data storage-specifier)
+
+(defmethod report.write-report-with-standard-columns ((stream stream) (columns-data list) (storage-specifier symbol))
   "Writes report using only registered columns functions. Column data should be
 list of conses (column-header . column-specifier). Storage-specifier should be symbol, to which
 function get-storage is applicable.
  NOTE: stream could be T & NIL"
-  (declare (list columns-data) (symbol storage-specifier))
+  (report.write-report-with-standard-columns stream columns-data (collect-storage storage-specifier)))
+
+
+
+(defmethod report.write-report-with-standard-columns ((stream stream) (columns-data list) (items list))
+  "Writes report using only registered columns functions. Column data should be
+list of conses (column-header . column-specifier).
+ NOTE: stream could be T & NIL"
+  (declare (list columns-data items) (stream stream))
   (loop
      :for (header . specifier) :in columns-data
      :collect header :into headers
      :collect (report.get-standard-column-func specifier) :into funcs
-     :finally (report.write-report stream headers funcs (collect-storage storage-specifier))))
+     :finally (report.write-report stream headers funcs items)))
 
 (defun report.%rsc (symbol func)
   (report.register-standard-column symbol func))
@@ -94,7 +106,7 @@ function get-storage is applicable.
    #'(lambda (item) (if (valid-string-p (seo-text item)) "есть" "нет")))
   (report.%rsc
    'product-num-pics
-   #'(lambda (item) (length (get-pics (articul item)))))
+   #'(lambda (item) (length (get-pics (key item)))))
   (report.%rsc 'product-valid-options #'valid-options)
   (report.%rsc
    'product-active
@@ -389,3 +401,4 @@ function get-storage is applicable.
     (let ((name (format nil "reports/keyoptions-report-~a.csv" (time.encode.backup-filename))))
       (create-report name #'report.write-keyoptions)
       "KEYOPTIONS REPORT DONE")))
+

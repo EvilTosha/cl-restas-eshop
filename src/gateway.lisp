@@ -2,255 +2,197 @@
 
 (in-package #:eshop)
 
-(defparameter *single-history* nil)
+(defclass gateway.dump ()
+  ((products-num :initform 0 :accessor product-num)
+   (is-loaded :initform nil :accessor is-loaded)
+   (date :initform 0 :accessor date))
+  (:documentation "Information about last product import dump from ERP (or another place)"))
 
-(defparameter *load-list* nil)
-(defparameter *order* nil)
-(defparameter *serialize-check-flag* t)
+(defclass gateway.erp-data-dump (gateway.dump)
+  ((list-raw-data :initform nil :accessor list-raw-data))
+  (:documentation "Raw data list of import products from ERP (or another place)"))
 
-(defun gateway-page ()
-  (setf (hunchentoot:content-type*) "text/html; charset=utf-8")
-  (let ((raw (hunchentoot:raw-post-data)))
-    (if (null raw)
-        "NIL"
-        (progn
-          (cond ((string= "0" (hunchentoot:get-parameter "num"))
-                 ;; Обработка последнего пакета
-                 (progn
-                   ;; Делаем все продукты неактивными
-                   (push raw *load-list*)
-                   (push (hunchentoot:get-parameter "num") *order*)
-                   ;; Обрабатываем все сохраненные пакеты
-                   (let ((data))
-                     (loop :for packet :in (reverse *load-list*)
-                        :do (setf data (append (json:decode-json-from-string
-                                                (sb-ext:octets-to-string packet :external-format :cp1251)) data))))
-                   ;;создаем новый yml файл
-                   ;;(create-yml-file)
-                   ;; Заполняем siteprice если он равен 0
-                   ;; (copy-price-to-siteprice)
-                   ;; Сохраняем *load-list* и *order* для истории
-                   (gateway.store-history (list (list (time.get-date-time) *order* *load-list*)))
-                   ;; Обнуляем *load-list* и *order* (если приходит 1 пакет, то он num=0)
-                   (post-proccess-gateway)
-                   (setf *load-list* nil)
-                   (setf *order* nil)
-                   "last"))
-                ((string= "1" (hunchentoot:get-parameter "num"))
-                 ;; Обработка первого пакета
-                 (progn
-                   ;; Обнуляем *load-list* и *order*
-                   (setf *load-list* nil)
-                   (setf *order* nil)
-                   ;; Засылаем первый пакет в *load-list*
-                   (push raw *load-list*)
-                   (push (hunchentoot:get-parameter "num") *order*)
-                   "first"))
-                ((string= "1" (hunchentoot:get-parameter "single"))
-                 ;; Обработка одиночного изменения, для экстренного внесения изменений на небольшое количество товаров
-                 (progn
-                   (let ((name (hunchentoot:get-parameter "user")))
-                     (log5:log-for info "GATEWAY::Single")
-                     ;; сохраняем запрос
-                     (gateway.store-singles (list (list (time.encode.backup) name raw)))
-                     ;; обрабатываем данные пришедшие в одиночном запросе
-                     (gateway.restore-singles1 (gateway.get-last-gateway-ts) (get-universal-time))
-                     ;; возможно тут необходимо пересчитать списки активных товаров или еще что-то
-                     "single")))
-                (t
-                 ;; Обработка промежуточных пакетов
-                 (progn
-                   ;; Засылаем первый пакет в *load-list*
-                   (push raw *load-list*)
-                   (push (hunchentoot:get-parameter "num") *order*)
-                   "ordinal")))))))
+(defvar *gateway.loaded-dump* (make-instance 'gateway.dump)
+ "Information about last loaded product dump")
 
+(defvar *gateway.dump* (make-instance 'gateway.erp-data-dump)
+  "Information about current import from ERP (or another place)")
 
-(defun gateway.check-price (product price siteprice)
-  (let ((price-old (+ (siteprice product) (delta-price product)))
-        (siteprice-old (siteprice product))
-        (mailbody))
-    (if (or (and (< 3000 siteprice-old)
-                 (<= 0.2 (float (/ (abs (- siteprice-old siteprice 1)) siteprice-old))))
-            (and (< 3000 price-old)
-                 (<= 0.2 (float (/ (abs (- price-old price 1)) price-old)))))
-        (progn
-          (setf mailbody (format nil "~&<a href=\"http://www.320-8080.ru/~a\">~a: ~a</a>
-                                         <br/>Изменение цены боллее чем на 20%
-                                         <br/>Старая цене на сайте:~a |  новая:~a
-                                         <br/>Разница в цене в магазине:~a | новая:~a"
-                                 (articul product)
-                                 (articul product)
-                                 (name-provider product)
-                                 siteprice-old siteprice
-                                 price-old price))
-          (if *serialize-check-flag*
-              (progn
-                (setf (delta-price product) (if (zerop siteprice)
-                                                0
-                                                (- price siteprice)))
-                (setf (siteprice product) (if (zerop siteprice)
-                                              price
-                                              siteprice))
-                (mapcar #'(lambda (email)
-                            (email.send-mail-warn (list email) mailbody (format nil "price ~a" (articul product))))
-                        *conf.emails.gateway.warn*)))))
-    t))
+(defun %gateway.clear-dump (&optional (dump *gateway.dump*))
+  "Init dump with new class gateway.erp-data-dump instance"
+  (declare (gateway.erp-data-dump dump))
+  (setf (list-raw-data dump) nil))
 
-(defun gateway.process-product1 (articul raw-price raw-siteprice isnew isspec
-                                 name realname raw-count-total raw-count-transit
-                                 raw-bonuscount raw-oldprice)
-  (declare (ignore isnew isspec))
-  (let* ((old-product (getobj (format nil "~a" articul) 'product))
-         (product (aif old-product
-                       it
-                       (make-instance 'product :articul articul)))
-         (price (ceiling (arnesi:parse-float raw-price)))
-         (siteprice (ceiling (arnesi:parse-float raw-siteprice)))
-         (oldprice (ceiling (arnesi:parse-float raw-oldprice)))
-         (count-total (ceiling (arnesi:parse-float raw-count-total)))
-         (count-transit (ceiling (arnesi:parse-float raw-count-transit)))
-         (bonuscount (ceiling (arnesi:parse-float raw-bonuscount))))
-    ;; ключ строка
-    (setf (key product) (format nil "~a" articul))
-    ;; артикул число
-    (setf (articul product) articul)
-    ;; имена
-    ;; имя из 1С
-    (when (and name
-               (equal "" (name-provider product)))
-      (setf (name-provider product)  name))
-    (if realname
-        (if (equal "" (name-seo product))
-            (setf (name-seo product) realname))
-        (if (equal "" (name-seo product))
-            (setf (name-seo product) name)))
-    ;; пересчет дельты если пришла только цена сайта
-    (if (and raw-siteprice
-             (not raw-price))
-        (setf (delta-price product) (- (price product) siteprice)))
-    ;; цены
-    (if raw-siteprice
-        (setf (siteprice product) siteprice))
-    ;; перещет дельты не проводится для акционных товаров
-    (if (and raw-price
+(defun %gateway.add-data->dump (data &optional (dump *gateway.dump*))
+  "Add raw ERP products data to dump"
+  (declare (gateway.erp-data-dump dump))
+  (push data (list-raw-data dump)))
+
+(defun %gateway.processing-fist-package (data &optional (dump *gateway.dump*))
+  "Prepare dump, start to collect packet data & give back answer"
+  (declare (gateway.erp-data-dump dump))
+  (%gateway.clear-dump)
+  (%gateway.add-data->dump data dump)
+  "first")
+
+(defun %gateway.processing-package (data &optional (dump *gateway.dump*))
+  "Collect packet data & give back answer"
+  (declare (gateway.erp-data-dump dump))
+  (%gateway.add-data->dump data dump)
+  "ordinal")
+
+(defun gateway.make-dump-pathname (&optional (timestamp (get-universal-time)))
+  "Create pathname dump file (named yyyy-mm-dd_HH:MM:SS.bkp) uses config :PATHS :path-to-gateway"
+  (declare (number timestamp))
+  (let* ((filename (concatenate 'string (time.encode.backup timestamp) ".bkp"))
+         (dump-path (config.get-option "PATHS" "path-to-gateway")))
+    (merge-pathnames filename dump-path)))
+
+(defun %gateway.get-time-from-dumpfile (dump-name)
+  "Extract time from dump file name (named yyyy-mm-dd_HH:MM:SS.bkp)"
+  (declare (pathname dump-name))
+  (time.decode.backup (pathname-name dump-name)))
+
+(defun %gateway.search-dump-path-and-timestamp (&optional (timestamp (get-universal-time)))
+  "Looking for dump file named with ts near timestamp & give back (values-list filename ts) (NIL NIL) for empty dump-path"
+  (declare (number timestamp))
+  (let* ((dump-path (config.get-option "PATHS" "path-to-gateway"))
+         (dump-mask (concatenate 'string (namestring dump-path) "*.bkp"))
+         (current-filename (gateway.make-dump-pathname timestamp))
+         (result-file nil)
+         (result-time nil))
+    (flet ((pathname> (pathname1 pathname2 &key (start1 0) end1 (start2 0) end2)
+             (string> (namestring pathname1) (namestring pathname2)
+                      :start1 start1 :start2 start2 :end1 end1 :end2 end2)))
+      (setf result-file (first (sort (remove-if (rcurry #'pathname> current-filename)
+                                                (directory dump-mask)) #'pathname>)))
+      (awhen result-file
+           (setf result-time (%gateway.get-time-from-dumpfile it)))
+      (values-list (list result-file result-time)))))
+
+(defun %gateway.prepare-raw-data (raw)
+  "Сonvert raw data to presentable format"
+  (slots.string-delete-newlines
+   (sb-ext:octets-to-string raw :external-format :cp1251)))
+
+(defun gateway.flush-dump (raw &optional (timestamp (get-universal-time)))
+  "Flush dump data list to file"
+  (declare (number timestamp))
+  (with-open-file (file (gateway.make-dump-pathname timestamp)
+                        :direction :output
+                        :if-exists :supersede
+                        :if-does-not-exist :create
+                        :external-format :utf-8)
+    (mapcar #'(lambda (data)
+                (format file "~&~A~%"
+                        (%gateway.prepare-raw-data data)))
+            (reverse raw))))
+
+(defun %gateway.decode-json-from-file (pathname)
+  "Read file and decode json data to appended list"
+  (declare (pathname pathname))
+  (with-open-file (file pathname)
+      (loop
+         :for line := (read-line file nil 'EOF)
+         :until (eq line 'EOF)
+         :nconc (json:decode-json-from-string line))))
+
+ (defun %product-update-name (product name)
+  "Update product field name"
+  (declare (product product) ((or string t) name))
+  (when (and name
+             (string= "" (name-provider product)))
+    (setf (name-provider product) name))
+  (when (string= "" (name-seo product))
+    (setf (name-seo product) name)))
+
+(defun %product-update-prices (product siteprice price oldprice)
+  "Update product fields delta-price & siteprice"
+  (declare (product product) ((or number t) siteprice price))
+  ;; пересчет дельты если пришла только цена сайта
+  (when (and siteprice
+             (not price))
+    (setf (delta-price product) (- (price product) siteprice)))
+  ;; цены
+  (when siteprice
+    (setf (siteprice product) siteprice))
+  ;; перещет дельты не проводится для акционных товаров
+  (when (and price
              (not (groupd.is-groupd product)))
-        (setf (delta-price product) (- price (siteprice product))))
-    ;; бонусы (нужно пересчитывать когда приходит новая цена)
-    (if raw-bonuscount
-        (setf (bonuscount product) bonuscount))
-    ;; количество
-    (if raw-count-total
-        (setf (count-total product) count-total)
-        (if (and raw-count-transit
-                 (equal 0 count-transit)
-                 (equal (count-total product)
-                        (count-transit product)))
-            0))
-    ;; старая цена для аукционных товаров
-    ;; когда розничная цена и цена сайта совпадают, но необходимо
-    ;; отображать разницу
-    (when (and (groupd.is-groupd product)
-             raw-oldprice
+    (setf (delta-price product) (- price (siteprice product))))
+  ;; старая цена для аукционных товаров
+  ;; когда розничная цена и цена сайта совпадают, но необходимо
+  ;; отображать разницу
+  (when (and (groupd.is-groupd product)
+             oldprice
              (zerop (delta-price product))
              (plusp oldprice))
-        (setf (delta-price product) (- oldprice (siteprice product))))
-    (if raw-count-transit
-        (setf (count-transit  product) count-transit))
-    ;; проставляем флаг active
-    (setf (active product) (plusp (count-total product)))
-    (unless old-product
-      (setobj (key product) product))))
+    ;; (log5:log-for info-console "old: ~A" product)
+    (setf (delta-price product) (- oldprice (siteprice product)))))
 
+(defun %product-update-bonuscount (product bonuscount)
+  "Update product fields bonuscount"
+  (declare (product product) ((or number t) bonuscount))
+  ;;TODO:(возможно нужно пересчитывать когда приходит новая цена)
+  (when bonuscount
+    (setf (bonuscount product) bonuscount)))
 
-(defun gateway.store-single-gateway (raws &optional (timestamp (get-universal-time)))
-  "Сохраняет одиночные выгрузки в файл"
-  (let ((filename (time.encode.backup timestamp))
-        (pathname (format nil "~a/gateway/singles.txt" *path-to-logs*)))
-    (with-open-file (file pathname
-                          :direction :output
-                          :if-exists :append
-                          :if-does-not-exist :create
-                          :external-format :utf-8)
-      (format file "~a>>~a~%" filename raws))))
+(defun %product-update-erp (product erp-price erp-class)
+  "Update product fields erp-price erp-class"
+  (declare (product product) ((or number t) erp-price erp-class))
+  (when erp-price
+    (setf (erp-price product) erp-price))
+  (when erp-class
+    (setf (erp-class product) erp-class)))
 
-(defun gateway.store-full-gateway (raws &optional (timestamp (get-universal-time)))
-  (let* ((filename (format nil "~a.bkp" (time.encode.backup timestamp)))
-         (pathname (merge-pathnames filename (config.get-option "PATHS" "path-to-gateway"))))
-    (with-open-file (file pathname
-                          :direction :output
-                          :if-exists :supersede
-                          :if-does-not-exist :create
-                          :external-format :utf-8)
-      (mapcar #'(lambda (data)
-                  (format file "~&~a" (slots.string-delete-newlines (sb-ext:octets-to-string data :external-format :cp1251))))
-              (reverse raws)))))
+(defun %product-update-counts (product count-total count-transit)
+  "Update product fields count-total count-transit"
+  (declare (product product) ((or number t) count-total count-transit))
+  (aif count-total
+       (setf (count-total product) it)
+       (when (and count-transit
+                  (zerop count-transit)
+                  (= (count-total product)
+                     (count-transit product)))
+         (t.%save-bad-product product)
+         (setf (count-total product) 0)))
+  (when count-transit
+    (setf (count-transit  product) count-transit)))
 
-(defun gateway.store-history (history)
-  "history имеет вид (list (list (time.get-date-time) *order* *load-list*))"
-  (mapcar #'(lambda (v)
-              (log5:log-for info-console "~a|~a|~a" (car v) (second v) (length (third v)))
-              (gateway.store-full-gateway (third v) (time.decode-gateway-time (car v))))
-          history))
+(defun %gateway.process-product (item)
+  "Process product item plist. Check fields and update data in storage."
+  (labels ((@ (field) (getf item field))
+           (fl@ (field) (float-string->int (@ field))))
+    (awhen (@ :id)
+      (let* ((old-product (getobj it 'product))
+             (product))
+        (setf product (aif old-product
+                           it
+                           (make-instance 'product :articul (@ :id))))
+        (setf (key product) (@ :id))
+        (setf (articul product) (fl@ :id))
+        (%product-update-name product (@ :name))
+        (%product-update-prices product
+                                (fl@ :price--site) (fl@ :price) (fl@ :price--old))
+        (%product-update-bonuscount product (fl@ :bonuscount))
+        (%product-update-counts product (fl@ :count--total) (fl@ :count--transit))
+        (%product-update-erp product (fl@ :iprice) (@ :cat))
+        (setf (active product) (plusp (count-total product)))
+        (unless old-product
+          (setobj (key product) product))))))
 
-(defun gateway.process-products1 (items)
-  (loop :for elt  :in items :collect
-     (block iteration
-       (let ((articul   (ceiling (arnesi:parse-float (cdr (assoc :id elt)))))
-             (price     (cdr (assoc :price elt)))
-             (siteprice (cdr (assoc :price--site elt)))
-             (bonuscount (cdr (assoc :bonuscount elt)))
-             (isnew     (cdr (assoc :isnew  elt)))
-             (isspec    (cdr (assoc :isspec elt)))
-             (name      (cdr (assoc :name elt)))
-             (realname  (cdr (assoc :realname elt)))
-             (oldprice (cdr (assoc :price--old elt)))
-             (count-total    (cdr (assoc :count--total elt)))
-             (count-transit  (cdr (assoc :count--transit elt))))
-         (gateway.process-product1 articul price siteprice isnew isspec name realname count-total count-transit bonuscount oldprice)))))
+(defun %gateway.process-products-dump-data (items)
+  "Process list items. Where items a alist example: ((:ID . \"158354\") (:NAME . \"USB HUB 4port mobileData HB-65\") (:ISNEW . \"0\"))"
+  (loop :for item  :in items
+     :do (%gateway.process-product (servo.alist-to-plist item))))
 
-(defun gateway.get-pathname-fulls (&optional (timestamp (get-universal-time)))
-  "список файлов выгрузок до определенной даты"
-  (let* ((filename (time.encode.backup timestamp))
-         (current-name (format nil "~a/gateway/~a.bkp" *path-to-logs* filename)))
-    (remove-if #'(lambda (v) (string< current-name (format nil "~a" v)))
-               (reverse (directory
-                         (format nil "~a/gateway/*.bkp" *path-to-logs*))))))
-
-(defun gateway.get-pathname-last-full (&optional (timestamp (get-universal-time)))
-  "имя файла последней выгрузки относительно метки времени или текущей даты"
-  (car (gateway.get-pathname-fulls timestamp)))
-
-(defun gateway.restore-singles1 (gateway-timestamp &optional (current-timestamp (get-universal-time)))
-  "список одиночных выгрузок"
-  (let ((filename (format nil "~a/gateway/singles.txt" *path-to-logs*))
-        (start (time.encode.backup gateway-timestamp))
-        (finish (time.encode.backup current-timestamp))
-        (stop nil)
-        (data))
-    (with-open-file (file filename)
-      (loop
-         :for line = (read-line file nil 'EOF)
-         :until (or (eq line 'EOF)
-                    stop)
-         :do (progn
-               (when (and (string<= start (subseq line 0 19))
-                          (string<= (subseq line 0 19) finish))
-                 (log5:log-for info-console "single: ~a" line)
-                 (setf data (json:decode-json-from-string (subseq line 21)))
-                 (gateway.process-products1 data)))))))
-
-
-
-(defun gateway.update-actives (data)
-  ;; TOCHECK
+(defun %gateway.update-actives (items)
+  "Update actives for products not entered the itmes"
   (let ((articuls (make-hash-table :test #'equal)))
     (mapcar #'(lambda (v)
-                (let ((articul (format nil "~a" (cdr (assoc :id v)))))
-                  (setf articul (ceiling (arnesi:parse-float articul)))
-                  (setf articul (format nil "~a" articul))
+                (let ((articul (cdr (assoc :id v))))
                   (setf (gethash articul articuls) t)))
-            data)
+            items)
     (process-storage #'(lambda (v)
                          (when (and (not (gethash (key v) articuls))
                                     (active v))
@@ -259,53 +201,121 @@
                            (setf (count-transit v) 0)))
                      'product)))
 
-(defun gateway.get-last-gateway-ts (&optional (timestamp (get-universal-time)))
-  (let* ((filename (time.encode.backup timestamp))
-         (current-name (format nil "~a/gateway/~a.bkp" *path-to-logs* filename))
-         (last-gateway))
-    (setf last-gateway (car
-                        (remove-if #'(lambda (v) (string< current-name (format nil "~a" v)))
-                                   (reverse (directory
-                                             (format nil "~a/gateway/*.bkp" *path-to-logs*))))))
-    (if last-gateway
-        (time.decode.backup
-         (subseq
-          (car (last (split-sequence:split-sequence
-                      #\/
-                      (format nil "~a" last-gateway)))) 0 19))
-        timestamp)))
+(defun %gateway.singles-pathname ()
+  (merge-pathnames "singles.txt" (config.get-option "PATHS" "path-to-gateway")))
 
-(defun gateway.restore-history (&optional (timestamp (get-universal-time)))
-  (let* ((filename (time.encode.backup timestamp))
-         (current-name (format nil "~a/gateway/~a.bkp" *path-to-logs* filename))
-         (*serialize-check-flag* nil)
-         (last-gateway))
-    (log5:log-for info "gateway current time ~a" current-name)
-    (setf last-gateway (car
-                        (remove-if #'(lambda (v) (string< current-name (format nil "~a" v)))
-                                   (reverse (directory
-                                             (format nil "~a/gateway/*.bkp" *path-to-logs*))))))
-    (log5:log-for info "gateway restore file ~a" last-gateway)
-    (if last-gateway
-        (let ((data)
-              (lastgateway-ts (time.decode.backup
-                               (subseq
-                                (car (last (split-sequence:split-sequence
-                                            #\/
-                                            (format nil "~a" last-gateway)))) 0 19))))
-          (with-open-file (file last-gateway)
-            (loop
-               :for line = (read-line file nil 'EOF)
-               :until (eq line 'EOF)
-               :do (setf data (append (json:decode-json-from-string line) data))))
-          (gateway.process-products1 data)
-          (gateway.update-actives data)
-          (gateway.restore-singles1 lastgateway-ts timestamp)
-          (post-proccess-gateway))))
-  (log5:log-for info "gateway restore finished")
-  "done")
+(defun gateway.restore-singles (dump-timestamp &optional (current-timestamp (get-universal-time)))
+  "Load singles products witch came between dump-timestamp and current-timestamp"
+  (declare (number dump-timestamp current-timestamp))
+  (let* ((data))
+    (labels ((@time (line) (subseq line 0 19))
+             (@json (line) (subseq line 21))
+             (@validp (line) (<= dump-timestamp (time.decode.backup (@time line))
+                                current-timestamp)))
+      (with-open-file (file (%gateway.singles-pathname))
+        (loop
+           :for line = (read-line file nil 'EOF)
+           :until (eq line 'EOF)
+           :when (@validp line)
+           :do (progn
+                 (setf data (json:decode-json-from-string (@json line)))
+                 (%gateway.process-products-dump-data data)))))))
 
-(defun gateway.store-singles (history)
-  (mapcar #'(lambda (v)
-              (gateway.store-single-gateway (slots.string-delete-newlines (sb-ext:octets-to-string (third v) :external-format :cp1251)) (time.decode.backup (car v))))
-          history))
+(defun gateway.%process-data (data last-dump-ts &optional (timestamp (get-universal-time)))
+  "Process products data and do post proccess"
+  (declare (number last-dump-ts timestamp))
+  (setf (date *gateway.loaded-dump*) last-dump-ts)
+  (setf (product-num *gateway.loaded-dump*) (length data))
+  (%gateway.process-products-dump-data data)
+  (%gateway.update-actives data)
+  (gateway.restore-singles last-dump-ts timestamp)
+  (post-proccess-gateway))
+
+(defun %gateway.load-data (last-dump last-dump-ts &optional (timestamp (get-universal-time)))
+  "Load product data from decoded alists"
+  (declare (number last-dump-ts timestamp))
+  (let ((data (%gateway.decode-json-from-file last-dump)))
+    (gateway.%process-data data last-dump-ts)))
+
+(defun gateway.%load-dump (raw)
+  "Load products from raw"
+  (let ((data (loop
+                 :for line :in raw
+                 :nconc (json:decode-json-from-string
+                         (%gateway.prepare-raw-data line))))
+        (last-dump-ts (get-universal-time)))
+    (gateway.%process-data data last-dump-ts)))
+
+(defun gateway.load (&optional (timestamp (get-universal-time)))
+  "Load products from file dump"
+  (declare (number timestamp))
+  (multiple-value-bind (last-dump last-dump-ts) (%gateway.search-dump-path-and-timestamp timestamp)
+    (awhen last-dump
+      (%gateway.load-data last-dump last-dump-ts timestamp))))
+
+(defun gateway.%store-and-processed-dump (raw)
+  "Store data, load and processed data"
+  (gateway.flush-dump raw)
+  (gateway.%load-dump raw))
+
+(defun %gateway.processing-last-package (data &optional (dump *gateway.dump*))
+  "Finish data collecting, start separate proccess to store and load dump give back answer"
+  (%gateway.add-data->dump data dump)
+  (setf (date dump) (get-universal-time))
+  (let ((raw (list-raw-data dump)))
+        (bt:make-thread #L(gateway.%store-and-processed-dump raw)
+                        :name "store-and-processed-dump"))
+  (%gateway.clear-dump)
+  "last")
+
+(defun gateway.store-single-gateway (data &optional (timestamp (get-universal-time)))
+  "Сохраняет одиночные выгрузки в файл"
+  (with-open-file (file (%gateway.singles-pathname)
+                        :direction :output
+                        :if-exists :append
+                        :if-does-not-exist :create
+                        :external-format :utf-8)
+    (format file "~&~A>>~A~%" (time.encode.backup timestamp) data)))
+
+(defun %gateway.processing-single-package (raw)
+  "Обработка одиночного изменения, для экстренного внесения изменений на небольшое количество товаров"
+  (let ((data (%gateway.prepare-raw-data raw)))
+    (gateway.store-single-gateway data)
+    (%gateway.process-products-dump-data (json:decode-json-from-string data))
+    ;; возможно тут необходимо пересчитать списки активных товаров или еще что-то
+    "single"))
+
+(defun gateway-page ()
+  "GP"
+  (setf (hunchentoot:content-type*) "text/html; charset=utf-8")
+  (let ((num (format nil "~A" (hunchentoot:get-parameter "num")))
+        (single (format nil "~A" (hunchentoot:get-parameter "single"))))
+    (aif (hunchentoot:raw-post-data)
+         (string-case num
+           ("1" (%gateway.processing-fist-package it))
+           ("0" (%gateway.processing-last-package it))
+           (t (string-case single
+                ("single" (%gateway.processing-single-package it))
+                (t (%gateway.processing-package it)))))
+         "NIL")))
+
+
+
+(defvar *bad-products* (make-hash-table :test #'equal))
+
+(defun t.%save-bad-product (product)
+  (debug-slime-format "~A: ~A ~A" (time.encode.backup) product (name-seo product))
+  (setf (gethash (key product) *bad-products*) product))
+
+(defun t.%kill-bad-products ()
+  (maphash #'(lambda (key pr)
+               (declare (ignore key))
+               (set-option pr "Secret" "YML" "No")
+               (setf (active pr) nil))
+           *bad-products*))
+
+(defun t.%report-bad-products ()
+  (format t "~&артикул;название товара; название группы;~%")
+  (maphash #'(lambda (key pr)
+               (format t "~&~A;~A;~A;~%" key (name-seo pr) (name (parent pr))))
+           *bad-products*))

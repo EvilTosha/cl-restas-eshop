@@ -1,6 +1,9 @@
 ;;;; log.lisp
 
 (in-package #:eshop)
+
+(defvar *eshop-access-log-lock* (bt:make-lock "eshop-request-log-lock"))
+
 (log5:defcategory test)
 (log5:defcategory request-log)
 (log5:defcategory debug-console)
@@ -41,3 +44,8 @@
 
 ;;example of call
 ;;(log5:log-for debug-console "First log msg")
+
+
+(defun request-log-message (control-string &rest args)
+  (tbnl::with-log-stream (stream (merge-pathnames "request.log" (config.get-option "PATHS" "path-to-logs")) *eshop-access-log-lock*)
+    (apply #'format stream control-string args)))

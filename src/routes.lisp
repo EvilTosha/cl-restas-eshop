@@ -15,9 +15,14 @@
 (defun make-proxy-route-timer (route)
   (make-instance 'proxy-route-timer :target route))
 
+(defvar *current-route-symbol* nil)
+
 (defmethod restas:process-route :around ((route proxy-route-timer) bindings)
-  "log timing and additional data for current route processing"
-   (sb-impl::call-with-timing #'log.timer #'call-next-method))
+  "log timing and additional data for current route processing and
+   update current thread information"
+  (let ((*current-route-symbol*
+         (restas:route-symbol (routes:proxy-route-target route))))
+    (sb-impl::call-with-timing #'log.timer #'call-next-method)))
 
 (defun log.timer (&key real-time-ms user-run-time-us system-run-time-us
                   gc-run-time-ms processor-cycles eval-calls
@@ -27,14 +32,16 @@
                   gc-run-time-ms eval-calls
                   lambdas-converted page-faults bytes-consed
                   aborted))
-  (log5:log-for request-log "~A"
-                (cl-csv:write-csv-row
-                 (list (time.encode.backup)
-                       (+ user-run-time-us system-run-time-us)
-                       processor-cycles
-                       (hunchentoot:request-uri*)
-                       (hunchentoot:user-agent)
-                       (hunchentoot:referer)))))
+  (request-log-message "~A"
+                       (cl-csv:write-csv-row
+                        (list (time.encode.backup)
+                              (+ user-run-time-us system-run-time-us)
+                              processor-cycles
+                              *current-route-symbol*
+                              (tbnl:request-uri*)
+                              (tbnl:real-remote-addr)
+                              (tbnl:user-agent)
+                              (tbnl:referer)))))
 
 
 (defmacro define-tracing-route (name (template &rest args) &body body)
@@ -298,6 +305,7 @@
   (oneclickcart.make-common-order (request-get-plist)))
 
 (define-tracing-route compare-route ("/compare")
+  (debug-slime-format "IP:~A" (tbnl:real-remote-addr))
 	 (soy.compare:compare-page
 		(list :keywords "" ;;keywords
 					:description "" ;;description
