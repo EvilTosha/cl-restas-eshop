@@ -122,7 +122,7 @@ Content-Transfer-Encoding: base64
    ;; (babel:string-to-octets
    ;;  param
    ;;  :encoding :cp1251)))
-   (sb-ext:string-to-octets param  :external-format :cp1251)))
+   (sb-ext:string-to-octets param  :external-format :cp1251) :columns 76))
 
 (defun encode1251 (param)
   (let (($ret nil))
