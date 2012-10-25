@@ -164,12 +164,13 @@
   (labels ((@ (field) (getf item field))
            (fl@ (field) (float-string->int (@ field))))
     (awhen (@ :id)
-      (let* ((old-product (getobj it 'product))
+      (let* ((key (write-to-string (fl@ :id)))
+             (old-product (getobj key 'product))
              (product))
         (setf product (aif old-product
                            it
-                           (make-instance 'product :articul (@ :id))))
-        (setf (key product) (write-to-string (fl@ :id)))
+                           (make-instance 'product :articul (fl@ :id))))
+        (setf (key product) key)
         (setf (articul product) (fl@ :id))
         (%product-update-name product (@ :name))
         (%product-update-prices product
