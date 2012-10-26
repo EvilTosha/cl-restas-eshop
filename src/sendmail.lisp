@@ -1,6 +1,6 @@
 ;;;; sendmail.lisp
 
-;; depends-on :alexandria
+;; depends-on :alexandria :flexi-streams
 
 (defpackage :sendmail
   (:use :cl :sb-unix :sb-ext :cl-mime)
@@ -16,18 +16,20 @@
            :other-headers
            ;; functions
            :send-email
-           :send-email-with-template))
+           :send-email-with-template
+           :make-attachment-mime-from-file
+           :make-attachment-mime-from-string))
 
 
 (in-package :sendmail)
 
-(sb-int:defconstant-eqx +sendmail-bin+
+(alexandria:define-constant +sendmail-bin+
     (find-if #'probe-file
              (list "/usr/lib/sendmail"
                    "/usr/bin/sendmail"
                    "/usr/sbin/sendmail"))
-  #'string-equal
-  "Path to executable sendmail file")
+  :test (constantly t)
+  :documentation "Path to executable sendmail file")
 
 (defclass email ()
   ((from            :initarg :from          :accessor from            :initform nil)
@@ -48,15 +50,50 @@
   (print-unreadable-object (object stream :type t :identity t)
     (format stream "to ~A regarding ~A" (to object) (subject object))))
 
+
+(defun make-attachment-mime-from-file (filepath &key (name (file-namestring filepath))
+                            content-type content-subtype)
+  "Creates attachment mime object from specified file. If no content-type/content-subtype specified
+looks for it in standard mime types table."
+  (declare ((or string pathname) filepath) ((or null string) content-type content-subtype))
+  (when (probe-file filepath)
+    (multiple-value-bind (type subtype)
+        (cl-mime:lookup-mime filepath)
+      (make-instance
+       'mime
+       :id (cl-mime:make-content-id)
+       :type (or content-type type "application")
+       :subtype (or content-subtype subtype "octet-stream")
+       :content (alexandria:read-file-into-byte-vector filepath)
+       :encoding :base64
+       :disposition "attachment"
+       :disposition-parameters `((:filename ,name))))))
+
+(defun make-attachment-mime-from-string (string name &key content-type content-subtype)
+  "Creates attachment mime object from specified string."
+  (declare (string string name) ((or null string) content-type content-subtype))
+  (make-instance
+   'mime
+   :id (cl-mime:make-content-id)
+   :type (or content-type "application")
+   :subtype (or content-subtype "octet-stream")
+   :content (flexi-streams:string-to-octets string :external-format :utf8)
+   :encoding :base64
+   :disposition "attachment"
+   :disposition-parameters `((:filename ,name))))
+
+
 (defun get-user ()
   (sb-unix:uid-username (sb-unix:unix-getuid)))
 
 (defun send-email (&key (from (get-user)) to reply-to (subject "") (body "") cc bcc (content-type "text")
                    (content-subtype "plain") attachments other-headers)
-  "Sends semail with specified parameters"
+  "Sends email with specified parameters.
+Note: attachments are list of mime objects. To easily create mime from pathname use
+#'make-attachment-mime-from-pathname function"
   (declare (string from subject body content-type content-subtype)
            ((or string list) to reply-to cc bcc)
-           (list attachments other-headers)
+           (list other-headers)
            (ignore other-headers))
   (let ((sendmail (sb-unix::process-input
                    (sb-ext:run-program +sendmail-bin+
@@ -81,21 +118,7 @@
                         :content body
                         :disposition "inline")
                        ;; The attachments themselves
-                       (mapcar
-                        #'(lambda (attachment)
-                            (multiple-value-bind (type subtype)
-                                (cl-mime:lookup-mime attachment)
-                              (make-instance
-                               'mime
-                               :type (or type "application")
-                               :subtype (or subtype "octet-stream")
-                               :content (alexandria:read-file-into-byte-vector attachment)
-                               :id (cl-mime:make-content-id)
-                               :encoding :base64
-                               :disposition "attachment"
-                               :disposition-parameters
-                               `((:filename ,(file-namestring attachment))))))
-                        attachments))))))
+                       (alexandria:ensure-list attachments))))))
     (mapc #'(lambda (header value)
               (when value
                 (format sendmail "~A: ~{~A~^,~}~%" header (alexandria:ensure-list value))))

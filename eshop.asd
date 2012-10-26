@@ -45,7 +45,7 @@
              (:file "admin" :depends-on ("filters" "cron"))
              (:file "gateway" :depends-on ("admin"))
              (:file "sendmail" :depends-on ("gateway"))
-             (:file "email" :depends-on ("gateway"))
+             (:file "email" :depends-on ("sendmail"))
              (:file "groupd" :depends-on ("email"))
              (:file "cartrige" :depends-on ("groupd"))
              (:file "report" :depends-on ("cartrige"))
