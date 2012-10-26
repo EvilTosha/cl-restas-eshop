@@ -40,6 +40,7 @@
      :subject (format nil "Doubles in xls: ~D" number)
      :body body)))
 
+
 (alexandria:define-constant +clientmail-template+
     (make-instance 'sendmail:email
                    :from "shop@320-8080.ru"
@@ -83,25 +84,3 @@
                  attachment-string attachment-filename
                  :content-type "text"
                  :content-subtype "plain")))
-
-
-;;; ---------------- old code ----------------
-
-
-(defun encode64 (param)
-  (base64:usb8-array-to-base64-string
-   ;; (babel:string-to-octets
-   ;;  param
-   ;;  :encoding :cp1251)))
-   (sb-ext:string-to-octets param  :external-format :cp1251) :columns 76))
-
-(defun encode1251 (param)
-  (let (($ret nil))
-    (loop
-       for x across param collect x
-       do (if (equal x (code-char 10))
-              (progn
-                (push (code-char 13) $ret)
-                (push x $ret))
-              (push x $ret)))
-    (coerce (reverse $ret) 'string)))
