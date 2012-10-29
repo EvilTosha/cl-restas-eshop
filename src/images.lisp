@@ -68,10 +68,12 @@ Returns pics"
                                :pics (%get-pics-no-cache key))))
       (pics (gethash key *pics-cache*)))))
 
-(defun get-pics (key)
+(defmethod get-pics ((product product))
+  (get-pics (key product)))
+
+(defmethod get-pics ((key string))
   "By given product key gets list of names of its pics in following format: pic-name.jpg;
 Firstly tries to get value from cache (checking for fresh)"
-  (declare (string key))
   (let ((cache-instance (gethash key *pics-cache*)))
     (if cache-instance
         (if (pics-cache-fresh-p (last-update cache-instance))
