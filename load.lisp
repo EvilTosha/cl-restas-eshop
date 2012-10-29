@@ -49,5 +49,13 @@
            "cl-csv"
            "cl-interpol-0.2.1"
            "cl-unicode-0.1.4"
+           ;;mongoDB
+           "cl-mongo"
+           "lisp-unit"
+           "documentation-template-0.4.2"
+           "uuid"
+           "trivial-utf-8"
+           "ironclad"
+           "nibbles"
            )))
 
