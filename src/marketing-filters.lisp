@@ -155,7 +155,7 @@ Filter's key is concatenated group's and default-filter's keys"
                                 :parents (list group)
                                 :default-set 'product
                                 :data (list :name "Для отдыха!")
-                                :serialize nil))
+                                :serialize nil)))
     ;; setup basic filters
     ;; TODO: get rid of gensym
     (setf (gethash (gensym) (filters filter))
