@@ -316,7 +316,10 @@
            *bad-products*))
 
 (defun t.%report-bad-products ()
-  (format t "~&артикул;название товара; название группы;~%")
+  (format t "~&артикул;название товара; название группы;цена;категория;~%")
   (maphash #'(lambda (key pr)
-               (format t "~&~A;~A;~A;~%" key (name-seo pr) (name (parent pr))))
+               (format t "~&~A;~S;~A;~A;~A;~%" key (name-seo pr) (aif (parent pr)
+                                                                (name it)
+                                                                "")
+                       (siteprice pr) (erp-class pr)))
            *bad-products*))

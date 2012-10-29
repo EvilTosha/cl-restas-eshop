@@ -182,6 +182,9 @@ list of conses (column-header . column-specifier).
   (report.%rsc 'filter-vendor #'(lambda (item) (getf (data item) :vendor)))
   (report.%rsc 'filter-seria #'(lambda (item) (getf (data item) :seria)))
   (report.%rsc 'filter-name #'(lambda (item) (getf (data item) :name)))
+  (report.%rsc 'filter-seotext #'(lambda (item) (if (valid-string-p (seo-text item))
+                                                    "есть"
+                                                    "нет")))
   (report.%rsc
    'filter-url
    #'(lambda (item)
@@ -246,7 +249,8 @@ list of conses (column-header . column-specifier).
          (cons "Имя" 'filter-name)
          (cons "URL" 'filter-url)
          (cons "продуктов" 'filter-products)
-         (cons "активных" 'filter-active-products))
+         (cons "активных" 'filter-active-products)
+         (cons "описание" 'filter-seotext))
    (marketing-filters.get-seria-filters)))
 
 (defun report.groups-products-report (stream)
