@@ -54,7 +54,7 @@
   (time.decode.backup (pathname-name dump-name)))
 
 (defun %gateway.search-dump-path-and-timestamp (&optional (timestamp (get-universal-time)))
-  "Looking for dump file named with ts near timestamp & give back (values-list filename ts) (NIL NIL) for empty dump-path"
+  "Looking for dump file named with ts near timestamp & give back (values filename ts) (NIL NIL) for empty dump-path"
   (declare (number timestamp))
   (let* ((dump-path (config.get-option "PATHS" "path-to-gateway"))
          (dump-mask (concatenate 'string (namestring dump-path) "*.bkp"))
@@ -68,7 +68,7 @@
                                                 (directory dump-mask)) #'pathname>)))
       (awhen result-file
            (setf result-time (%gateway.get-time-from-dumpfile it)))
-      (values-list (list result-file result-time)))))
+      (values result-file result-time))))
 
 (defun %gateway.prepare-raw-data (raw)
   "Сonvert raw data to presentable format"
@@ -184,7 +184,7 @@
 
 (defun %gateway.process-products-dump-data (items)
   "Process list items. Where items a alist example: ((:ID . \"158354\") (:NAME . \"USB HUB 4port mobileData HB-65\") (:ISNEW . \"0\"))"
-  (loop :for item  :in items
+  (loop :for item :in items
      :do (%gateway.process-product (servo.alist-to-plist item))))
 
 (defun %gateway.update-actives (items)

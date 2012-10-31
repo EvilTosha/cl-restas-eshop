@@ -453,14 +453,13 @@ Type: ~A" type))
                         (setf child-open (or child-open branch-opened))
                         branch))
                   (groups group)))
-    (values-list (list
-                  (soy.class_forms:group-tree-branch (list :opened child-open
-                                                           :hashkey (key group)
-                                                           :name (name group)
-                                                           :checked checked
-                                                           :children children
-                                                           :fieldname field-name))
-                  (or open child-open)))))
+    (values (soy.class_forms:group-tree-branch (list :opened child-open
+                                                     :hashkey (key group)
+                                                     :name (name group)
+                                                     :checked checked
+                                                     :children children
+                                                     :fieldname field-name))
+            (or open child-open))))
 
 
 (defmethod slots.%get-data ((type (eql 'group-list)) string-list)

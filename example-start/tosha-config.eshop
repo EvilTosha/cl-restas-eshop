@@ -16,7 +16,7 @@ make-marketing-filters = 0
 
 [PATHS]
 path-to-last-backup = last-backup/
-path-to-templates = Dropbox/httpls/dev/
+path-to-templates = Dropbox/httpls/release/
 path-to-articles = Dropbox/content/articles/
 path-to-static-pages = Dropbox/content/static-pages/
 path-to-pics = htpics1/

@@ -55,7 +55,7 @@
                                            :cnt cnt
                                            :sum (* cnt price))))))
                            alist))
-    (values-list (list res-list sum-counter sum bonuscount))))
+    (values res-list sum-counter sum bonuscount)))
 
 (defun newcart-tovar (n)
   (let ((k n))
@@ -233,7 +233,7 @@
     (if (or (equal discount-cart t)
             (valid-string-p discount-cart))
         (setf ekk discount-cart-number))
-    (values-list (list phone delivery-type name email city addr courier_comment pickup pickup_comment payment bankaccount ekk family))))
+    (values phone delivery-type name email city addr courier_comment pickup pickup_comment payment bankaccount ekk family)))
 
 ;; страница информации об отправленном заказе
 (defun thanks-page ()
@@ -346,12 +346,9 @@
             ;; удаление страных символов
             (setf client-mail (remove-if #'(lambda(c) (< 10000 (char-code c))) client-mail))
             (setf tks-mail (remove-if #'(lambda(c) (< 10000 (char-code c))) (soy.sendmail:mailfile mail-file)))
-            (mapcar #'(lambda (email)
-                        (send-mail (list email) client-mail filename tks-mail order-id))
-                    *conf.emails.cart*)
-            ;; сделать валидацию пользовательского email
-            (unless (string= email "")
-              (send-client-mail (list email) client-mail order-id))
+            (email.send-order-details order-id client-mail filename tks-mail)
+            (when (email.valid-email-p email)
+              (email.send-client-mail email order-id client-mail))
             (soy.newcart:fullpage
              (list :head (soy.newcart:newcart-head
                           (list :thanks

@@ -44,21 +44,24 @@
 					 ;; "cl-store" ;; сохранение данных | Serialization Package http://common-lisp.net/project/cl-store/
 					 "drakma-1.2.8" ;;http клиент для тестов
 					 ;; "cl-cron" ;; http://www.trailoflight.net/cl-cron/
-					 "py-configparser-1.0.3"
+					 "py-configparser-1.0.3" ;;
            "string-case"
            "cl-csv"
            "cl-interpol-0.2.1"
            "cl-unicode-0.1.4"
+           "cl-mime"
+           "cl-qprint"
            ;;mongoDB
            "cl-mongo"
-           "lisp-unit"
-           "documentation-template-0.4.2"
-           "uuid"
-           "trivial-utf-8"
-           "ironclad"
-           "nibbles"
+           "lisp-unit" ;; mongo
+           "documentation-template-0.4.2" ;; mongo
+           "uuid" ;; mongo
+           "trivial-utf-8" ;; mongo
+           "ironclad" ;; mongo
+           "nibbles" ;; mongo
            ;; "js" ;; test parenscript
            ;; "parse-js" ;; -> js
            ;; "Eos"
            )))
+
 
