@@ -36,7 +36,7 @@
 					 "cl-closure-template" ;; шаблонизатор
 					 "cl-json_0.4.1" ;; JSON сериализатор
 					 "arnesi_dev-20080427" ;; parse-float
-					 "parenscript" ;;closure-template
+					 "parenscript-2.5" ;;closure-template
 					 "named-readtables-0.9" ;;closure-template
 					 "anaphora-0.9.4" ;; closure-template | macro collection from Hell http://www.cliki.net/Anaphora
 					 "esrap" ;; closure-template | packrat parser http://nikodemus.github.com/esrap/
@@ -57,5 +57,8 @@
            "trivial-utf-8"
            "ironclad"
            "nibbles"
+           ;; "js" ;; test parenscript
+           ;; "parse-js" ;; -> js
+           ;; "Eos"
            )))
 
