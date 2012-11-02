@@ -49,11 +49,12 @@
   :documentation "Template for email to client about his/her order")
 
 (defun email.send-client-mail (to order-id body)
+  (declare (fixnum order-id) (string body) ((or list string) to))
   (when (email.valid-email-p to)
     (sendmail:send-email-with-template
      +clientmail-template+
      :to to
-     :subject (format nil "Subject: www.320-8080.ru - 3AKA3 ~D~%" order-id)
+     :subject (format nil "www.320-8080.ru - 3AKA3 ~D" order-id)
      :body body)))
 
 (alexandria:define-constant +order-emails+
