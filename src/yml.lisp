@@ -27,7 +27,7 @@
   (declare (product product))
   (and (parent product)
        (ymlshow (parent product))
-       (or (active product) (yml.available-for-order-p product))
+       (active product) ;; (yml.available-for-order-p product))
        (price product)
        (plusp (price product))
        ;;для селективного исключения товаров по значению специальной опции

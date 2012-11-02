@@ -282,6 +282,9 @@
         ("seo-report"
          (report.do-seo-reports)
          "SEO-REPORT")
+        ("groups-products-report"
+         (report.do-groups-products-report)
+         "groups-products-report")
         ("keyoptions-aliases-restore"
          (report.do-alias-reports)
          action)

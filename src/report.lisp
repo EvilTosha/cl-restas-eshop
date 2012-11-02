@@ -90,13 +90,16 @@ list of conses (column-header . column-specifier).
   (report.register-standard-column symbol func))
 
 ;; register standard columns
-(defun report.register-standart-columns ()
+(defun report.register-standard-columns ()
+  (report.%rsc 'item-key #'key)
   ;; product functions
   (report.%rsc 'product-articul #'articul)
   (report.%rsc 'product-price #'price)
   (report.%rsc 'product-siteprice #'siteprice)
   (report.%rsc 'product-name #'name-provider)
   (report.%rsc 'product-name-real #'name-seo)
+  (report.%rsc 'product-erp-price #'erp-price)
+  (report.%rsc 'product-erp-class #'erp-class)
   (report.%rsc
    'product-yml-name
    (rcurry #'get-option "Secret" "Yandex"))
@@ -147,7 +150,7 @@ list of conses (column-header . column-specifier).
    #'(lambda (item)
        ;; TODO: use restas url designator
        (format nil "http://www.320-8080.ru/~A" (key item))))
-;;; group functions
+  ;; group functions
   (report.%rsc
    'group-name #'name)
   (report.%rsc
@@ -169,9 +172,34 @@ list of conses (column-header . column-specifier).
   (report.%rsc
    'group-count-active-products
    #'(lambda (item)
-       (count-if #'active (products item)))))
+       (count-if #'active (products item))))
+  (report.%rsc
+   'group-rootgroup-name
+   #'(lambda (item) (aif (get-root-parent item)
+                         (name it)
+                         "no")))
+  ;; marketing filters
+  (report.%rsc 'filter-vendor #'(lambda (item) (getf (data item) :vendor)))
+  (report.%rsc 'filter-seria #'(lambda (item) (getf (data item) :seria)))
+  (report.%rsc 'filter-name #'(lambda (item) (getf (data item) :name)))
+  (report.%rsc 'filter-seotext #'(lambda (item) (if (valid-string-p (seo-text item))
+                                                    "есть"
+                                                    "нет")))
+  (report.%rsc
+   'filter-url
+   #'(lambda (item)
+       ;; TODO: use restas url designator
+       (format nil "http://www.320-8080.ru/~A/~A"
+               (key (parent item))
+               (key item))))
+  (report.%rsc
+   'filter-products
+   #'(lambda (item) (length (filters.filter item))))
+  (report.%rsc
+   'filter-active-products
+   #'(lambda (item) (count-if #'active (filters.filter item)))))
 
-(report.register-standart-columns)
+(report.register-standard-columns)
 
 (defun report.product-report (stream)
   (report.write-report-with-standard-columns
@@ -197,7 +225,9 @@ list of conses (column-header . column-specifier).
          (cons "серия" 'product-seria)
          (cons "direct-name" 'product-direct-name)
          (cons "дубль" 'product-double)
-         (cons "гарантия" 'product-warranty))
+         (cons "гарантия" 'product-warranty)
+         (cons "1с группа" 'product-erp-class)
+         (cons "1с цена" 'product-erp-price))
    'product))
 
 (defun report.group-report (stream)
@@ -210,6 +240,28 @@ list of conses (column-header . column-specifier).
          (cons "продуктов" 'group-count-products)
          (cons "активных" 'group-count-active-products))
    'group))
+
+(defun report.seo-seria-filters (stream)
+  (report.write-report-with-standard-columns
+   stream
+   (list (cons "Брэнд" 'filter-vendor)
+         (cons "Серия" 'filter-seria)
+         (cons "Имя" 'filter-name)
+         (cons "URL" 'filter-url)
+         (cons "продуктов" 'filter-products)
+         (cons "активных" 'filter-active-products)
+         (cons "описание" 'filter-seotext))
+   (marketing-filters.get-seria-filters)))
+
+(defun report.groups-products-report (stream)
+  (report.write-report-with-standard-columns
+   stream
+   (list (cons "Ключ" 'item-key)
+         (cons "Название root категории" 'group-rootgroup-name)
+         (cons "Название группы" 'group-name)
+         (cons "Продуктов" 'group-count-products)
+         (cons "Активных продуктов" 'group-count-active-products))
+         'group))
 
 (defun report.product-vendor-report (stream)
   (report.write-report-with-standard-columns
@@ -316,7 +368,8 @@ list of conses (column-header . column-specifier).
            (push v rs)
            (setf (active v) nil)))
      'product)
-    (length rs)))
+    (length rs))
+  (t.%kill-bad-products))
 
 (defun product-delivery (p)
   (let ((g (parent p))
@@ -356,7 +409,10 @@ list of conses (column-header . column-specifier).
     (create-report name #'write-vendors))
   (let ((name (format nil "reports/seo-report-products-~a.csv" (time.encode.backup-filename))))
     (log5:log-for info "Do products SEO report")
-    (create-report name #'report.product-vendor-report)))
+    (create-report name #'report.product-vendor-report))
+  (let ((name (format nil "reports/seo-report-seria-filters-~a.csv" (time.encode.backup-filename))))
+    (log5:log-for info "Do seria filter SEO report")
+    (create-report name #'report.seo-seria-filters)))
 
 
 (defun report.write-alias (&optional (stream *standard-output*))
@@ -402,3 +458,7 @@ list of conses (column-header . column-specifier).
       (create-report name #'report.write-keyoptions)
       "KEYOPTIONS REPORT DONE")))
 
+(defun report.do-groups-products-report ()
+    (let ((name (format nil "reports/groups-products-~a.csv" (time.encode.backup-filename))))
+      (create-report name #'report.groups-products-report))
+    t)

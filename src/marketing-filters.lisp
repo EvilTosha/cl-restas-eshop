@@ -148,7 +148,6 @@ Filter's key is concatenated group's and default-filter's keys"
           (gethash key (filters group)) filter)
     (setobj key filter 'filter)))
 
-
 (defun marketing-filters.set-holiday-filter (group)
   (let* ((key (format nil "~A-holiday-filter" (key group)))
          (filter (make-instance 'filter
@@ -254,3 +253,6 @@ Filter's key is concatenated group's and default-filter's keys"
                 "klaviatury"
                 "holodilniki-i-morozilniki"
                 "stiralnie-mashiny")))
+
+(defun marketing-filters.get-seria-filters ()
+  (collect-storage 'filter :when-fn #'(lambda (filter) (getf (data filter) :seria))))

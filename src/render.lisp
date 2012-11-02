@@ -1,4 +1,4 @@
-000;;;; render.lisp
+;;;; render.lisp
 
 (in-package #:eshop)
 
@@ -279,6 +279,23 @@
                               (upsale-links object))))
 
 
+(defun render.%add-button (product)
+  (declare (product product))
+  (let ((fields (list :articul (articul product)
+                      :name (name-seo product)
+                      :pic (first (get-pics product))
+                      :deliveryprice (yml.get-product-delivery-price1 product)
+                      :siteprice (siteprice product)
+                      :price (price product))))
+    (if (active product)
+        (if (preorder product)
+            (soy.buttons:buy-product-preorder fields)
+            (soy.buttons:add-product-cart fields))
+        ;;else (not active)
+        (when (yml.available-for-order-p product)
+          (soy.buttons:buy-product-order fields)))))
+
+
 (defmethod render.view ((object product))
   (let ((pics (get-pics (key object))))
     (let ((group (parent object)))
@@ -316,14 +333,7 @@
             :keyopts (render.get-catalog-keyoptions object)
             :oneclickbutton  (unless (preorder object)
                                (soy.buttons:add-one-click (list :articul (articul object))))
-            :addbutton (if (preorder object)
-                           (soy.buttons:add-product-rasp (list :articul (articul object)))
-                           (soy.buttons:add-product-cart (list :articul (articul object)
-                                                               :name (name-seo object)
-                                                               :pic (if (null pics) nil (car pics))
-                                                               :deliveryprice (yml.get-product-delivery-price1 object)
-                                                               :siteprice (price object)
-                                                               :price (siteprice object))))))))0
+            :addbutton (render.%add-button object)))))
 
 
 (defun render.render-optgroups (optgroups)
@@ -494,7 +504,8 @@
                                                               (getf v :optvalue)))
                                                          (render.get-keyoptions object))
                                           6)
-                             :active (active object)
+                             :active (or (active object)
+                                         (yml.available-for-order-p object))
                              :vintage is-vintage
                              :shortdescr (seo-text object)
                              :bestproducts (soy.product:similar-products
@@ -503,15 +514,12 @@
                                                                          (render.view prod)))
                                                                     (filters.limit-end (servo.find-relative-product-list object) 4))))
                              :seotextflag (valid-string-p (seo-text object))
-                             :predzakaz (preorder object)
-                             :addproductcart (if (preorder object)
-                                                 (soy.buttons:add-product-rasp (list :articul (articul object)))
-                                                 (soy.buttons:add-product-cart (list :articul (articul object)
-                                                                                     :name (name-seo object)
-                                                                                     :pic (if (null pics) nil (car pics))
-                                                                                     :siteprice (siteprice object)
-                                                                                     :price (price object))))
-                             :addoneclick (unless (preorder object)
+                             :predzakaz (or (preorder object)
+                                            (yml.available-for-order-p object))
+                             :addproductcart (render.%add-button object)
+                             :isavaiblefororder is-available
+                             :addoneclick (unless (or (preorder object)
+                                                      (yml.available-for-order-p object))
                                             (soy.buttons:add-one-click (list :articul (articul object)
                                                                              :available is-available)))))
     (default-page

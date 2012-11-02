@@ -109,20 +109,21 @@
 (defun classes.has-vendor-seo-text (group vendor-key)
   "Chech whether there is vendor's seo-text for given group"
   (and group (valid-string-p vendor-key)
-       (let ((vendor-obj (gethash (string-downcase vendor-key) (vendors group))))
+       (let ((vendor-obj (getobj (string-downcase vendor-key) 'vendor)))
          (and vendor-obj (gethash (key group) (seo-texts vendor-obj))))
        t))
 
 (defun classes.get-group-seo-text (group &optional vendor-key)
-  "If vendor passed, try to return corresponding seo-text for group,
-if there is not one, or no vendor passed, return group's seo-text"
+  "Get group seotext or vendor seotext."
   (declare (group group))
   (let ((vendor-object (when (valid-string-p vendor-key)
-                         (gethash (string-downcase vendor-key) (vendors group)))))
-    (aif (and vendor-object (gethash (key group) (seo-texts vendor-object)))
-         it             ; if condition non-nil, it is required seo-text
-         ;; else
-         (seo-text group))))
+                         (getobj (string-downcase vendor-key) 'vendor))))
+    (if vendor-object
+        (aif (gethash (key group) (seo-texts vendor-object))
+             it
+             "")
+        ;;else
+        (seo-text group))))
 
 
 (defgeneric parent (item)

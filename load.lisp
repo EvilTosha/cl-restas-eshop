@@ -36,7 +36,7 @@
 					 "cl-closure-template" ;; шаблонизатор
 					 "cl-json_0.4.1" ;; JSON сериализатор
 					 "arnesi_dev-20080427" ;; parse-float
-					 "parenscript" ;;closure-template
+					 "parenscript-2.5" ;;closure-template
 					 "named-readtables-0.9" ;;closure-template
 					 "anaphora-0.9.4" ;; closure-template | macro collection from Hell http://www.cliki.net/Anaphora
 					 "esrap" ;; closure-template | packrat parser http://nikodemus.github.com/esrap/
@@ -44,12 +44,24 @@
 					 ;; "cl-store" ;; сохранение данных | Serialization Package http://common-lisp.net/project/cl-store/
 					 "drakma-1.2.8" ;;http клиент для тестов
 					 ;; "cl-cron" ;; http://www.trailoflight.net/cl-cron/
-					 "py-configparser-1.0.3"
+					 "py-configparser-1.0.3" ;;
            "string-case"
            "cl-csv"
            "cl-interpol-0.2.1"
            "cl-unicode-0.1.4"
-           "cl-base64-3.3.3"
            "cl-mime"
-           "cl-qprint")))
+           "cl-qprint"
+           ;;mongoDB
+           "cl-mongo"
+           "lisp-unit" ;; mongo
+           "documentation-template-0.4.2" ;; mongo
+           "uuid" ;; mongo
+           "trivial-utf-8" ;; mongo
+           "ironclad" ;; mongo
+           "nibbles" ;; mongo
+           ;; "js" ;; test parenscript
+           ;; "parse-js" ;; -> js
+           ;; "Eos"
+           )))
+
 

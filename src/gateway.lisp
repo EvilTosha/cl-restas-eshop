@@ -164,12 +164,13 @@
   (labels ((@ (field) (getf item field))
            (fl@ (field) (float-string->int (@ field))))
     (awhen (@ :id)
-      (let* ((old-product (getobj it 'product))
+      (let* ((key (write-to-string (fl@ :id)))
+             (old-product (getobj key 'product))
              (product))
         (setf product (aif old-product
                            it
-                           (make-instance 'product :articul (@ :id))))
-        (setf (key product) (@ :id))
+                           (make-instance 'product :articul (fl@ :id))))
+        (setf (key product) key)
         (setf (articul product) (fl@ :id))
         (%product-update-name product (@ :name))
         (%product-update-prices product
@@ -295,7 +296,7 @@
            ("1" (%gateway.processing-fist-package it))
            ("0" (%gateway.processing-last-package it))
            (t (string-case single
-                ("single" (%gateway.processing-single-package it))
+                ("1" (%gateway.processing-single-package it))
                 (t (%gateway.processing-package it)))))
          "NIL")))
 
@@ -315,7 +316,10 @@
            *bad-products*))
 
 (defun t.%report-bad-products ()
-  (format t "~&артикул;название товара; название группы;~%")
+  (format t "~&артикул;название товара; название группы;цена;категория;~%")
   (maphash #'(lambda (key pr)
-               (format t "~&~A;~A;~A;~%" key (name-seo pr) (name (parent pr))))
+               (format t "~&~A;~S;~A;~A;~A;~%" key (name-seo pr) (aif (parent pr)
+                                                                (name it)
+                                                                "")
+                       (siteprice pr) (erp-class pr)))
            *bad-products*))
