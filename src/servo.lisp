@@ -216,14 +216,16 @@
       (values result page-line-string))))
 
 
-(defun default-page (&optional (content nil) &key keywords description title no-need-cart)
+(defun default-page (&optional (content nil) &key keywords description title no-need-cart line-banner)
   (soy.index:main (list :keywords keywords
                         :description description
                         :title title
                         :header (soy.header:header (append (list :cart (unless no-need-cart
                                                                          (soy.index:cart))
                                                                  :bannertype "line-text")
-                                                           (main-page-show-banner "line-text" (banner *main-page.storage*))))
+                                                           (aif line-banner
+                                                                it
+                                                                (main-page-show-banner "line-text" (banner *main-page.storage*)))))
                         :content (if content
                                      content
                                      (format nil "<pre>'~a' ~%'~a' ~%'~a'</pre>"
