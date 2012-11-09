@@ -28,7 +28,7 @@
   (declare ((or string list) email))
   (every #'(lambda (addr)
              (and (valid-string-p addr) (cl-ppcre:scan "^[^@]+@[^@]+\\.[^@]+$" addr)))
-         email))
+         (ensure-list email)))
 
 (defun email.send-xls-doubles-warn (number body)
   "Sends email with warning about double products in xls processing"

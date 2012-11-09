@@ -289,7 +289,7 @@
          (report.do-alias-reports)
          action)
         ("gateway-restore"
-         (gateway.load-dump)
+         (gateway.load)
          "GATEWAY-RESTORE")
         (t (format nil "DON't know action ~a" action)))
     (error (e) (format  nil "ERROR:~%~a" e))))

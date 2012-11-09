@@ -8,8 +8,7 @@
                       :components
                       ((:module "closure-templates"
                                 :components
-                                ((:file "common-lisp-backend")
-                                 (:file "parse")))
+                                ((:file "common-lisp-backend")))
                        (:module "cl-mime"
                                 :components ((:file "encoding")))))
              (:file "packages")
