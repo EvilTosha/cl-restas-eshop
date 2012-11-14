@@ -2,6 +2,8 @@
 
 (in-package #:eshop)
 
+(arnesi:enable-sharp-l-syntax)
+
 (defclass gateway.dump ()
   ((products-num :initform 0 :accessor product-num)
    (is-loaded :initform nil :accessor is-loaded)
@@ -191,7 +193,7 @@
   "Update actives for products not entered the itmes"
   (let ((articuls (make-hash-table :test #'equal)))
     (mapcar #'(lambda (v)
-                (let ((articul (cdr (assoc :id v))))
+                (let ((articul (write-to-string (float-string->int (cdr (assoc :id v))))))
                   (setf (gethash articul articuls) t)))
             items)
     (process-storage #'(lambda (v)
