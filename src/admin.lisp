@@ -90,6 +90,8 @@
                                      (time.encode.backup (date *gateway.loaded-dump*))
                                      " || продуктов: "
                                      (write-to-string (product-num *gateway.loaded-dump*))
+                                     " || активных: "
+                                     (write-to-string (count-storage 'product :when-fn #'active))
                                      " || выключенных: "
                                      (write-to-string (hash-table-count *bad-products*))
                                      "</b>")
@@ -291,7 +293,7 @@
         ("gateway-restore"
          (gateway.load)
          "GATEWAY-RESTORE")
-        (t (format nil "DON't know action ~a" action)))
+        (t (format nil "DON't know action ~A<br>~A" action (admin.get-info))))
     (error (e) (format  nil "ERROR:~%~a" e))))
 
 (defun admin.parenting-content (post-data)
