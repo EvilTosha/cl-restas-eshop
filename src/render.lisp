@@ -25,7 +25,7 @@
        (order b))))
 
 ;;TODO временно убрана проверка на пустые группы, тк это поле невалидно
-(defun render.menu (&optional current-object)
+(defun render.menu (&optional current-object (show-all nil))
   "Creating left menu"
   (let* ((current-root (get-root-parent current-object))
          (dividers (list "setevoe-oborudovanie" "foto-and-video" "rashodnye-materialy"))
@@ -44,7 +44,9 @@
                                           :in (sort
                                                (remove-if #'(lambda (g)
                                                               (or
-                                                               ;; (empty g)
+                                                               (zerop (storage.count-recursive-products g (if show-all
+                                                                                                              #'identity
+                                                                                                              #'active)))
                                                                (not (active g))))
                                                           (groups val))
                                                #'menu-sort)
@@ -55,7 +57,7 @@
                                                   :key  (key val)
                                                   :name (name val)
                                                   :icon (icon val)))))
-                  (get-root-groups))))
+                  (remove-if-not #'active (get-root-groups)))))
     (soy.menu:main (list :elts src-lst))))
 
 (defmethod render.get-keywords ((object group) &optional (parameters (request-get-plist)))
@@ -131,7 +133,12 @@
                                   :producers (when showall
                                                (render.show-producers (storage.get-filtered-products object #'atom)))
                                   :accessories (soy.catalog:accessories)
-                                  :groups (let ((sort-groups (sort (remove-if-not #'active (groups object)) #'menu-sort)))
+                                  :groups (let ((sort-groups (sort (remove-if-not #'(lambda (group)
+                                                                                      (and (active group)
+                                                                                           (plusp (storage.count-recursive-products group (if showall
+                                                                                                                                              #'identity
+                                                                                                                                              #'active)))))
+                                                                                  (groups object)) #'menu-sort)))
                                             (mapcar #'(lambda (child)
                                                         (let* ((show-func (if showall
                                                                               #'atom
