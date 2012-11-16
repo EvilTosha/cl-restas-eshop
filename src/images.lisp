@@ -25,13 +25,13 @@ Path will be like path-to-pics/size/123/123456/picname.jpg
                            size
                            (pics.make-articul-subpath articul)
                            pic-name)
-                   (config.get-option "PATHS" "path-to-pics")))
+                   (config.get-option :paths :path-to-pics)))
 
 (defun %get-pics-no-cache (key)
   "By given product key gets list of names of its pics in following format: pic-name.jpg;
 Uses file operations, ignore cache"
   (let* ((path-art (pics.make-articul-subpath key))
-         (path (format nil "~A/big/~A/*.jpg" (config.get-option "PATHS" "path-to-pics") path-art)))
+         (path (format nil "~A/big/~A/*.jpg" (config.get-option :paths :path-to-pics) path-art)))
     (loop
        :for pic :in (ignore-errors (directory path))
        :collect (format nil "~A.~A"
@@ -43,7 +43,7 @@ Uses file operations, ignore cache"
   "Check whether timestamp is in range specified in config"
   (declare (number cache-timestamp))
   (< (get-universal-time) (+ cache-timestamp
-                             (config.get-option "OTHER_OPTIONS" "pics-cache-ttl"))))
+                             (config.get-option :other-options :pics-cache-ttl))))
 
 (defun drop-pics-cache (key)
   "Drops last-update time for pics cache for product to zero;

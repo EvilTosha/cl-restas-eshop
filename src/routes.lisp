@@ -61,36 +61,36 @@
 (define-tracing-route request-static-route-pic ("/pic/*")
   (let* ((full-uri (format nil "~a" (restas:request-full-uri)))
          (path-to-img (ppcre:regex-replace ".*/pic/(\\w{1,})/(\\d{1,3})(\\d{0,})/(.*)$" full-uri "\\1/\\2/\\2\\3/\\4")))
-    (pathname (format nil "~a/~a" (config.get-option "PATHS" "path-to-pics") path-to-img))))
+    (pathname (format nil "~a/~a" (config.get-option :paths :path-to-pics) path-to-img))))
 
 (define-tracing-route request-static-route-css ("/css/*")
   (let ((full-uri (format nil "~a" (restas:request-full-uri))))
-    (pathname (concatenate 'string *path-to-dropbox* "/htimgs/" (if (config.get-option "START_OPTIONS" "dbg-on") "dev/") (subseq full-uri (search "/css/" full-uri))))))
+    (pathname (concatenate 'string *path-to-dropbox* "/htimgs/" (if (config.get-option :start-options :dbg-on) "dev/") (subseq full-uri (search "/css/" full-uri))))))
 
 (define-tracing-route request-static-route-js ("/js/*")
   (let ((full-uri (format nil "~a" (restas:request-full-uri))))
-    (pathname (concatenate 'string *path-to-dropbox* "/htimgs/" (if (config.get-option "START_OPTIONS" "dbg-on") "dev/") (subseq full-uri (search "/js/" full-uri))))))
+    (pathname (concatenate 'string *path-to-dropbox* "/htimgs/" (if (config.get-option :start-options :dbg-on) "dev/") (subseq full-uri (search "/js/" full-uri))))))
 
 (define-tracing-route request-route-static-favicon ("/favicon.ico")
   (pathname (concatenate 'string  *path-to-dropbox* "/htimgs/img/favicon.ico")))
 
 (define-tracing-route request-route-static-robots ("/robots.txt")
-  (merge-pathnames "robots.txt" (config.get-option "CRITICAL" "path-to-conf")))
+  (merge-pathnames "robots.txt" (config.get-option :critical :path-to-conf)))
 
 (define-tracing-route request-route-static-yml ("/yml.xml")
-  (merge-pathnames "yml.xml" (config.get-option "CRITICAL" "path-to-conf")))
+  (merge-pathnames "yml.xml" (config.get-option :critical :path-to-conf)))
 
 (define-tracing-route request-route-static-sitemap ("/sitemap.xml")
-  (merge-pathnames "sitemap.xml" (config.get-option "CRITICAL" "path-to-conf")))
+  (merge-pathnames "sitemap.xml" (config.get-option :critical :path-to-conf)))
 
 (define-tracing-route request-route-static-sitemap-index ("/sitemap-index.xml")
-  (merge-pathnames "sitemap-index.xml" (config.get-option "CRITICAL" "path-to-conf")))
+  (merge-pathnames "sitemap-index.xml" (config.get-option :critical :path-to-conf)))
 
 (define-tracing-route request-route-static-sitemap1 ("/sitemap1.xml")
-  (merge-pathnames "sitemap1.xml" (config.get-option "CRITICAL" "path-to-conf")))
+  (merge-pathnames "sitemap1.xml" (config.get-option :critical :path-to-conf)))
 
 (define-tracing-route request-route-static-sitemap2 ("/sitemap2.xml")
-  (merge-pathnames "sitemap2.xml" (config.get-option "CRITICAL" "path-to-conf")))
+  (merge-pathnames "sitemap2.xml" (config.get-option :critical :path-to-conf)))
 
 ;; end static content
 ;; FILTER
@@ -313,7 +313,3 @@
 					:header (soy.header:header (append (list :cart (soy.index:cart))
 																			 (main-page-show-banner "line" (banner *main-page.storage*))))
 					:footer (soy.footer:footer))))
-
-
-
-

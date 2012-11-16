@@ -102,7 +102,7 @@
 (defun cartrige.restore ()
   (let ((t-storage (make-hash-table :test #'equal)))
     (xls.restore-from-xls
-     (merge-pathnames "printyrikartridji.xls" (config.get-option "CRITICAL" "path-to-conf"))
+     (merge-pathnames "printyrikartridji.xls" (config.get-option :critical :path-to-conf))
      #'(lambda (line)
          (let* ((content-list (mapcar #'(lambda (elt)
                                           (string-trim "#\"" elt))
@@ -128,4 +128,3 @@
                                  (format nil "~a ~(~a~)" type tech))))
      "cartrige.restore")
     (setf *printer-storage* t-storage)))
-

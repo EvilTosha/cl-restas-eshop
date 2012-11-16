@@ -61,7 +61,7 @@
       (loop
          :for folder :in *pics-dir-names*
          :do (rename-in-folder product
-                               (format nil "~a/~a/~a" (config.get-option "PATHS" "path-to-pics") folder path-art))))))
+                               (format nil "~a/~a/~a" (config.get-option :paths :path-to-pics) folder path-art))))))
 
 
 (defun rename-force-product-all-pics (product)
@@ -69,7 +69,7 @@
     (loop
        :for folder :in *pics-dir-names*
        :do (rename-in-folder product
-                             (format nil "~a/~a/~a" (config.get-option "PATHS" "path-to-pics") folder path-art)))))
+                             (format nil "~a/~a/~a" (config.get-option :paths :path-to-pics) folder path-art)))))
 
 
 (defun rename-convert-from-folder (product path-to-folder)
@@ -93,7 +93,7 @@
                 (rename-convert
                  (format nil "~a" pic)
                  (format nil "~a/~a/~a/~a.jpg"
-                         (config.get-option "PATHS" "path-to-pics")
+                         (config.get-option :paths :path-to-pics)
                          folder
                          path-art
                          new-name)
@@ -172,7 +172,7 @@
 
 
 (defun rename-convert-all (&key (from (format nil "~a/big-images/" *path-to-dropbox*))
-                           (backup (config.get-option "PATHS" "path-to-big-images-backup")))
+                           (backup (config.get-option :paths :path-to-big-images-backup)))
   "Convert all pictures from folders with articul names"
   (if (and (directory-exists-p from)
            (directory-exists-p backup))
@@ -209,7 +209,7 @@
   (let ((path-art (pics.make-articul-subpath (key product))))
     (loop
        :for dir :in *pics-dir-names*
-       :do (rename-remove-folder (format nil "~a/~a/~a" (config.get-option "PATHS" "path-to-pics") dir path-art)))))
+       :do (rename-remove-folder (format nil "~a/~a/~a" (config.get-option :paths :path-to-pics) dir path-art)))))
 
 
 (defmethod rename-remove-product-pics ((product string))
@@ -222,7 +222,7 @@
 (defmethod rename.restore-pics-from-backup
     ((product product)
      &optional (path-to-backup
-                (config.get-option "PATHS" "path-to-big-images-backup")))
+                (config.get-option :paths :path-to-big-images-backup)))
   (when product
     (let* ((articul (format nil "~a" (articul product)))
            (dir-pathname (merge-pathnames articul path-to-backup)))
@@ -237,10 +237,9 @@
 (defmethod rename.restore-pics-from-backup
     ((product string)
      &optional (path-to-backup
-                (config.get-option "PATHS" "path-to-big-images-backup")))
+                (config.get-option :paths :path-to-big-images-backup)))
   (let ((product-object (getobj product 'product)))
     (if product-object
         (rename.restore-pics-from-backup product-object path-to-backup)
         (log5:log-for warning
                       "Attempt to restore pics for product with invalid articul ~a" product))))
-

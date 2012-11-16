@@ -236,7 +236,7 @@
                  (banner t-storage)  (review t-storage))
        :do (let ((num 0))
              (xls.restore-from-xls
-              (merge-pathnames filename (config.get-option "PATHS" "path-to-main-page"))
+              (merge-pathnames filename (config.get-option :paths :path-to-main-page))
               #'(lambda (line)
                   (let* ((words (sklonenie-get-words line))
                          (skls (mapcar #'(lambda (w) (string-trim "#\""  w))

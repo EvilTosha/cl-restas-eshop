@@ -20,8 +20,6 @@
   (:import-from :alexandria :rcurry)
   (:export :config.parse-config
            :config.get-option
-           :config.set-option
-           :config.has-option-p
            :servo.compile-soy
            :dtd
            :sklonenie.restore

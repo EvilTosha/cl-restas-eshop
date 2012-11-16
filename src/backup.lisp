@@ -41,10 +41,10 @@
   (log5:log-for info "Total serialized: ~A" (count-storage type)))
 
 
-(defun backup.serialize-all (&key (backup-dir (config.get-option "PATHS" "path-to-backups"))
-                             (make-copy (config.get-option "START_OPTIONS" "release"))
+(defun backup.serialize-all (&key (backup-dir (config.get-option :paths :path-to-backups))
+                             (make-copy (config.get-option :start-options :release))
                              (copy-path
-                              (config.get-option "CRITICAL" "path-to-dropbox-backup")))
+                              (config.get-option :critical :path-to-dropbox-backup)))
   "Serializing all products & groups & vendors to given files in given folder. If no filenames passed, it makes files with type-date-time.bkp template"
   (let* ((date-time (time.encode.backup-filename)))
     (maphash

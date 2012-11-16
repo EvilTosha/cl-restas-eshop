@@ -17,7 +17,7 @@
 (log5:defoutput human-time (time.get-full-human-time))
 
 (log5:start-sender 'general-file
-                   (log5:stream-sender :location (merge-pathnames "general.log" (config.get-option "PATHS" "path-to-logs")))
+                   (log5:stream-sender :location (merge-pathnames "general.log" (config.get-option :paths :path-to-logs)))
                    :category-spec '(or info warn+)
                    :output-spec '(human-time log5:category log5:message))
 
@@ -33,12 +33,12 @@
 
 
 (log5:start-sender 'debug-file
-                   (log5:stream-sender :location (merge-pathnames "debug.log" (config.get-option "PATHS" "path-to-logs")))
+                   (log5:stream-sender :location (merge-pathnames "debug.log" (config.get-option :paths :path-to-logs)))
                    :category-spec '(or debug-file)
                    :output-spec '(log5:message))
 
 (log5:start-sender 'request-log
-                   (log5:stream-sender :location (merge-pathnames "request.log" (config.get-option "PATHS" "path-to-logs")))
+                   (log5:stream-sender :location (merge-pathnames "request.log" (config.get-option :paths :path-to-logs)))
                    :category-spec '(or request-log)
                    :output-spec '(human-time log5:category log5:message))
 
@@ -47,5 +47,5 @@
 
 
 (defun request-log-message (control-string &rest args)
-  (tbnl::with-log-stream (stream (merge-pathnames "request.log" (config.get-option "PATHS" "path-to-logs")) *eshop-access-log-lock*)
+  (tbnl::with-log-stream (stream (merge-pathnames "request.log" (config.get-option :paths :path-to-logs)) *eshop-access-log-lock*)
     (apply #'format stream control-string args)))

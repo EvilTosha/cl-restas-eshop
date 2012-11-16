@@ -23,7 +23,7 @@
   (let ((t-storage))
     (log5:log-for info "START:RESTOR:static-pages")
     (let ((*storage-articles* (make-hash-table :test #'equal)))
-      (static-pages.process-dir (config.get-option "PATHS" "path-to-static-pages") "static")
+      (static-pages.process-dir (config.get-option :paths :path-to-static-pages) "static")
       (setf t-storage *storage-articles*))
     (setf static-pages.*storage* t-storage)
     (log5:log-for info "FINISH:RESTOR:static-pages")))
@@ -31,4 +31,3 @@
 ;;обновление шаблонов для отображения
 (defun static-pages.update ()
   (servo.compile-soy "index.soy"))
-

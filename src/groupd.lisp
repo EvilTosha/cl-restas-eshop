@@ -15,7 +15,7 @@
 (defun groupd.restore ()
   (let ((t-storage (make-hash-table :test #'equal)))
     (xls.restore-from-xls
-     (merge-pathnames "sale.xls" (config.get-option "PATHS" "path-to-main-page"))
+     (merge-pathnames "sale.xls" (config.get-option :paths :path-to-main-page))
      #'(lambda (line) (groupd.line-processor t-storage line))
      "groupd.restore")
     (when t-storage
@@ -27,7 +27,7 @@
 (defun groupd.holiday.restore ()
   (let ((t-storage (make-hash-table :test #'equal)))
     (xls.restore-from-xls
-     (merge-pathnames "holiday.xls" (config.get-option "PATHS" "path-to-main-page"))
+     (merge-pathnames "holiday.xls" (config.get-option :paths :path-to-main-page))
      #'(lambda (line) (groupd.line-processor t-storage line))
      "groupd.holiday.restore")
     (when t-storage

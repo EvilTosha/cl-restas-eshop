@@ -76,7 +76,7 @@
     (log5:log-for info "Start load articles...")
     (sb-ext:gc :full t)
     (let ((*storage-articles* (make-hash-table :test #'equal)))
-      (process-articles-dir (config.get-option "PATHS" "path-to-articles") "article")
+      (process-articles-dir (config.get-option :paths :path-to-articles) "article")
       (setf t-storage *storage-articles*))
     (setf *storage-articles* t-storage)
     (sb-ext:gc :full t)

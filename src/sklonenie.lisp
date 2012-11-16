@@ -21,7 +21,7 @@
 (defun sklonenie.restore ()
   (let ((t-storage (make-hash-table :test #'equal)))
     (xls.restore-from-xls
-     (merge-pathnames "sklonenija.xls" (config.get-option "PATHS" "path-to-seo"))
+     (merge-pathnames "sklonenija.xls" (config.get-option :paths :path-to-seo))
      #'(lambda (line)
          (let* ((words (sklonenie-get-words line))
                 (skls (mapcar #'(lambda (w) (string-trim "#\""  w))

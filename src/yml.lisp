@@ -156,7 +156,7 @@
 
 (defun yml.%flush (data)
   (let* ((name (concatenate 'string "yml" "-" (time.encode.backup-filename) ".xml"))
-         (yml-path (merge-pathnames #P"yml/" (config.get-option "PATHS" "path-to-backups")))
+         (yml-path (merge-pathnames #P"yml/" (config.get-option :paths :path-to-backups)))
          (yml-file (merge-pathnames name yml-path)))
     (ensure-directories-exist yml-file)
     (with-open-file (file yml-file
@@ -292,7 +292,7 @@
 
 
 (defun create-yml-file ()
-  (let ((filename (merge-pathnames "yml.xml" (config.get-option "CRITICAL" "path-to-conf"))))
+  (let ((filename (merge-pathnames "yml.xml" (config.get-option :critical :path-to-conf))))
     (with-open-file
         (stream filename :direction :output :if-exists :supersede)
       (format stream "~a" (make-yml-data)))))
@@ -352,4 +352,3 @@
   (declare (group group))
   (remove-if-not #'yml.available-for-order-p
                  (storage.get-recursive-products group (complement #'active))))
-

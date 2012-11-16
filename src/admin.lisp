@@ -226,7 +226,7 @@
       (setf output
             (if (file-exists-p (pathname (merge-pathnames
                                           (pathname name)
-                                          (config.get-option "PATHS" "path-to-templates"))))
+                                          (config.get-option :paths :path-to-templates))))
                 (handler-case
                     (progn
                       (servo.compile-soy name)

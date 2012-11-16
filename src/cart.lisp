@@ -7,7 +7,7 @@
 (defun get-order-id ()
   "Generate pseudo-unique order number"
   (let ((current-order-id *order-id*)
-        (order-id-pathname (format nil "~a~a" (config.get-option "CRITICAL" "path-to-conf") *path-order-id-file*)))
+        (order-id-pathname (format nil "~a~a" (config.get-option :critical :path-to-conf) *path-order-id-file*)))
     (if *order-id*
         (progn
           (incf *order-id*)
@@ -35,12 +35,8 @@
   (not (null products)))
 
 (defun save-order-text (file-name body)
-  (when (config.get-option "START_OPTIONS" "release")
+  (when (config.get-option :start-options :release)
     (let ((filename (format nil "~a/orders/~a.html" *path-to-dropbox* file-name)))
       (with-open-file
           (stream filename :direction :output :if-exists :supersede)
         (format stream "~a" body)))))
-
-
-
-

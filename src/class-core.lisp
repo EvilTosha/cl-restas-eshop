@@ -256,9 +256,8 @@ such as pointer to storage, serialize flag, etc.")
   (declare (symbol type))
   (if (not (gethash type *classes*))
       (error "type ~A doesn't exist" type)
-      ;;else
       (merge-pathnames (format nil "~(~A~).bkp" type)
-                       (config.get-option "PATHS" "path-to-last-backup"))))
+                       (config.get-option :paths :path-to-last-backup))))
 
 (defmacro class-core.define-class-checker (name)
   "Macro for defining type-checking functions such as productp, groupp, etc"

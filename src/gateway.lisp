@@ -47,7 +47,7 @@
   "Create pathname dump file (named yyyy-mm-dd_HH:MM:SS.bkp) uses config :PATHS :path-to-gateway"
   (declare (number timestamp))
   (let* ((filename (concatenate 'string (time.encode.backup timestamp) ".bkp"))
-         (dump-path (config.get-option "PATHS" "path-to-gateway")))
+         (dump-path (config.get-option :paths :path-to-gateway)))
     (merge-pathnames filename dump-path)))
 
 (defun %gateway.get-time-from-dumpfile (dump-name)
@@ -58,7 +58,7 @@
 (defun %gateway.search-dump-path-and-timestamp (&optional (timestamp (get-universal-time)))
   "Looking for dump file named with ts near timestamp & give back (values filename ts) (NIL NIL) for empty dump-path"
   (declare (number timestamp))
-  (let* ((dump-path (config.get-option "PATHS" "path-to-gateway"))
+  (let* ((dump-path (config.get-option :paths :path-to-gateway))
          (dump-mask (concatenate 'string (namestring dump-path) "*.bkp"))
          (current-filename (gateway.make-dump-pathname timestamp))
          (result-file nil)
@@ -205,7 +205,7 @@
                      'product)))
 
 (defun %gateway.singles-pathname ()
-  (merge-pathnames "singles.txt" (config.get-option "PATHS" "path-to-gateway")))
+  (merge-pathnames "singles.txt" (config.get-option :paths :path-to-gateway)))
 
 (defun gateway.restore-singles (dump-timestamp &optional (current-timestamp (get-universal-time)))
   "Load singles products witch came between dump-timestamp and current-timestamp"
