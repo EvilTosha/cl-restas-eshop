@@ -43,7 +43,6 @@
              "esrap" ;; closure-template
              "arnesi" ;; eshop parse-float
              "log5" ;; eshop
-             "py-configparser" ;; eshop
              "string-case" ;; eshop
              "cl-csv" ;; eshop
              "cl-interpol" ;; cl-csv
@@ -71,5 +70,3 @@
            ;; "rt-20040621" ;; usocket-test
            ;;               ;; These extensions have been incorporated into sbcl's sb-rt package
   ))))
-
-

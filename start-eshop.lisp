@@ -32,13 +32,8 @@
 			(setf eshop::*order-id* 1)
 			(setf eshop::*path-order-id-file* "wolfor-order-id.txt")
 			;; адрес для карты сайта
-			;;(setf eshop:*path-sitemap* "wolfor-sitemap.xml")
-      ;; TODO: change to new variables
-			;; Список email для рассылки писем от ошибках выгрузки 1с
-			(setf eshop::*conf.emails.gateway.warn* (list "wolforus@gmail.com"))
-			;; Список email для отправки заказов
-			(setf eshop::*conf.emails.cart* (list "wolforus@gmail.com"
-																						"slamly@gmail.com"))))
+			;;(setf eshop:*path-sitemap* "wolfor-sitemap.xml"
+      ))
 
 (if (eshop:config.get-option :start-options :dbg-on)
 		(restas:debug-mode-on)

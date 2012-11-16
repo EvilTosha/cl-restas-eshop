@@ -1,5 +1,5 @@
 (defsystem eshop
-  :depends-on (#:restas #:cl-json #:arnesi #:closure-template #:log5 #:py-configparser #:string-case #:alexandria #:cl-csv :cl-mime)
+  :depends-on (#:restas #:cl-json #:arnesi #:closure-template #:log5 #:string-case #:alexandria #:cl-csv :cl-mime)
   :components
   ((:module "src"
             :serial t

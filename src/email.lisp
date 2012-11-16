@@ -2,19 +2,6 @@
 
 (in-package #:eshop)
 
-;; TODO: move lists of emails to config
-
-;; Список email для рассылки писем от ошибках выгрузки 1с
-(defvar *conf.emails.gateway.warn* (list "Supplers@alpha-pc.com"
-                                         "web_design@alpha-pc.com"
-                                         "wolforus@gmail.com"
-                                         "slamly@gmail.com"))
-
-(alexandria:define-constant +xls-warn-emails+ (list "wolforus@gmail.com"
-                                                    "web_design@alpha-pc.com")
-  :test (constantly t)
-  :documentation "List of emails to which warnings about double products will be sent")
-
 (alexandria:define-constant +email-warn-template+
     (make-instance 'sendmail:email
                    :from "shop@320-8080.ru"
@@ -36,7 +23,7 @@
   (when (plusp number)
     (sendmail:send-email-with-template
      +email-warn-template+
-     :to +xls-warn-emails+
+     :to (config.get-option :critical :xls-warn-emails)
      :subject (format nil "Doubles in xls: ~D" number)
      :body body)))
 
@@ -57,21 +44,11 @@
      :subject (format nil "www.320-8080.ru - 3AKA3 ~D" order-id)
      :body body)))
 
-(alexandria:define-constant +order-emails+
-    (list "internetorder@alpha-pc.com"
-          "shop@320-8080.ru"
-          "zakaz320@yandex.ru"
-          "slamly@gmail.com"
-          "wolforus@gmail.com")
-  :test (constantly t)
-  :documentation "List of emails for sending order details to.")
-
 (alexandria:define-constant +order-details-mail-template+
     (make-instance 'sendmail:email
                    :from "shop@320-8080.ru"
                    :type "text" :subtype "html"
-                   ;; FIXME: change to +order-emails+ when deploy
-                   :to "toshaevil@gmail.com") ;+order-emails+)
+                   :to (config.get-option :critical :order-emails))
   :test (constantly t)
   :documentation "Template for email to all interested about orders' details")
 

@@ -29,8 +29,8 @@
          :path-to-static-pages         (list :value #P"Dropbox/content/static-pages/" :type :path)
          :path-to-pics                 (list :value #P"htpics1/"                      :type :path)
          :path-to-logs                 (list :value #P"eshop-logs/"                   :type :path)
-         :path-to-gateway              (list :value #P"test/gateway/"                 :type :path)
-         :path-to-backups              (list :value #P"eshop-logs/backups/"           :type :path)
+         :path-to-gateway              (list :value #P"eshop-logs/gateway/"           :type :path)
+         :path-to-backups              (list :value #P"eshop-dev/backups/"            :type :path)
          :path-to-big-images-backup    (list :value #P"source-big-images-bkps/"       :type :path)
          :path-to-main-page            (list :value #P"eshop-dev/mainPage/"           :type :path)
          :path-to-seo                  (list :value #P"eshop-dev/seo/"                :type :path)
@@ -40,6 +40,11 @@
    (list :path-to-conf                 (list :value #P"eshop-dev/htconf/"             :type :path)
          :path-to-sitemap              (list :value #P"eshop-dev/htconf/"             :type :path)
          :path-to-dropbox-backup       (list :value #P"Dropbox/eshop-backups/"        :type :path)
+         :gateway-warn-emails          (list :value (list "wolforus@gmail.com")       :type :string-list)
+         :xls-warn-emails              (list :value (list "wolforus@gmail.com"
+                                                          "web_design@alpha-pc.com")  :type :string-list)
+         :order-emails                 (list :value (list "wolforus@gmail.com"
+                                                          "slamly@gmail.com")         :type :string-list)
          )
    ;; OTHER-OPTIONS section
    :other-options (list
