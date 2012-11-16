@@ -333,7 +333,7 @@ list of conses (column-header . column-specifier).
    'group))
 
 (defun create-report (file-name report-func)
-  (let ((filename (format nil "~a/~a" *path-to-dropbox* file-name)))
+  (let ((filename (merge-pathnames file-name (config.get-option :paths :path-to-dropbox))))
     (with-open-file
         (stream filename :direction :output :if-exists :supersede :external-format :cp1251)
       (print stream)

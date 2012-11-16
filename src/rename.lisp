@@ -171,7 +171,7 @@
         (log5:log-for info "Copying finished! ~a files were copied." counter)))))
 
 
-(defun rename-convert-all (&key (from (format nil "~a/big-images/" *path-to-dropbox*))
+(defun rename-convert-all (&key (from (merge-pathnames "big-images/" (config.get-option :paths :path-to-dropbox)))
                            (backup (config.get-option :paths :path-to-big-images-backup)))
   "Convert all pictures from folders with articul names"
   (if (and (directory-exists-p from)

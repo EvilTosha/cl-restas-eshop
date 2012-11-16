@@ -27,7 +27,8 @@
                                                (style (when pic
                                                         (let ((dimensions
                                                                (get-dimensions
-                                                                (format nil "~a/htimgs~a" *path-to-dropbox* (pic node)))))
+                                                                (merge-pathnames (concatenate 'string "htimgs" (pic node))
+                                                                                 (config.get-option :paths :path-to-dropbox)))))
                                                           (style-for-resize (getf dimensions :width)
                                                                             (getf dimensions :height)
                                                                             70)))))

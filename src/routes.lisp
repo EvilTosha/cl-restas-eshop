@@ -56,7 +56,8 @@
 
 (define-tracing-route request-static-route-img ("/img/*")
   (let ((full-uri (format nil "~a" (restas:request-full-uri))))
-    (pathname (concatenate 'string *path-to-dropbox* "/htimgs/" (subseq full-uri (search "/img/" full-uri))))))
+    (merge-pathnames (concatenate 'string "htimgs/" (subseq full-uri (search "/img/" full-uri)))
+                     (config.get-option :paths :path-to-dropbox))))
 
 (define-tracing-route request-static-route-pic ("/pic/*")
   (let* ((full-uri (format nil "~a" (restas:request-full-uri)))
@@ -65,14 +66,22 @@
 
 (define-tracing-route request-static-route-css ("/css/*")
   (let ((full-uri (format nil "~a" (restas:request-full-uri))))
-    (pathname (concatenate 'string *path-to-dropbox* "/htimgs/" (if (config.get-option :start-options :dbg-on) "dev/") (subseq full-uri (search "/css/" full-uri))))))
+    (merge-pathnames (concatenate 'string
+                                  "htimgs/"
+                                  (when (config.get-option :start-options :dbg-on) "dev/")
+                                  (subseq full-uri (search "/css/" full-uri)))
+                     (config.get-option :paths :path-to-dropbox))))
 
 (define-tracing-route request-static-route-js ("/js/*")
   (let ((full-uri (format nil "~a" (restas:request-full-uri))))
-    (pathname (concatenate 'string *path-to-dropbox* "/htimgs/" (if (config.get-option :start-options :dbg-on) "dev/") (subseq full-uri (search "/js/" full-uri))))))
+    (merge-pathnames (concatenate 'string
+                                  "htimgs/"
+                                  (when (config.get-option :start-options :dbg-on) "dev/")
+                                  (subseq full-uri (search "/js/" full-uri)))
+                     (config.get-option :paths :path-to-dropbox))))
 
 (define-tracing-route request-route-static-favicon ("/favicon.ico")
-  (pathname (concatenate 'string  *path-to-dropbox* "/htimgs/img/favicon.ico")))
+  (merge-pathnames "htimgs/img/favicon.ico" (config.get-option :paths :path-to-dropbox)))
 
 (define-tracing-route request-route-static-robots ("/robots.txt")
   (merge-pathnames "robots.txt" (config.get-option :critical :path-to-conf)))

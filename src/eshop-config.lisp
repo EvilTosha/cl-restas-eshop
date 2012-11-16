@@ -2,12 +2,6 @@
 
 (in-package #:eshop)
 
-;; PATH
-(defparameter *path-to-dropbox* (format nil "~aDropbox" (user-homedir-pathname)))
-(export '*path-to-dropbox*)
-(defparameter *path-to-logs* (format nil "~aeshop-logs" (user-homedir-pathname)))
-(export '*path-to-logs*)
-
 ;; ORDER
 (defparameter *path-order-id-file* "order-id.txt")
 (export '*path-order-id-file*)
