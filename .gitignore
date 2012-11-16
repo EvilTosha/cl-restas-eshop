@@ -5,5 +5,7 @@ cl-cron.log
 /backup
 
 /example-start/*
-!/example-start/tosha-config.eshop
-!/example-start/start-tosha.sh
+!/example-start/config-dev.conf
+!/example-start/config-release.conf
+!/example-start/start-dev.sh
+!/example-start/start-release.sh

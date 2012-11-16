@@ -116,9 +116,9 @@ Return format is plist"
     (and (not (equal 'section-not-found section-data))
          (not (equal 'option-not-found option-data)))))
 
-(defgeneric config.%validate-option (type option &key &allow-other-keys)
+(defgeneric config.%validate-option (type option &key)
   (:documentation "Validates specified option with specified type rules")
-  (:method (type option &key)
+  (:method (type option &key &allow-other-keys)
     t))
 
 (defmethod config.%validate-option ((type (eql :path)) option &key)
