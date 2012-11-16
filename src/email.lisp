@@ -11,10 +11,11 @@
 
 (defun email.valid-email-p (email)
   "Ensure that there is an @ and a . and email not containing @s before and after each."
-  ;; TODO: make proper validation
   (declare ((or string list) email))
   (every #'(lambda (addr)
-             (and (valid-string-p addr) (cl-ppcre:scan "^[^@]+@[^@]+\\.[^@]+$" addr)))
+             (handler-case
+                 (data-sift:sift 'data-sift:email addr)
+               (data-sift:validation-fail () nil)))
          (ensure-list email)))
 
 (defun email.send-xls-doubles-warn (number body)
