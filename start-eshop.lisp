@@ -25,8 +25,8 @@
 (asdf:load-system :eshop)
 
 ;; alternative order numbering for developers server
-(if (and (not (eshop:config.get-option "START_OPTIONS" "release"))
-				 (eshop:config.get-option "START_OPTIONS" "dbg-on"))
+(if (and (not (eshop:config.get-option :start-options :release))
+				 (eshop:config.get-option :start-options :dbg-on))
 		(progn
 			;; нумерация заказов
 			(setf eshop::*order-id* 1)
@@ -40,31 +40,31 @@
 			(setf eshop::*conf.emails.cart* (list "wolforus@gmail.com"
 																						"slamly@gmail.com"))))
 
-(if (eshop:config.get-option "START_OPTIONS" "dbg-on")
+(if (eshop:config.get-option :start-options :dbg-on)
 		(restas:debug-mode-on)
 		(restas:debug-mode-off))
-(setf hunchentoot:*catch-errors-p* (eshop:config.get-option "START_OPTIONS" "catch-errors"))
+(setf hunchentoot:*catch-errors-p* (eshop:config.get-option :start-options :catch-errors))
 
 (let ((*package* (find-package :eshop)))
 	;;; content
-  (when (eshop:config.get-option "START_OPTIONS" "load-storage")
+  (when (eshop:config.get-option :start-options :load-storage)
     (eshop:sklonenie.restore)
 		(eshop:class-core.unserialize-all)
 		(eshop:gateway.load))
-	(when (eshop:config.get-option "START_OPTIONS" "load-xls")
+	(when (eshop:config.get-option :start-options :load-xls)
 		(eshop:dtd)
     (eshop:cartrige.restore))
-	(when (eshop:config.get-option "START_OPTIONS" "load-content")
+	(when (eshop:config.get-option :start-options :load-content)
 		(eshop:static-pages.restore)
 		(eshop:articles.restore)
 		(eshop:main-page.restore))
-	(when (eshop:config.get-option "START_OPTIONS" "run-cron-jobs")
+	(when (eshop:config.get-option :start-options :run-cron-jobs)
 		;; making timer for backups
 		(cl-cron:make-cron-job #'eshop::backup.serialize-all :minute 0 :hour 17)
 		(cl-cron:start-cron))
   ;;; business logic
   (eshop::filters.create-standard-filters)
-  (when (eshop:config.get-option "START_OPTIONS" "make-marketing-filters")
+  (when (eshop:config.get-option :start-options :make-marketing-filters)
     (eshop::groupd.restore)
     (eshop::groupd.holiday.restore)
     (eshop::marketing-filters.create-all-filters)))
@@ -78,4 +78,4 @@
 (room)
 
 ;; запуск Restas
-(restas:start '#:eshop :port (eshop:config.get-option "START_OPTIONS" "server-port"))
+(restas:start '#:eshop :port (eshop:config.get-option :start-options :server-port))
