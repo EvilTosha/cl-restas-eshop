@@ -333,9 +333,10 @@ list of conses (column-header . column-specifier).
    'group))
 
 (defun create-report (file-name report-func)
-  (let ((filename (merge-pathnames file-name (config.get-option :paths :path-to-dropbox))))
+  (log5:log-for info "Create report ~A ..." file-name)
+  (let ((filepath (merge-pathnames file-name (config.get-option :paths :path-to-reports))))
     (with-open-file
-        (stream filename :direction :output :if-exists :supersede :external-format :cp1251)
+        (stream filepath :direction :output :if-exists :supersede :external-format :cp1251)
       (print stream)
       (funcall report-func stream))))
 
@@ -401,18 +402,11 @@ list of conses (column-header . column-specifier).
                (format nil "~:(~a~)" input-string)))
 
 (defun report.do-seo-reports ()
-  (let ((name (format nil "reports/seo-report-groups-~a.csv" (time.encode.backup-filename))))
-    (log5:log-for info "Do groups SEO report")
-    (create-report name #'report.group-report))
-  (let ((name (format nil "reports/seo-report-vendors-~a.csv" (time.encode.backup-filename))))
-    (log5:log-for info "Do vendors SEO report")
-    (create-report name #'write-vendors))
-  (let ((name (format nil "reports/seo-report-products-~a.csv" (time.encode.backup-filename))))
-    (log5:log-for info "Do products SEO report")
-    (create-report name #'report.product-vendor-report))
-  (let ((name (format nil "reports/seo-report-seria-filters-~a.csv" (time.encode.backup-filename))))
-    (log5:log-for info "Do seria filter SEO report")
-    (create-report name #'report.seo-seria-filters)))
+  (let ((time (time.encode.backup-filename)))
+    (create-report (format nil "seo-report-groups-~A.csv" time) #'report.group-report)
+    (create-report (format nil "seo-report-vendors-~A.csv" time) #'write-vendors)
+    (create-report (format nil "seo-report-products-~A.csv" time) #'report.seo-seria-filters)
+    (create-report (format nil "seo-report-seria-filters-~A.csv" time) #'report.product-vendor-report)))
 
 
 (defun report.write-alias (&optional (stream *standard-output*))
@@ -449,16 +443,10 @@ list of conses (column-header . column-specifier).
 
 
 (defun report.do-alias-reports ()
-  (progn
-    (let ((name (format nil "reports/aliases-report-~a.csv" (time.encode.backup-filename))))
-      (create-report name #'report.write-alias)
-      "AliAS REPORT DONE"))
-  (progn
-    (let ((name (format nil "reports/keyoptions-report-~a.csv" (time.encode.backup-filename))))
-      (create-report name #'report.write-keyoptions)
-      "KEYOPTIONS REPORT DONE")))
+  (let ((time (time.encode.backup-filename)))
+    (create-report (format nil "aliases-report-~A.csv" time) #'report.write-alias)
+    (create-report (format nil "keyoptions-report-~A.csv" time) #'report.write-keyoptions)))
 
 (defun report.do-groups-products-report ()
-    (let ((name (format nil "reports/groups-products-~a.csv" (time.encode.backup-filename))))
-      (create-report name #'report.groups-products-report))
-    t)
+  (create-report (format nil "groups-products-~a.csv" (time.encode.backup-filename))
+                 #'report.groups-products-report))

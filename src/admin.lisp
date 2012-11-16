@@ -257,9 +257,9 @@
               (*standard-output*)
             (room))))
         ("report-products"
-         (let ((name (format nil "reports/products-report-~a.csv" (time.encode.backup-filename))))
-           (create-report name #'report.product-report)
-           "DO PRODUCTS REPORT"))
+         (create-report (format nil "products-report-~A.csv" (time.encode.backup-filename))
+                        #'report.product-report)
+         "DO PRODUCTS REPORT")
         ("proccess-pictures"
          (rename-convert-all)
          "DO proccess-pictures")
