@@ -73,7 +73,8 @@
 													 (servo.edit-get-param (encode-uri (nth 1 (opts banner))) "bannerType" type))
 							:src (nth 2 (opts banner))
               :name (name banner)
-              :src2 (nth 3 (opts banner)))
+              :src2 (nth 3 (opts banner))
+              :type (banner-type banner))
 				(list :url ""
 							:src ""))))
 
@@ -96,24 +97,27 @@
 
 ;;отображение главной страницы
 (defun main-page-show ()
-  (default-page
-      (soy.index:content
-       (list :menu (render.menu)
-             :dayly  (soy.main-page:daily (list :items (main-page-products-show (daily *main-page.storage*) 6)))
-             :banner (soy.main-page:banner (main-page-show-banner "center" (banner *main-page.storage*)))
-             :olist (soy.main-page:olist)
-             :lastreview (soy.main-page:lastreview (main-page-show-lastreview (review *main-page.storage*)))
-             :best (soy.main-page:best (list :items (main-page-products-show (best *main-page.storage*) 12)))
-             :hit (soy.main-page:hit (list :items (main-page-products-show (hit *main-page.storage*) 2)))
-             :new  (soy.main-page:new (list :items (main-page-products-show (new *main-page.storage*) 6)))
-             :post (soy.main-page:post
-                    (list :news (articles-view-articles (filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "новости")) 3))
-                          :akcii (articles-view-articles(filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "акции")) 3))
-                          :reviews (articles-view-articles(filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "обзоры")) 3))))
-             :plus (soy.main-page:plus)))
-      :KEYWORDS "компьютеры, купить компьютер, компьютерная техника, Петербург, Спб, Питер, Санкт-Петербург, продажа компьютеров, магазин компьютерной техники, магазин компьютеров, интернет магазин компьютеров, интернет магазин компьютерной техники, продажа компьютерной техники, магазин цифровой техники, цифровая техника, Цифры, 320-8080"
-      :DESCRIPTION "Купить компьютер и другую технику вы можете в Цифрах. Цифровая техника в Интернет-магазине 320-8080.ru"
-      :TITLE "Интернет-магазин: купить компьютер, цифровую технику, комплектующие в Санкт-Петербурге"))
+  (let ((center-banner (main-page-show-banner "center" (banner *main-page.storage*))))
+    (default-page
+        (soy.index:content
+         (list :menu (render.menu)
+               :dayly  (soy.main-page:daily (list :items (main-page-products-show (daily *main-page.storage*) 6)))
+               :banner (if (string= "swf" (getf center-banner :type))
+                           (soy.main-page:banner center-banner)
+                           (soy.main-page:banner-center-png center-banner))
+               :olist (soy.main-page:olist)
+               :lastreview (soy.main-page:lastreview (main-page-show-lastreview (review *main-page.storage*)))
+               :best (soy.main-page:best (list :items (main-page-products-show (best *main-page.storage*) 12)))
+               :hit (soy.main-page:hit (list :items (main-page-products-show (hit *main-page.storage*) 2)))
+               :new  (soy.main-page:new (list :items (main-page-products-show (new *main-page.storage*) 6)))
+               :post (soy.main-page:post
+                      (list :news (articles-view-articles (filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "новости")) 3))
+                            :akcii (articles-view-articles(filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "акции")) 3))
+                            :reviews (articles-view-articles(filters.limit-end (articles.sort (get-articles-by-tags (get-articles-list) "обзоры")) 3))))
+               :plus (soy.main-page:plus)))
+        :KEYWORDS "компьютеры, купить компьютер, компьютерная техника, Петербург, Спб, Питер, Санкт-Петербург, продажа компьютеров, магазин компьютерной техники, магазин компьютеров, интернет магазин компьютеров, интернет магазин компьютерной техники, продажа компьютерной техники, магазин цифровой техники, цифровая техника, Цифры, 320-8080"
+        :DESCRIPTION "Купить компьютер и другую технику вы можете в Цифрах. Цифровая техника в Интернет-магазине 320-8080.ru"
+        :TITLE "Интернет-магазин: купить компьютер, цифровую технику, комплектующие в Санкт-Петербурге")))
 
 (defclass main-page-storage ()
   ((daily          :initarg :daily       :initform (make-hash-table :test #'equal)     :accessor daily)

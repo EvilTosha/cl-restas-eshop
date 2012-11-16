@@ -252,7 +252,10 @@ Filter's key is concatenated group's and default-filter's keys"
                 "myshki"
                 "klaviatury"
                 "holodilniki-i-morozilniki"
-                "stiralnie-mashiny")))
+                "stiralnie-mashiny"
+                "konvektory"
+                "radiatori"
+                "mobilephones")))
 
 (defun marketing-filters.get-seria-filters ()
   (collect-storage 'filter :when-fn #'(lambda (filter) (getf (data filter) :seria))))

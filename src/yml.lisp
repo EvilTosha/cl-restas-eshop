@@ -84,6 +84,7 @@
                 (> diagonal 32)))
           (setf result 500)
           (if (or
+               (< 3000 (siteprice product))
                ;; (equal key "netbuki")
                ;; (equal key "noutbuki")
                ;; (equal key "planshetnie-komputery")

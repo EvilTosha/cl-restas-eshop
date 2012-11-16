@@ -126,6 +126,16 @@ filtered by wgen-func"
                (storage.get-recursive-products gr when-fn))
            (groups group))))
 
+(defun storage.count-recursive-products (group &optional (when-fn #'active))
+  "Return count of all products of given group and all its child groups,
+filtered by wgen-func"
+  (declare (group group) (function when-fn))
+  (+
+   (count-if when-fn (products group))
+   (apply #'+ (mapcar #'(lambda (gr)
+               (storage.count-recursive-products gr when-fn))
+           (groups group)))))
+
 (defgeneric storage.get-vendors (object)
   (:documentation ""))
 
