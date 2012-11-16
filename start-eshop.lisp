@@ -27,13 +27,8 @@
 ;; alternative order numbering for developers server
 (if (and (not (eshop:config.get-option :start-options :release))
 				 (eshop:config.get-option :start-options :dbg-on))
-		(progn
-			;; нумерация заказов
-			(setf eshop::*order-id* 1)
-			(setf eshop::*path-order-id-file* "wolfor-order-id.txt")
-			;; адрес для карты сайта
-			;;(setf eshop:*path-sitemap* "wolfor-sitemap.xml"
-      ))
+    ;; нумерация заказов
+    (setf eshop::*order-id* 1))
 
 (if (eshop:config.get-option :start-options :dbg-on)
 		(restas:debug-mode-on)

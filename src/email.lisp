@@ -2,13 +2,6 @@
 
 (in-package #:eshop)
 
-(alexandria:define-constant +email-warn-template+
-    (make-instance 'sendmail:email
-                   :from "shop@320-8080.ru"
-                   :type "text" :subtype "html")
-  :test (constantly t)
-  :documentation "Template for email tech support about double products warnings during DTD")
-
 (defun email.valid-email-p (email)
   "Ensure that there is an @ and a . and email not containing @s before and after each."
   (declare ((or string list) email))
@@ -17,6 +10,13 @@
                  (data-sift:sift 'data-sift:email addr)
                (data-sift:validation-fail () nil)))
          (ensure-list email)))
+
+(alexandria:define-constant +email-warn-template+
+    (make-instance 'sendmail:email
+                   :from (config.get-option :critical :from-email)
+                   :type "text" :subtype "html")
+  :test (constantly t)
+  :documentation "Template for email tech support about double products warnings during DTD")
 
 (defun email.send-xls-doubles-warn (number body)
   "Sends email with warning about double products in xls processing"
@@ -31,7 +31,7 @@
 
 (alexandria:define-constant +clientmail-template+
     (make-instance 'sendmail:email
-                   :from "shop@320-8080.ru"
+                   :from (config.get-option :critical :from-email)
                    :type "text" :subtype "html")
   :test (constantly t)
   :documentation "Template for email to client about his/her order")
@@ -47,7 +47,7 @@
 
 (alexandria:define-constant +order-details-mail-template+
     (make-instance 'sendmail:email
-                   :from "shop@320-8080.ru"
+                   :from (config.get-option :critical :from-email)
                    :type "text" :subtype "html"
                    :to (config.get-option :critical :order-emails))
   :test (constantly t)

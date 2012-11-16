@@ -39,6 +39,8 @@
    ;; CRITICAL section, options should be different for dev and release servers
    :critical
    (list :path-to-conf                 (list :value #P"eshop-dev/htconf/"             :type :path)
+         :path-to-order-id-file        (list :value #P"eshop-dev/htconf/dev-order-id.txt"
+                                                                                      :type :path)
          :path-to-sitemap              (list :value #P"eshop-dev/htconf/"             :type :path)
          :path-to-dropbox-backup       (list :value #P"Dropbox/eshop-backups/"        :type :path)
          :gateway-warn-emails          (list :value (list "wolforus@gmail.com")       :type :string-list)
@@ -46,6 +48,7 @@
                                                           "web_design@alpha-pc.com")  :type :string-list)
          :order-emails                 (list :value (list "wolforus@gmail.com"
                                                           "slamly@gmail.com")         :type :string-list)
+         :from-email                   (list :value "shop@320-8080.ru"                :type :string)
          )
    ;; OTHER-OPTIONS section
    :other-options (list

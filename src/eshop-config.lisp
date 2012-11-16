@@ -2,10 +2,6 @@
 
 (in-package #:eshop)
 
-;; ORDER
-(defparameter *path-order-id-file* "order-id.txt")
-(export '*path-order-id-file*)
-
 (config.parse-config)
 
 (defun compile-templates ()

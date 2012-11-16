@@ -7,8 +7,7 @@
 (defun get-order-id ()
   "Generate pseudo-unique order number"
   (let ((current-order-id *order-id*)
-        (order-id-pathname (merge-pathnames *path-order-id-file*
-                                            (config.get-option :critical :path-to-conf))))
+        (order-id-pathname (config.get-option :critical :path-to-order-id-file)))
     (if *order-id*
         (progn
           (incf *order-id*)
