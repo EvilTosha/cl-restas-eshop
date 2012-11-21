@@ -115,7 +115,11 @@
   (let ((cnt 0)
         (items nil)
         (num-all 0))
-    (loop :for file :in (directory (format nil "~a/*.xls" (folder obn))) :do
+    (loop :for file :in (remove-if #'(lambda (file) (or (directory-pathname-p file)
+                                                        (not (equal (pathname-type file) "xls"))))
+                                   (rename-recursive-get-files (folder obn)))
+       ;; (directory (format nil "~a/*.xls" (folder obn))) :do
+       :do
        (setf items (reverse (ƒ file px)))
        (setf num-all (+ num-all (length items)))
        (log5:log-for info-console "~a. Processing file: ~a | ~a" (incf cnt) file (length items))
