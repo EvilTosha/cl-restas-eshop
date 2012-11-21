@@ -7,7 +7,7 @@
 (defun compile-templates ()
   (mapcar #'(lambda (fname)
               (let ((pathname (merge-pathnames fname (config.get-option :paths :path-to-templates))))
-                (format t "~&compile-template: ~a" pathname)
+                (format t "~&compile-template: ~A" pathname)
                 (closure-template:compile-template :common-lisp-backend pathname)))
           '("admin.soy"
             "articles.soy"

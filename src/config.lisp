@@ -72,7 +72,7 @@
               (config.set-option section-name option-name option-value)
               ;; else, validate, process, update
               (let* ((processing-options (config.%get-option-data section-name option-name))
-                     (value (getf processing-options :value))
+                     (value option-value)
                      (type (getf processing-options :type)))
                 ;; remove non-options
                 (remf processing-options :value)
