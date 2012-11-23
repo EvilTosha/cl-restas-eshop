@@ -58,10 +58,10 @@
     (cond ((string= q "")              (make-output "Введите поисковый запрос!"))
           ((null url-decoded)          (make-output))
           ((> 3 (length url-decoded))  (make-output "Слишком короткий поисковый запрос"))
-          (t  (let ((search-result (get-match-products (strip url-decoded))))
-                (if (null search-result)
-                    (make-output)
-                    (make-output (prefer search-result))))))))
+          (t (let ((search-result (get-match-products (strip url-decoded))))
+               (if (null search-result)
+                   (make-output)
+                   (make-output (prefer search-result))))))))
 
 (defun prefer (products)
   (soy.catalog:centerproduct
@@ -89,3 +89,28 @@
                              "Ничего не найдено"
                              (format nil "~a" centercontent))))))
 
+
+;;;; ----------------------------
+;;; new search
+
+
+(defclass search-tip ()
+  ((tip :accessor :tip :initarg tip :initform "")
+   (weight :accessor :weight :initarg weight :initform 0)))
+
+
+(defparameter *search-tips* (make-array 0 :element-type 'search-tip))
+
+(defparameter *tips-interval-tree* #())
+
+(defun nearest-degree-of-two (n)
+  "Finds nearest (greater than n) degree of 2"
+  (declare (integer n))
+  (loop :for x := 1 :then (* x 2)
+     :while (< x n)
+     :finally (return x)))
+
+;; (defun build-interval-tree (&optional (tips *search-tips*))
+;;   "Create interval tree for specified tips storage"
+;;   (let ((tree (make-array (2 * (nearest-degree-of-two (length tips)))
+;;                           :element-type 'integer :initial-element -1)))

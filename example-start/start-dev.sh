@@ -1,5 +1,5 @@
 ESHOP_PATH="$HOME/eshop-dev/"
-CONFIG_PATH=$ESHOP_PATH"example-start/config-320-dev.eshop"
+CONFIG_PATH=$ESHOP_PATH"example-start/config-dev.conf"
 LIBS_PATH=$HOME"eshop/libs/"
 SWANK_PORT=7777
 
