@@ -3,9 +3,5 @@ cl-cron.log
 /libs
 /old
 /backup
-
-/example-start/*
-!/example-start/config-dev.conf
-!/example-start/config-release.conf
-!/example-start/start-dev.sh
-!/example-start/start-release.sh
+/eshop-logs
+/last-backup

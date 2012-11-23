@@ -23,7 +23,7 @@
    ;; PATHS section
    :paths
    (list :path-to-dropbox              (list :value #P"Dropbox/"                      :type :path)
-         :path-to-last-backup          (list :value #P"last-backup/"                  :type :path)
+         :path-to-last-backup          (list :value #P"eshop-dev/last-backup/"        :type :path)
          :path-to-templates            (list :value #P"Dropbox/httpls/release/"       :type :path)
          :path-to-articles             (list :value #P"Dropbox/content/articles/"     :type :path)
          :path-to-static-pages         (list :value #P"Dropbox/content/static-pages/" :type :path)
@@ -32,8 +32,8 @@
          :path-to-gateway              (list :value #P"eshop-logs/gateway/"           :type :path)
          :path-to-backups              (list :value #P"eshop-dev/backups/"            :type :path)
          :path-to-big-images-backup    (list :value #P"source-big-images-bkps/"       :type :path)
-         :path-to-main-page            (list :value #P"eshop-dev/mainPage/"           :type :path)
-         :path-to-seo                  (list :value #P"eshop-dev/seo/"                :type :path)
+         :path-to-main-page            (list :value #P"Dropbox/mainPage/"           :type :path)
+         :path-to-seo                  (list :value #P"Dropbox/seo/"                :type :path)
          :path-to-reports              (list :value #P"Dropbox/reports/"              :type :path)
          )
    ;; CRITICAL section, options should be different for dev and release servers
