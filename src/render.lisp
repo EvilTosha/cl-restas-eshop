@@ -218,7 +218,7 @@
                        (when (equal (name it) "Nokia")
                          (list :URL "/articles/nokia_bonus?bannerType=line-text"
                                :SRC "/img/banners/nokia.png"
-                               :NAME "Узнай специальную ценю для членов F-клуба!"
+                               :NAME "Узнай специальную цену для членов F-клуба!"
                                :SRC2 "/img/banners/nokia.png")))
         :keywords (render.get-keywords object parameters)
         :description (render.get-description object parameters)
@@ -542,7 +542,7 @@
                                 (equal (vendor object) "Nokia"))
                        (list :URL "/articles/nokia_bonus?bannerType=line-text"
                              :SRC "/img/banners/nokia.png"
-                             :NAME "Узнай специальную ценю для членов F-клуба!"
+                             :NAME "Узнай специальную цену для членов F-клуба!"
                              :SRC2 "/img/banners/nokia.png"))
         :keywords (render.get-keywords object nil)
         :description (format nil "купить ~a в ЦиFры 320-8080 по лучшей цене с доставкой по Санкт-Петербургу"
