@@ -688,9 +688,9 @@
     (soy.catalog:producers
      (list
       :vendorblocks (render.make-producters-base
-                     veiws :cut 3)
+                     veiws :cut 6)
       :vendorhiddenblocks (render.make-producters-hidden
-                           veiws :cut 3)))))
+                           veiws :cut 6)))))
 
 
 (defmethod restas:render-object ((designer eshop-render) (object group))
