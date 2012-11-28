@@ -1,5 +1,5 @@
 ;; TODO: move to own package
-(in-package #:eshop)
+;; (in-package #:eshop)
 
 (defclass search-tip ()
   ((tip :accessor tip :initarg :tip :initform "")
@@ -68,7 +68,7 @@ Be careful: old values will be lost.
 Returns created instance."
   (declare (array tips))
   (let ((new-tips (make-instance 'search-tips)))
-    (setf (tips new-tips) (sort tips #'< :key #'weight)
+    (setf (tips new-tips) (sort tips #'string< :key #'tip)
           (interval-tree new-tips) (make-array (* 4 (length tips)) :element-type 'fixnum
                                                :initial-element most-negative-fixnum))
 
@@ -97,6 +97,17 @@ Returns created instance."
 (defun get-max-weight-tip (tips)
   (declare (search-tips tips))
   (tips-elt tips (get-max-on-whole-interval tips)))
+
+(defun binary-lower-bound (array elt &optional (comp #'string<))
+  (declare (array array) (function comp))
+  (let ((l 0) (r (length array)))
+    (loop :while (< l r)
+       :do (let ((m (floor (+ l r) 2)))
+             (print (list m l r))
+             (if (funcall comp (elt array m) elt)
+                 (setf l (1+ m))
+                 (setf r m)))
+       :finally (return l))))
 
 
 ;; ??: is it really needed?
