@@ -13,7 +13,7 @@
     :numproducts (count-storage 'product)
     :menu (render.menu)
     :items (let ((res)
-                 (roots (get-root-groups))
+                 (roots (remove-if-not #'active (get-root-groups)))
                  (exception "bytovaya-technika"))
              (setf roots (remove exception roots :key #'key :test #'equal))
              (setf roots (append roots
@@ -40,7 +40,7 @@
                                            :imgstyle style
                                            :groups (mapcar #'(lambda (g)
                                                                (format nil "<a href=\"/~a\">~a</a>~%" (key g) (name g)))
-                                                           (storage.get-all-child-groups node)))))))
+                                                           (storage.get-all-sorted-child-groups node)))))))
                            roots))
              (when col1
                (nconc res (list col1)))
