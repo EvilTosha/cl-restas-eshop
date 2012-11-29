@@ -109,6 +109,16 @@ Returns created instance."
                  (setf r m)))
        :finally (return l))))
 
+(defun next-prefix (prefix)
+  "Returns next (to current) lexicographical prefix, by increasing char-code of last char by 1"
+  (declare (string prefix))
+  (when (plusp (length prefix))
+    (let ((res prefix)
+          (last-index (- (length prefix) 1)))
+      (setf (char res last-index)
+            (code-char (1+ (char-code (char res last-index)))))
+      res)))
+
 
 ;; ??: is it really needed?
 (defun nearest-degree-of-two (n)
