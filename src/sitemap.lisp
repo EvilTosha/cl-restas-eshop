@@ -127,8 +127,7 @@
                    :direction :output :if-exists :supersede)
          (format stream "~A" (soy.sitemap:head))
          (loop
-            :for i
-            :from 0 :to (min (- (length routes) 1) 45000)
+            :for i :from 0 :to (min (1- (length routes)) 45000)
             :do
             (format stream "~A~%"
                     (soy.sitemap:route (nth i routes))))

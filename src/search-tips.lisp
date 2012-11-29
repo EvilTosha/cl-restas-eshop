@@ -3,6 +3,7 @@
 
 (defclass search-tip ()
   ((tip :accessor tip :initarg :tip :initform "")
+
    (weight :accessor weight :initarg :weight :initform 0)))
 
 (defmethod print-object ((object search-tip) stream)
@@ -80,14 +81,14 @@ Value for negative indexes is -infinity"
   (declare (search-tips tips))
   (%build-interval-tree tips 1 0 (1- (length (tips tips)))))
 
-(defun build-search-tips (tips)
+(defun build-search-tips (tips-array)
   "Updates *search-tips* variable with new values.
 Be careful: old values will be lost.
 Returns created instance."
-  (declare (array tips))
+  (declare (array tips-array))
   (let ((new-tips (make-instance 'search-tips)))
-    (setf (tips new-tips) (sort tips #'string< :key #'tip)
-          (interval-tree new-tips) (make-array (* 4 (length tips)) :element-type 'fixnum
+    (setf (tips new-tips) (sort tips-array #'string-lessp :key #'tip)
+          (interval-tree new-tips) (make-array (* 4 (length tips-array)) :element-type 'fixnum
                                                :initial-element most-negative-fixnum))
 
     (build-interval-tree new-tips)
@@ -132,8 +133,8 @@ Returns created instance."
 (defun max-tip-by-prefix (tips prefix)
   "Returns single tip with given prefix and with maximum weight"
   (declare (search-tips tips) (string prefix))
-  (let* ((l (binary-lower-bound (tips tips) prefix :comp #'string< :key #'tip))
-         (r (1- (binary-lower-bound (tips tips) (next-prefix prefix) :comp #'string< :key #'tip)))
+  (let* ((l (binary-lower-bound (tips tips) prefix :comp #'string-lessp :key #'tip))
+         (r (1- (binary-lower-bound (tips tips) (next-prefix prefix) :comp #'string-lessp :key #'tip)))
          (index (get-it-max tips l r)))
     (unless (minusp index)
       (tips-elt tips index))))
@@ -141,13 +142,13 @@ Returns created instance."
 (defun max-k-tips-by-prefix (tips prefix k)
   "Returns k tips with maximum weight and with given prefix. If there's not enough elements, returns all with given prefix"
   (declare (search-tips tips) (string prefix) (fixnum k))
-  (let* ((l (binary-lower-bound (tips tips) prefix :comp #'string< :key #'tip))
-         (r (1- (binary-lower-bound (tips tips) (next-prefix prefix) :comp #'string< :key #'tip)))
+  (let* ((l (binary-lower-bound (tips tips) prefix :comp #'string-lessp :key #'tip))
+         (r (1- (binary-lower-bound (tips tips) (next-prefix prefix) :comp #'string-lessp :key #'tip)))
          (queue (make-instance 'cl-heap:priority-queue :sort-fun #'>))
          res)
     (flet ((it-weight (index) (weight (tips-elt tips (it-elt tips index))))
            (intersect (l1 r1 l2 r2) (and (>= r2 l1) (>= r1 l2)))
-           (lays-in (ol or il ir) (and (<= ol il ir or))))
+           (lays-in (ol or il ir) (<= ol il ir or)))
       (cl-heap:enqueue queue (it-root tips) (it-weight (first (it-root tips))))
       (loop :while (and (< (length res) k) (cl-heap:peep-at-queue queue))
          :do (let* ((cur (cl-heap:dequeue queue))

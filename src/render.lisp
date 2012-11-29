@@ -561,12 +561,12 @@
     (multiple-value-bind (division remainder)
         (truncate len columns)
       (loop
-         :for i from 1 to columns
+         :for i :from 1 :to columns
          :do (progn
                (setf segment division)
-               (when (< 0 remainder)
-                 (setf segment (+ 1 segment))
-                 (setf remainder (- remainder 1)))
+               (when (plusp remainder)
+                 (setf segment (1+ segment))
+                 (setf remainder (1- remainder)))
                (push (subseq list start-pos (+ start-pos segment)) rs)
                (setf start-pos (+ start-pos segment)))))
     rs))
