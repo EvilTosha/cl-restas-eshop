@@ -1,7 +1,6 @@
 ;;;; packages.lisp
 
 ;;; TODO: make separated package eshop-core (class-core, slots, backup, etc.)
-;;; TODO: why not defpackage? Edit if needed
 (restas:define-module #:eshop
     (:use
      ;; system and libs' packages

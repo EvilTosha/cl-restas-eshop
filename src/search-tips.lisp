@@ -35,6 +35,11 @@
   (declare (search-tips tips) (fixnum val index))
   (setf (elt (interval-tree tips) index) val))
 
+(defun it-root (tips)
+  "Returns list of 3 values: index of root, and ends of its interval"
+  (declare (search-tips tips))
+  (list 1 0 (1- (length (tips tips)))))
+
 (defun it-son (v vl vr direction)
   "Retrurns list of 3 values: index of son of specified vertex in interval tree, and right andd left bounds for its interval.
 Aceepted values of direction are :left and :right. If other direction
@@ -73,7 +78,7 @@ Value for negative indexes is -infinity"
 (defun build-interval-tree (tips)
   "By given array of weighted search tips build interval tree for maximums."
   (declare (search-tips tips))
-  (%build-interval-tree tips 1 0 (- (length (tips tips)) 1)))
+  (%build-interval-tree tips 1 0 (1- (length (tips tips)))))
 
 (defun build-search-tips (tips)
   "Updates *search-tips* variable with new values.
@@ -102,7 +107,7 @@ Returns created instance."
 (defun get-it-max (tips request-l request-r)
   "Returns index of maximum on requested interval"
   (declare (search-tips tips) (fixnum request-l request-r))
-  (%get-it-max tips 1 0 (- (length (tips tips)) 1) request-l request-r))
+  (%get-it-max tips 1 0 (1- (length (tips tips))) request-l request-r))
 
 (defun binary-lower-bound (array elt &key (key #'identity) (comp #'<))
   (declare (array array) (function comp))
@@ -119,7 +124,7 @@ Returns created instance."
   (declare (string prefix))
   (when (plusp (length prefix))
     (let ((res prefix)
-          (last-index (- (length prefix) 1)))
+          (last-index (1- (length prefix))))
       (setf (char res last-index)
             (code-char (1+ (char-code (char res last-index)))))
       res)))
@@ -128,16 +133,30 @@ Returns created instance."
   "Returns single tip with given prefix and with maximum weight"
   (declare (search-tips tips) (string prefix))
   (let* ((l (binary-lower-bound (tips tips) prefix :comp #'string< :key #'tip))
-         (r (binary-lower-bound (tips tips) (next-prefix prefix) :comp #'string< :key #'tip))
-         (index (get-it-max tips l (- r 1))))
+         (r (1- (binary-lower-bound (tips tips) (next-prefix prefix) :comp #'string< :key #'tip)))
+         (index (get-it-max tips l r)))
     (unless (minusp index)
       (tips-elt tips index))))
 
-
-;; ??: is it really needed?
-(defun nearest-degree-of-two (n)
-  "Finds nearest (greater than n) degree of 2"
-  (declare (integer n))
-  (loop :for x := 1 :then (* x 2)
-     :while (< x n)
-     :finally (return x)))
+(defun max-k-tips-by-prefix (tips prefix k)
+  "Returns k tips with maximum weight and with given prefix. If there's not enough elements, returns all with given prefix"
+  (declare (search-tips tips) (string prefix) (fixnum k))
+  (let* ((l (binary-lower-bound (tips tips) prefix :comp #'string< :key #'tip))
+         (r (1- (binary-lower-bound (tips tips) (next-prefix prefix) :comp #'string< :key #'tip)))
+         (queue (make-instance 'cl-heap:priority-queue :sort-fun #'>))
+         res)
+    (flet ((it-weight (index) (weight (tips-elt tips (it-elt tips index))))
+           (intersect (l1 r1 l2 r2) (and (>= r2 l1) (>= r1 l2)))
+           (lays-in (ol or il ir) (and (<= ol il ir or))))
+      (cl-heap:enqueue queue (it-root tips) (it-weight (first (it-root tips))))
+      (loop :while (and (< (length res) k) (cl-heap:peep-at-queue queue))
+         :do (let* ((cur (cl-heap:dequeue queue))
+                    (left (it-son (first cur) (second cur) (third cur) :left))
+                    (right (it-son (first cur) (second cur) (third cur) :right)))
+               (when (and (null left) (null right) (lays-in l r (second cur) (third cur)))
+                 (push (tips-elt tips (it-elt tips (first cur))) res))
+               (when (and left (intersect l r (second left) (third left)))
+                 (cl-heap:enqueue queue left (it-weight (first left))))
+               (when (and right (intersect l r (second right) (third right)))
+                 (cl-heap:enqueue queue right (it-weight (first right))))))
+      res)))

@@ -55,6 +55,7 @@
              "drakma" ;; hunch-test http клиент для тестов
              "puri-unicode" ;; drakma
              "Eos" ;; esrap test
+             "cl-heap" ;; heap and priority queue
 
            ;; ;;mongoDB
            ;; "cl-mongo"
