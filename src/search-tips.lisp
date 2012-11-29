@@ -1,5 +1,5 @@
 ;; TODO: move to own package
-;; (in-package #:eshop)
+(in-package #:eshop)
 
 (defclass search-tip ()
   ((tip :accessor tip :initarg :tip :initform "")
@@ -92,7 +92,7 @@ Returns created instance."
   "Returns index of maximum on request interval"
   (declare (search-tips tips) (fixnum v vl vr request-l request-l))
   (cond
-    ((> request-l request-r) -1)
+    ((or (> request-l vr) (< request-r vl)) most-negative-fixnum)
     ((and (= vl request-l) (= vr request-r)) (it-elt tips v))
     (t (let ((mid (floor (+ vl vr) 2)))
          (it-max tips
@@ -129,7 +129,7 @@ Returns created instance."
   (declare (search-tips tips) (string prefix))
   (let* ((l (binary-lower-bound (tips tips) prefix :comp #'string< :key #'tip))
          (r (binary-lower-bound (tips tips) (next-prefix prefix) :comp #'string< :key #'tip))
-         (index (get-it-max tips l r)))
+         (index (get-it-max tips l (- r 1))))
     (unless (minusp index)
       (tips-elt tips index))))
 
