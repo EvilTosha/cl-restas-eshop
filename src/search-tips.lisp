@@ -1,5 +1,4 @@
-;; TODO: move to own package
-(in-package #:eshop)
+(in-package :search-tips)
 
 (defclass search-tip ()
   ((tip :accessor tip :initarg :tip :initform "")

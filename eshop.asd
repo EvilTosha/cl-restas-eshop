@@ -1,5 +1,5 @@
 (defsystem eshop
-  :depends-on (#:restas #:cl-json #:arnesi #:closure-template #:log5 #:string-case #:alexandria #:cl-csv :cl-mime :data-sift)
+  :depends-on (#:restas #:cl-json #:arnesi #:closure-template #:log5 #:string-case #:alexandria #:cl-csv :cl-mime :data-sift :cl-heap)
   :components
   ((:module "src"
             :serial t
@@ -12,6 +12,7 @@
                        (:module "cl-mime"
                                 :components ((:file "encoding")))))
              (:file "packages")
+             (:file "search-tips")
              (:file "images") ;; imagemagic
              (:file "config")
              (:file "time")

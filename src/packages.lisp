@@ -1,5 +1,12 @@
 ;;;; packages.lisp
 
+(defpackage :search-tips
+  (:use :cl)
+  (:export :search-tip
+           :search-tips
+           :build-search-tips
+           :max-k-tips-by-prefix))
+
 ;;; TODO: make separated package eshop-core (class-core, slots, backup, etc.)
 (restas:define-module #:eshop
     (:use
@@ -28,6 +35,7 @@
            :articles.restore
            :main-page.restore
            :cartrige.restore))
+
 
 (in-package #:eshop)
 ;;; registering classes for proper compilation of methods
