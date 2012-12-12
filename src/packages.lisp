@@ -5,7 +5,10 @@
   (:export :search-tip
            :search-tips
            :build-search-tips
-           :max-k-tips-by-prefix))
+           :max-k-tips-by-prefix
+           :tip
+           :tips
+           :weight))
 
 ;;; TODO: make separated package eshop-core (class-core, slots, backup, etc.)
 (restas:define-module #:eshop

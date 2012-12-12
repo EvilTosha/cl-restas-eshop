@@ -9,7 +9,7 @@
 (log5:start-sender 'main-page-sender
                    (log5:stream-sender :location *error-output*)
                    :category-spec 'log5:warn+
-                   :output-spec '("WARN:: " log5:message))
+                   :output-spec '("WARN: " log5:message))
 
 ;;обновление главной страницы
 (defun main-page-update ()

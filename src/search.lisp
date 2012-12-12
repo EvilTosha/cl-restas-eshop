@@ -70,9 +70,7 @@
     :accessories (soy.catalog:accessories)
     :products (loop
                  :for product
-                 :in (remove-if #'(lambda (x)
-                                    (null (active x)))
-                                products)
+                 :in (remove-if-not #'active products)
                  :collect (render.view product)))))
 
 

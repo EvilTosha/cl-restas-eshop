@@ -121,6 +121,29 @@ Note: function must be called during request, so functions like
                (products group))
     (pushnew product (products group))))
 
+(defun class-core.bind-group-to-parent (group parent)
+  "Bind product to group, and push product to group's children"
+  (when (every #'(lambda (parent)
+                   (string/= (key group) (key parent)))
+               (parents group))
+    (pushnew parent (parents group)))
+  (when (every #'(lambda (child)
+                   (string/= (key group) (key child)))
+               (groups group))
+    (pushnew group (groups parent))))
+
+(defun class-core.unbind-product-from-all-groups (product)
+  (process-storage #'(lambda (group)
+                       (setf (products group)
+                             (remove (key product) (products group) :key #'key)))
+                   'group))
+
+(defun class-core.unbind-group-from-all-parents (group)
+  (process-storage #'(lambda (parent)
+                       (setf (groups parent)
+                             (remove (key group) (groups parent) :key #'key)))
+                   'group))
+
 
 (defgeneric %post-unserialize (type)
   (:documentation "Method that called after unserializing all the items from files.

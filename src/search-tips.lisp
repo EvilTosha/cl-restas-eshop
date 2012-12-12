@@ -119,6 +119,11 @@ Returns created instance."
                  (setf r m)))
        :finally (return l))))
 
+;; (defun change-weight (tips str)
+;;   "Searches for tip with tips str, if it's found, change its weight and rebuild the interval tree"
+;;   (declare (search-tips tips) (string str))
+;;   (let ((index (binary-lower-bound (tips elt)
+
 (defun next-prefix (prefix)
   "Returns next (to current) lexicographical prefix, by increasing char-code of last char by 1"
   (declare (string prefix))

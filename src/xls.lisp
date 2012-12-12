@@ -59,14 +59,14 @@
          (mx (max (length line) (length optgroups) (length fields)))
          (cur-optgroup)
          (cur-options))
-    (loop :for i :from 0 :to (- mx 1) :do
+    (loop :for i :from 0 :to (1- mx) :do
        (let ((val       (if (nth i line)       (nth i line) ""))
              (optgroup  (if (nth i optgroups)  (nth i optgroups) ""))
              (field     (if (nth i fields)     (nth i fields) "")))
-         (cond ((equal i 0) (setf (getf flt :articul)
-                                  (parse-integer val)))
+         (cond ((zerop i) (setf (getf flt :articul)
+                                (parse-integer val)))
                ((equal i 1) (setf (getf flt :realname) val))
-               (t (progn (unless (equal 0 (length optgroup))
+               (t (progn (unless (zerop (length optgroup))
                            (unless (null cur-optgroup)
                              (push (list :optgroup_name cur-optgroup :options (reverse cur-options)) rs))
                            (setf cur-optgroup optgroup)
@@ -141,7 +141,7 @@
                                                                          <td>~a</td></tr>" articul articul realname
                                                                          (car (last (split-sequence:split-sequence #\/ (format nil "~a" pr))))
                                                                          (car (last (split-sequence:split-sequence #\/ (format nil "~a" file))))) *xls.errors*))
-                  (setf *xls.errors-num* (+ *xls.errors-num* 1)))
+                  (setf *xls.errors-num* (1+ *xls.errors-num*)))
                 ;; else
                 (setf (gethash articul *xls.product-table*) file))
             (if (null product)

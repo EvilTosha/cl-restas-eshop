@@ -55,17 +55,17 @@
 ;; Дублирует функционал nginx для развертывания на localhost
 
 (define-tracing-route request-static-route-img ("/img/*")
-  (let ((full-uri (format nil "~a" (restas:request-full-uri))))
+  (let ((full-uri (format nil "~A" (restas:request-full-uri))))
     (merge-pathnames (concatenate 'string "htimgs/" (subseq full-uri (search "/img/" full-uri)))
                      (config.get-option :paths :path-to-dropbox))))
 
 (define-tracing-route request-static-route-pic ("/pic/*")
-  (let* ((full-uri (format nil "~a" (restas:request-full-uri)))
+  (let* ((full-uri (format nil "~A" (restas:request-full-uri)))
          (path-to-img (ppcre:regex-replace ".*/pic/(\\w{1,})/(\\d{1,3})(\\d{0,})/(.*)$" full-uri "\\1/\\2/\\2\\3/\\4")))
-    (pathname (format nil "~a/~a" (config.get-option :paths :path-to-pics) path-to-img))))
+    (pathname (format nil "~A/~A" (config.get-option :paths :path-to-pics) path-to-img))))
 
 (define-tracing-route request-static-route-css ("/css/*")
-  (let ((full-uri (format nil "~a" (restas:request-full-uri))))
+  (let ((full-uri (format nil "~A" (restas:request-full-uri))))
     (merge-pathnames (concatenate 'string
                                   "htimgs/"
                                   (when (config.get-option :start-options :dbg-on) "dev/")
@@ -73,7 +73,7 @@
                      (config.get-option :paths :path-to-dropbox))))
 
 (define-tracing-route request-static-route-js ("/js/*")
-  (let ((full-uri (format nil "~a" (restas:request-full-uri))))
+  (let ((full-uri (format nil "~A" (restas:request-full-uri))))
     (merge-pathnames (concatenate 'string
                                   "htimgs/"
                                   (when (config.get-option :start-options :dbg-on) "dev/")
@@ -100,6 +100,19 @@
 
 (define-tracing-route request-route-static-sitemap2 ("/sitemap2.xml")
   (merge-pathnames "sitemap2.xml" (config.get-option :critical :path-to-conf)))
+
+(defvar *search-tips* (make-instance 'search-tips:search-tips))
+
+(define-tracing-route request-suggestions ("/api/suggestions" :method :get)
+  (let ((prefix (tbnl:get-parameter "prefix"))
+        (k (aif (tbnl:get-parameter "k") (parse-integer it) 10)))
+    (if (or (null prefix) (null k) (not (typep k 'integer)))
+        "Incorrect parameters"
+        (when (plusp (length (search-tips:tips *search-tips*)))
+          (htmlize (format nil "~{~A~%~}"
+                           (mapcar #'(lambda (tip)
+                                       (format nil "~A ~A" (search-tips:weight tip) (search-tips:tip tip)))
+                                   (reverse (search-tips:max-k-tips-by-prefix *search-tips* prefix k)))))))))
 
 ;; end static content
 ;; FILTER
@@ -286,7 +299,7 @@
 
 ;;необходимо отдавать 404 ошибку для несуществеющих страниц
 (define-tracing-route not-found-route ("*any")
-  ;; (log5:log-for info "error 404: ~a" any)
+  ;; (log5:log-for info "error 404: ~A" any)
   (restas:abort-route-handler
    (babel:string-to-octets
     (default-page
