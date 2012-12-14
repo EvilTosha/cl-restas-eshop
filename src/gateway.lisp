@@ -396,7 +396,7 @@
 
 (defvar *bad-products* (make-hash-table :test #'equal))
 
-(defstruct (bad-product
+(defstruct (aux-bad-product
   (:constructor
    create-bad-product (product &optional
                                (add-ts (get-universal-time))
