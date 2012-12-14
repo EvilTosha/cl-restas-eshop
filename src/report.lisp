@@ -154,6 +154,8 @@ list of conses (column-header . column-specifier).
   (report.%rsc
    'group-name #'name)
   (report.%rsc
+   'group-ymlshow #'ymlshow)
+  (report.%rsc
    'group-url
    #'(lambda (item)
        ;; TODO: use restas url designator
@@ -236,6 +238,7 @@ list of conses (column-header . column-specifier).
    (list (cons "Название категории" 'group-name)
          (cons "url страницы" 'group-url)
          (cons "Active" 'group-active)
+         (cons "YmlShow" 'group-ymlshow)
          (cons "seo-text" 'group-seo-text)
          (cons "продуктов" 'group-count-products)
          (cons "активных" 'group-count-active-products))

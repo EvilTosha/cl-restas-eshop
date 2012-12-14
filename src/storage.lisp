@@ -2,6 +2,8 @@
 
 (in-package #:eshop)
 
+(arnesi:enable-sharp-l-syntax)
+
 (defun get-storage (type)
   "Get storage for given type objects"
   (declare (symbol type))
