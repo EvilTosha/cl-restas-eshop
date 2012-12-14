@@ -396,7 +396,6 @@
 
 (defvar *bad-products* (make-hash-table :test #'equal))
 
-
 (defstruct (bad-product
   (:constructor
    create-bad-product (product &optional
@@ -406,31 +405,31 @@
   (add-ts (get-universal-time) :type integer) ;; time stamp when it been added
   (die-ts (get-universal-time) :type integer)) ;; time stamp when
 
-(defun t.%save-bad-product (product)
-  ;; (debug-slime-format "~A: ~A ~A" (time.encode.backup) product (name-seo product))
-  (sunless (gethash (key product) *bad-products*)
-    (setf it (create-bad-product product *gateway.import-ts*))))
+;; (defun t.%save-bad-product (product)
+;;   ;; (debug-slime-format "~A: ~A ~A" (time.encode.backup) product (name-seo product))
+;;   (sunless (gethash (key product) *bad-products*)
+;;     (setf it (create-bad-product product *gateway.import-ts*))))
 
-(defun t.%kill-bad-products ()
-  (maphash #'(lambda (key bad-product)
-               (declare (ignore key))
-               (let ((pr (bad-product-product bad-product)))
-                 (set-option pr "Secret" "YML" "No")
-                 (setf (active pr) nil)))
-           *bad-products*))
+;; (defun t.%kill-bad-products ()
+;;   (maphash #'(lambda (key bad-product)
+;;                (declare (ignore key))
+;;                (let ((pr (bad-product-product bad-product)))
+;;                  (set-option pr "Secret" "YML" "No")
+;;                  (setf (active pr) nil)))
+;;            *bad-products*))
 
-(defun t.%report-bad-products ()
-  (format t "~&артикул;название товара; название группы;цена;категория;дата;~%")
-  (maphash #'(lambda (key bad-product)
-               (let ((add-ts (bad-product-add-ts bad-product))
-                     (pr (bad-product-product bad-product)))
-                 (format t "~&~A;~S;~A;~A;~A;~A~%" key (name-seo pr)
-                         (aif (parent pr)
-                              (name it)
-                              "")
-                         (siteprice pr) (erp-class pr)
-                         (time.encode.backup add-ts))))
-           *bad-products*))
+;; (defun t.%report-bad-products ()
+;;   (format t "~&артикул;название товара; название группы;цена;категория;дата;~%")
+;;   (maphash #'(lambda (key bad-product)
+;;                (let ((add-ts (bad-product-add-ts bad-product))
+;;                      (pr (bad-product-product bad-product)))
+;;                  (format t "~&~A;~S;~A;~A;~A;~A~%" key (name-seo pr)
+;;                          (aif (parent pr)
+;;                               (name it)
+;;                               "")
+;;                          (siteprice pr) (erp-class pr)
+;;                          (time.encode.backup add-ts))))
+;;            *bad-products*))
 
 ;; (gateway.restore-singles (time.decode.backup "2012-10-16_12:01:23"))
 ;; (gateway.restore-singles (time.decode.backup "2012-12-12_12:01:23"))
