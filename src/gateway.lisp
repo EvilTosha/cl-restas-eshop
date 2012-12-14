@@ -405,12 +405,12 @@
   (add-ts (get-universal-time) :type integer) ;; time stamp when it been added
   (die-ts (get-universal-time) :type integer)) ;; time stamp when
 
-;; (defun t.%save-bad-product (product)
+(defun t.%save-bad-product (product))
 ;;   ;; (debug-slime-format "~A: ~A ~A" (time.encode.backup) product (name-seo product))
 ;;   (sunless (gethash (key product) *bad-products*)
 ;;     (setf it (create-bad-product product *gateway.import-ts*))))
 
-;; (defun t.%kill-bad-products ()
+(defun t.%kill-bad-products ())
 ;;   (maphash #'(lambda (key bad-product)
 ;;                (declare (ignore key))
 ;;                (let ((pr (bad-product-product bad-product)))
