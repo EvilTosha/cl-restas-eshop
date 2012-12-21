@@ -2,8 +2,9 @@
 
 (defclass search-tip ()
   ((tip :accessor tip :initarg :tip :initform "")
-
-   (weight :accessor weight :initarg :weight :initform 0)))
+   (weight :accessor weight :initarg :weight :initform 0)
+   ;; TODO: abstract interval-tree
+   (info :accessor info :initarg :info :initform "")))
 
 (defmethod print-object ((object search-tip) stream)
   (print-unreadable-object (object stream :type t :identity t)
@@ -118,11 +119,6 @@ Returns created instance."
                  (setf l (1+ m))
                  (setf r m)))
        :finally (return l))))
-
-;; (defun change-weight (tips str)
-;;   "Searches for tip with tips str, if it's found, change its weight and rebuild the interval tree"
-;;   (declare (search-tips tips) (string str))
-;;   (let ((index (binary-lower-bound (tips elt)
 
 (defun next-prefix (prefix)
   "Returns next (to current) lexicographical prefix, by increasing char-code of last char by 1"

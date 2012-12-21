@@ -7,6 +7,7 @@
            :build-search-tips
            :max-k-tips-by-prefix
            :tip
+           :info
            :tips
            :weight))
 

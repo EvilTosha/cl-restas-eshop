@@ -86,3 +86,15 @@
              :subcontent (if (null centercontent)
                              "Ничего не найдено"
                              (format nil "~a" centercontent))))))
+
+
+;;; prefix-search by name of product
+(defparameter *labels-tips* (search-tips:build-search-tips
+                             (map 'vector #'(lambda (product)
+                                              (make-instance 'search-tips:search-tip
+                                                             :tip (name-seo product)
+                                                             :weight (price product)
+                                                             :info (key product)))
+                                  (collect-storage 'product))))
+
+;; request: (mapcar #'search-tips:info (search-tips:max-k-tips-by-prefix *labels-tips* "acer" 10))
