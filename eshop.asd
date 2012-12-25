@@ -10,7 +10,8 @@
                                 :components
                                 ((:file "common-lisp-backend")))
                        (:module "cl-mime"
-                                :components ((:file "encoding")))))
+                                :components ((:file "encoding")
+                                             (:file "headers")))))
              (:file "packages")
              (:file "images") ;; imagemagic
              (:file "config")
