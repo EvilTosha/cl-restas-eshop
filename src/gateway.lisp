@@ -20,6 +20,8 @@
 (defvar *gateway.dump* (make-instance 'gateway.erp-data-dump)
   "Information about current import from ERP (or another place)")
 
+(defvar *gateway.import-time* nil)
+
 (defun %gateway.clear-dump (&optional (dump *gateway.dump*))
   "Init dump with new class gateway.erp-data-dump instance"
   (declare (gateway.erp-data-dump dump))
@@ -220,7 +222,7 @@
            :for line = (read-line file nil 'EOF)
            :until (eq line 'EOF)
            :when (@validp line)
-           :do (progn
+           :do (let ((*gateway.import-time* (time.decode.backup (@time line))))
                  (setf data (json:decode-json-from-string (@json line)))
                  (%gateway.process-products-dump-data data)))))))
 
@@ -303,26 +305,24 @@
          "NIL")))
 
 
+;;; LEGACY
+;;---TODO (wolforus@gmail.com): REMOVE legacy & migrate code
 
 (defvar *bad-products* (make-hash-table :test #'equal))
-
 (defun t.%save-bad-product (product)
-  (debug-slime-format "~A: ~A ~A" (time.encode.backup) product (name-seo product))
+  (debug-slime-format "~A" product)
   (setf (gethash (key product) *bad-products*) product))
 
-(defun t.%kill-bad-products ()
-  (maphash #'(lambda (key pr)
-               (declare (ignore key))
-               (set-option pr "Secret" "YML" "No")
-               (setf (active pr) nil))
-           *bad-products*))
+(defun t.%kill-bad-products ())
 
 (defun t.%report-bad-products ()
-  (format t "~&артикул;название товара; название группы;цена;категория;~%")
+  (format t "~&артикул;название товара; название группы;цена;категория;на лвш;транзит;~%")
   (maphash #'(lambda (key pr)
-               (format t "~&~A;~S;~A;~A;~A;~%" key (name-seo pr) (aif (parent pr)
-                                                                (name it)
-                                                                "")
-                       (siteprice pr) (erp-class pr)))
+               (format t "~&~A;~S;~A;~A;~A;~A;~A;~%"
+                       key (name-seo pr) (aif (parent pr)
+                                              (name it)
+                                              "")
+                       (siteprice pr) (erp-class pr)
+                       (count-total pr) (count-transit pr)
+                       ))
            *bad-products*))
-
