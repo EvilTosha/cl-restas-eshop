@@ -50,6 +50,7 @@
              (:file "groupd")
              (:file "cartrige")
              (:file "report")
+             (:file "black-list")
              (:module "cl-cron"
                       :components ((:file "packages")
                                    (:file "cl-cron"))

@@ -373,7 +373,7 @@ list of conses (column-header . column-specifier).
            (setf (active v) nil)))
      'product)
     (length rs))
-  (t.%kill-bad-products))
+  (black-list.deactivate-all))
 
 (defun product-delivery (p)
   (let ((g (parent p))

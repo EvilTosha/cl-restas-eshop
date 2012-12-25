@@ -158,7 +158,7 @@
                   (zerop count-transit)
                   (= (count-total product)
                      (count-transit product)))
-         (t.%save-bad-product product)
+         (black-list.insert product)
          (setf (count-total product) 0)))
   (when count-transit
     (setf (count-transit  product) count-transit)))
@@ -304,25 +304,3 @@
                 (t (%gateway.processing-package it)))))
          "NIL")))
 
-
-;;; LEGACY
-;;---TODO (wolforus@gmail.com): REMOVE legacy & migrate code
-
-(defvar *bad-products* (make-hash-table :test #'equal))
-(defun t.%save-bad-product (product)
-  (debug-slime-format "~A" product)
-  (setf (gethash (key product) *bad-products*) product))
-
-(defun t.%kill-bad-products ())
-
-(defun t.%report-bad-products ()
-  (format t "~&артикул;название товара; название группы;цена;категория;на лвш;транзит;~%")
-  (maphash #'(lambda (key pr)
-               (format t "~&~A;~S;~A;~A;~A;~A;~A;~%"
-                       key (name-seo pr) (aif (parent pr)
-                                              (name it)
-                                              "")
-                       (siteprice pr) (erp-class pr)
-                       (count-total pr) (count-transit pr)
-                       ))
-           *bad-products*))

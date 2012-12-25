@@ -93,7 +93,7 @@
                                      " || активных: "
                                      (write-to-string (count-storage 'product :when-fn #'active))
                                      " || выключенных: "
-                                     (write-to-string (hash-table-count *bad-products*))
+                                     (write-to-string (hash-table-count black-list.*storage*))
                                      "</b>")
                 (mapcar #'(lambda (v) (let ((thread-name (bt:thread-name v)))
                                         (list thread-name)))
