@@ -284,7 +284,8 @@
 
 (defun %gateway.processing-single-package (raw)
   "Обработка одиночного изменения, для экстренного внесения изменений на небольшое количество товаров"
-  (let ((data (%gateway.prepare-raw-data raw)))
+  (let ((*gateway.import-time* (get-universal-time))
+        (data (%gateway.prepare-raw-data raw)))
     (gateway.store-single-gateway data)
     (%gateway.process-products-dump-data (json:decode-json-from-string data))
     ;; возможно тут необходимо пересчитать списки активных товаров или еще что-то

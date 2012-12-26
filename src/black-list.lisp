@@ -52,7 +52,7 @@
 
 (defmethod black-list.%deactive ((item black-list.item))
   "Deactive product item from black list"
-  (black-list.%deactive item))
+  (black-list.%deactive (black-list.item-item item)))
 
 (defun black-list.deactivate-all ()
   "Deactive all products from black list"
