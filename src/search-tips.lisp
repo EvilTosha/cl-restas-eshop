@@ -47,7 +47,7 @@ Aceepted values of direction are :left and :right. If other direction
 parameter specified, :left is used.
 If vertex is a leaf, return nil"
   (declare (fixnum v vl vr) (keyword direction))
-  (unless (= vl vr)
+  (when (< vl vr)
     (let ((mid (floor (alexandria:mean (list vl vr)))))
       (if (equal direction :right)
           (list (* 2 v) vl mid)
@@ -67,7 +67,7 @@ Value for negative indexes is -infinity"
 (defun %build-interval-tree (tips v vl vr)
   "Init max in current vertex and go recursively down to children"
   (declare (search-tips tips) (fixnum v vl vr))
-  (if (= vl vr)
+  (if (>= vl vr)
       (setf (it-elt tips v) vl)
       (let ((left-son (it-son v vl vr :left))
             (right-son (it-son v vl vr :right)))
@@ -90,8 +90,8 @@ Returns created instance."
     (setf (tips new-tips) (sort tips-array #'string-lessp :key #'tip)
           (interval-tree new-tips) (make-array (* 4 (length tips-array)) :element-type 'fixnum
                                                :initial-element most-negative-fixnum))
-
-    (build-interval-tree new-tips)
+    (unless (zerop (length tips-array))
+      (build-interval-tree new-tips))
     new-tips))
 
 (defun %get-it-max (tips v vl vr request-l request-r)
