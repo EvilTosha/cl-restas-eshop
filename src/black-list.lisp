@@ -61,15 +61,24 @@
                (black-list.%deactive item))
            black-list.*storage*))
 
+(defun black-list.clear ()
+  "Remove some items from black list"
+  (maphash #'(lambda (key item)
+               (awhen (black-list.item-item item)
+                 (when (> (count-total it) (count-transit it))
+                   (remhash key black-list.*storage*))))
+           black-list.*storage*))
+
 ;;; Reports
 
 (defmethod black-list.%print-item ((product product))
-  (format nil "~A;~S;~A;~A;~A;"
+  (format nil "~A;~S;~A;~A;~A;~A;"
           (key product) (name-seo product)
           (aif (parent product)
                (name it)
                "")
-          (siteprice product) (erp-class product)))
+          (siteprice product) (erp-class product)
+          (- (count-total product) (count-transit product))))
 
 (defmethod black-list.%print-item ((item black-list.item))
   (declare (black-list.item item))
@@ -78,9 +87,10 @@
           (time.encode.backup (black-list.item-add-ts item))))
 
 (defun black-list.report (&optional (stream t))
-  (format stream "~&артикул;название товара; название группы;цена;категория;дата добавления;~%")
+  (format stream "~&артикул;название товара; название группы;цена;категория;на лев;дата добавления;~%")
   (maphash #'(lambda (key item)
                (declare (ignore key))
                (format stream "~A" (black-list.%print-item item)))
            black-list.*storage*))
+
 
