@@ -23,7 +23,7 @@
    ;; PATHS section
    :paths
    (list :path-to-dropbox              (list :value #P"Dropbox/"                      :type :path)
-         :path-to-last-backup          (list :value #P"last-backup/"                  :type :path)
+         :path-to-last-backup          (list :value #P"eshop-dev/last-backup/"        :type :path)
          :path-to-templates            (list :value #P"Dropbox/httpls/release/"       :type :path)
          :path-to-articles             (list :value #P"Dropbox/content/articles/"     :type :path)
          :path-to-static-pages         (list :value #P"Dropbox/content/static-pages/" :type :path)
@@ -32,8 +32,8 @@
          :path-to-gateway              (list :value #P"eshop-logs/gateway/"           :type :path)
          :path-to-backups              (list :value #P"eshop-dev/backups/"            :type :path)
          :path-to-big-images-backup    (list :value #P"source-big-images-bkps/"       :type :path)
-         :path-to-main-page            (list :value #P"eshop-dev/mainPage/"           :type :path)
-         :path-to-seo                  (list :value #P"eshop-dev/seo/"                :type :path)
+         :path-to-main-page            (list :value #P"Dropbox/mainPage/"           :type :path)
+         :path-to-seo                  (list :value #P"Dropbox/seo/"                :type :path)
          :path-to-reports              (list :value #P"Dropbox/reports/"              :type :path)
          )
    ;; CRITICAL section, options should be different for dev and release servers
@@ -43,11 +43,17 @@
                                                                                       :type :path)
          :path-to-sitemap              (list :value #P"eshop-dev/htconf/"             :type :path)
          :path-to-dropbox-backup       (list :value #P"Dropbox/eshop-backups/"        :type :path)
-         :gateway-warn-emails          (list :value (list "wolforus@gmail.com")       :type :string-list)
+         :gateway-warn-emails          (list :value (list "Supplers@alpha-pc.com"
+                                                          "web_design@alpha-pc.com"
+                                                          "wolforus@gmail.com"
+                                                          "slamly@gmail.com")       :type :string-list)
          :xls-warn-emails              (list :value (list "wolforus@gmail.com"
-                                                          "web_design@alpha-pc.com")  :type :string-list)
-         :order-emails                 (list :value (list "wolforus@gmail.com"
-                                                          "slamly@gmail.com")         :type :string-list)
+                                                          "web_design@alpha-pc.com") :type :string-list)
+         :order-emails                 (list :value (list "internetorder@alpha-pc.com"
+                                                          "shop@320-8080.ru"
+                                                          "zakaz320@yandex.ru"
+                                                          "slamly@gmail.com"
+                                                          "wolforus@gmail.com")         :type :string-list)
          :from-email                   (list :value "shop@320-8080.ru"                :type :string)
          )
    ;; OTHER-OPTIONS section

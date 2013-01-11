@@ -218,7 +218,7 @@
                        (when (equal (name it) "Nokia")
                          (list :URL "/articles/nokia_bonus?bannerType=line-text"
                                :SRC "/img/banners/nokia.png"
-                               :NAME "Узнай специальную ценю для членов F-клуба!"
+                               :NAME "Узнай специальную цену для членов F-клуба!"
                                :SRC2 "/img/banners/nokia.png")))
         :keywords (render.get-keywords object parameters)
         :description (render.get-description object parameters)
@@ -308,6 +308,27 @@
         (when (yml.available-for-order-p product)
           (soy.buttons:buy-product-order fields)))))
 
+(defun %get-yml-name (product)
+  (declare (product product))
+  (let ((yml-name (get-option product "Secret" "Yandex")))
+    (if (or (null yml-name)
+            (string= ""
+                     (stripper yml-name))
+            (string= "No"
+                     (stripper yml-name)))
+        (name-seo product)
+        yml-name)))
+
+(defun render.get-special-yml-name (product)
+  (declare (product product))
+  (awhen (parent product)
+    (when (or (find (key it) '("noutbuki"
+                               "netbuki") :test #'equal)
+              (and (equal (key it) "planshetnie-komputery")
+                   (find (vendor product)
+                         '("Apple" "Samsung") :test #'equal)))
+      (%get-yml-name product))))
+
 
 (defmethod render.view ((object product))
   (let ((pics (get-pics (key object))))
@@ -344,6 +365,7 @@
                                                     (if (= 400 (yml.get-product-delivery-price1 object))
                                                         " Акция: скидка на доставку 20. Закажи сейчас!")))))
             :keyopts (render.get-catalog-keyoptions object)
+            :ymlname (render.get-special-yml-name object)
             :oneclickbutton  (unless (preorder object)
                                (soy.buttons:add-one-click (list :articul (articul object))))
             :addbutton (render.%add-button object)))))
@@ -466,6 +488,7 @@
                              :breadcrumbs (soy.product:breadcrumbs (render.breadcrumbs object))
                              :articul (articul object)
                              :name (name-seo object)
+                             :ymlname (render.get-special-yml-name object)
                              :siteprice (siteprice object)
                              :storeprice (price object)
                              :bestprice (plusp (delta-price object))
@@ -542,7 +565,7 @@
                                 (equal (vendor object) "Nokia"))
                        (list :URL "/articles/nokia_bonus?bannerType=line-text"
                              :SRC "/img/banners/nokia.png"
-                             :NAME "Узнай специальную ценю для членов F-клуба!"
+                             :NAME "Узнай специальную цену для членов F-клуба!"
                              :SRC2 "/img/banners/nokia.png"))
         :keywords (render.get-keywords object nil)
         :description (format nil "купить ~a в ЦиFры 320-8080 по лучшей цене с доставкой по Санкт-Петербургу"
@@ -688,9 +711,9 @@
     (soy.catalog:producers
      (list
       :vendorblocks (render.make-producters-base
-                     veiws :cut 3)
+                     veiws :cut 6)
       :vendorhiddenblocks (render.make-producters-hidden
-                           veiws :cut 3)))))
+                           veiws :cut 6)))))
 
 
 (defmethod restas:render-object ((designer eshop-render) (object group))

@@ -20,6 +20,8 @@
 (defvar *gateway.dump* (make-instance 'gateway.erp-data-dump)
   "Information about current import from ERP (or another place)")
 
+(defvar *gateway.import-time* nil)
+
 (defun %gateway.clear-dump (&optional (dump *gateway.dump*))
   "Init dump with new class gateway.erp-data-dump instance"
   (declare (gateway.erp-data-dump dump))
@@ -156,7 +158,7 @@
                   (zerop count-transit)
                   (= (count-total product)
                      (count-transit product)))
-         (t.%save-bad-product product)
+         (black-list.insert product)
          (setf (count-total product) 0)))
   (when count-transit
     (setf (count-transit  product) count-transit)))
@@ -220,7 +222,7 @@
            :for line = (read-line file nil 'EOF)
            :until (eq line 'EOF)
            :when (@validp line)
-           :do (progn
+           :do (let ((*gateway.import-time* (time.decode.backup (@time line))))
                  (setf data (json:decode-json-from-string (@json line)))
                  (%gateway.process-products-dump-data data)))))))
 
@@ -282,7 +284,8 @@
 
 (defun %gateway.processing-single-package (raw)
   "Обработка одиночного изменения, для экстренного внесения изменений на небольшое количество товаров"
-  (let ((data (%gateway.prepare-raw-data raw)))
+  (let ((*gateway.import-time* (get-universal-time))
+        (data (%gateway.prepare-raw-data raw)))
     (gateway.store-single-gateway data)
     (%gateway.process-products-dump-data (json:decode-json-from-string data))
     ;; возможно тут необходимо пересчитать списки активных товаров или еще что-то
@@ -302,26 +305,3 @@
                 (t (%gateway.processing-package it)))))
          "NIL")))
 
-
-
-(defvar *bad-products* (make-hash-table :test #'equal))
-
-(defun t.%save-bad-product (product)
-  (debug-slime-format "~A: ~A ~A" (time.encode.backup) product (name-seo product))
-  (setf (gethash (key product) *bad-products*) product))
-
-(defun t.%kill-bad-products ()
-  (maphash #'(lambda (key pr)
-               (declare (ignore key))
-               (set-option pr "Secret" "YML" "No")
-               (setf (active pr) nil))
-           *bad-products*))
-
-(defun t.%report-bad-products ()
-  (format t "~&артикул;название товара; название группы;цена;категория;~%")
-  (maphash #'(lambda (key pr)
-               (format t "~&~A;~S;~A;~A;~A;~%" key (name-seo pr) (aif (parent pr)
-                                                                (name it)
-                                                                "")
-                       (siteprice pr) (erp-class pr)))
-           *bad-products*))

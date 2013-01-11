@@ -2,6 +2,8 @@
 
 (in-package #:eshop)
 
+(arnesi:enable-sharp-l-syntax)
+
 (defun get-storage (type)
   "Get storage for given type objects"
   (declare (symbol type))
@@ -155,13 +157,19 @@ where key is vendor name and value is number of products with this vendor"
             object)
     vendors))
 
-(defun storage.get-all-child-groups (root &optional (sorter #'storage.alphabet-group-sorter))
-  (sort
-   (aif (groups root)
-        ;; no need for sort in mapcan, because it will be sorted anyway
-        (mapcan #'storage.get-all-child-groups it)
-        (list root))  ; else
-   sorter))
+(defun storage.get-all-sorted-child-groups (root &optional (sorter #'storage.alphabet-group-sorter) (when-fn #'identity))
+    "Return all recursive child groups for root group using when-fn inspection starting from top group level & sort thems"
+    (declare (group root) (function when-fn sorter))
+    (sort (storage.get-all-child-groups root when-fn) sorter))
+
+(defun storage.get-all-child-groups (root &optional (when-fn #'identity))
+  "Return all recursive child groups for root group using when-fn inspection starting from top group level"
+  (declare (group root) (function when-fn))
+  (aif (remove-if-not when-fn (groups root))
+       ;; no need for sort in mapcan, because it will be sorted anyway
+       (mapcan #L(storage.get-all-child-groups !1 when-fn) it)
+       (list root))) ; else
+
 
 (defgeneric storage.get-filtered-products (object &optional filter)
   (:documentation "Returns list of prodicts taken from object somehow, and deleted all

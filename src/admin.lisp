@@ -23,6 +23,12 @@
 (restas:define-route admin-backup-route ("/administration-super-panel/makebackup" :method :post)
   (show-admin-page "backup"))
 
+;; (restas:define-route admin-black-list-route ("/administration-super-panel/black-list")
+;;   (show-admin-page "black-list"))
+
+(restas:define-route admin-black-list-post-route ("/administration-super-panel/black-list" :method :post)
+  (show-admin-page "black-list"))
+
 (restas:define-route admin-cron-route ("/administration-super-panel/cron-jobs" :method :post)
   (show-admin-page "cron-jobs"))
 
@@ -101,7 +107,7 @@
                                      " || активных: "
                                      (write-to-string (count-storage 'product :when-fn #'active))
                                      " || выключенных: "
-                                     (write-to-string (hash-table-count *bad-products*))
+                                     (write-to-string (hash-table-count black-list.*storage*))
                                      "</b>")
                 (mapcar #'(lambda (v) (let ((thread-name (bt:thread-name v)))
                                         (list thread-name)))
@@ -364,6 +370,21 @@
          (soy.admin:vendor-seo-upload (list :text (awhen (getobj vendor-key 'vendor)
                                                     (gethash group-key (seo-texts it)))))))))
 
+
+(defun admin.black-list (post-data)
+  (let* ((key (getf post-data :key))
+         (output nil)
+         (errortext nil))
+    (when key
+      (aif (getobj key)
+           (progn
+             (black-list.insert it)
+             (black-list.%deactive it)
+             (setf output (format nil "Товар <a href='/~A'>~A</a>:~A убран"
+                                  (key it) (key it) (name-seo it))))
+           (setf errortext "Нет такого товара")))
+    (soy.admin:black-list (list :output output :errortext errortext))))
+
 (defun show-admin-page (&optional (key ""))
   (let ((post-data (servo.alist-to-plist (hunchentoot:post-parameters hunchentoot:*request*))))
     (soy.admin:main
@@ -377,5 +398,6 @@
              ("pics" (admin.pics-deleting post-data))
              ("templates" (admin.compile-template post-data))
              ("backup" (admin.make-backup post-data))
+             ("black-list" (admin.black-list post-data))
              ("vendor-seo" (admin.vendor-seo-upload post-data))
              (t "Админка в разработке"))))))

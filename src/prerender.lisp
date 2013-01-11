@@ -44,20 +44,12 @@
               (c2 (nth 2 args))
               (c3 (nth 3 args))
               (c4 (nth 4 args))
-              (articul (nth 5 args))
-              (product (getobj articul 'product))
-              (name (name-seo product))
-              (siteprice (siteprice product))
-              ;; (delivery-price (delivery-price product))
-              (picname (car (get-pics articul))))
+              (articul (nth 5 args)))
          (format nil "<area shape=\"rect\" coords=\"~a,~a,~a,~a\"
-                     href=\"#add\" ~a>"
+                     href=\"#oneClickBox\" ~a>"
                  c1 c2 c3 c4
-                 (soy.buttons:add-product-onclick
-                  (list :articul articul
-                        :name name
-                        :siteprice siteprice
-                        :pic picname)))))
+                 (soy.buttons:add-prerender-onclick
+                  (list :articul articul)))))
       ;;вставка кнопки покупки
       ((string= type "buy")
        (let* ((articul (nth 1 args))
@@ -73,6 +65,15 @@
                             :name name
                             :siteprice siteprice
                             :pic picname)))))))
+      ;;вставка счетчика
+      ((string= type "tiker")
+       (let* ((cnt (floor (- (time.decode.backup "2012-12-30_23:23:59")
+                            (get-universal-time)) (* 60 60 24)))
+              (skl (+ 1 (skls.get-count-skls cnt))))
+         (format nil "<font size='6'>~A</font><br>
+                         <font>~A</font><br>
+                      <font size='6'>~A</font><br>"
+                 (sklonenie "остался" skl) cnt (sklonenie "день" skl))))
       ;;вставка нескольких акционнных товаров
       ((string= type "rasprodaja")
        (let* ((articul (nth 1 args))

@@ -10,7 +10,8 @@
                                 :components
                                 ((:file "common-lisp-backend")))
                        (:module "cl-mime"
-                                :components ((:file "encoding")))))
+                                :components ((:file "encoding")
+                                             (:file "headers")))))
              (:file "packages")
              (:file "search-tips")
              (:file "images") ;; imagemagic
@@ -50,6 +51,7 @@
              (:file "groupd")
              (:file "cartrige")
              (:file "report")
+             (:file "black-list")
              (:module "cl-cron"
                       :components ((:file "packages")
                                    (:file "cl-cron"))

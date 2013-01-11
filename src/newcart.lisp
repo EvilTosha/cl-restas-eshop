@@ -70,7 +70,7 @@
                 "товаров")))))
 
 (defun newcart-yandex-cookie ()
-  (let* ((cookie (hunchentoot:cookie-in "user-nc"))
+  (let* ((cookie (hunchentoot:url-decode (hunchentoot:cookie-in "user-nc")))
          (cookie-data (when cookie
                         (servo.alist-to-plist (decode-json-from-string cookie))))
          (post-data (servo.alist-to-plist (hunchentoot:post-parameters hunchentoot:*request*)))
@@ -133,7 +133,7 @@
   (declare (ignore request-str))
   (when (assoc "operation_id" (hunchentoot:post-parameters hunchentoot:*request*)  :test #'string=)
     (newcart-yandex-cookie))
-  (let ((cart-cookie (hunchentoot:cookie-in "cart"))
+  (let ((cart-cookie (hunchentoot:url-decode (hunchentoot:cookie-in "cart")))
         (cart)
         (products)
         (count 0)
@@ -173,7 +173,7 @@
 
 ;; корзина товаров
 (defun cart-page ()
-  (let ((cart-cookie (hunchentoot:cookie-in "cart"))
+  (let ((cart-cookie (hunchentoot:url-decode (hunchentoot:cookie-in "cart")))
         (cart)
         (products)
         (count)
@@ -246,8 +246,10 @@
     ;; кукисы пользователя
     (mapcar #'(lambda (cookie)
                 (string-case (car cookie)
-                  ("cart" (setf cart (json:decode-json-from-string (cdr cookie))))
-                  ("user-nc" (setf user (json:decode-json-from-string (cdr cookie))))
+                  ("cart" (setf cart (json:decode-json-from-string
+                                      (hunchentoot:url-decode(cdr cookie)))))
+                  ("user-nc" (setf user (json:decode-json-from-string
+                                         (hunchentoot:url-decode(cdr cookie)))))
                   (t nil)))
             (hunchentoot:cookies-in hunchentoot:*request*))
     ;;если кукисы не пустые
