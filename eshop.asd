@@ -24,7 +24,6 @@
              (:file "routes")
              (:file "render")
              (:file "cart")
-             (:file "search")
              (:file "xls")  ;;необходима xls2csv | sudo apt-get install catdoc
              (:file "yml")
              (:file "articles")
@@ -44,6 +43,7 @@
              (:file "marketing-filters")
              (:file "oneclickcart")
              (:file "static-pages")
+             (:file "search")
              (:file "admin")
              (:file "gateway")
              (:file "sendmail")
