@@ -68,6 +68,14 @@
               ;; FIXME: bad code
               (when (and (groupp object) (equal slot 'raw-fullfilter))
                 (setf (fullfilter object) (decode-fullfilter (raw-fullfilter object))))
+              (when (equal slot 'parents)
+                (typecase object
+                  (product
+                   (class-core.unbind-product-from-all-groups object)
+                   (mapcar #'(lambda (group) (class-core.bind-product-to-group object group)) (parents object)))
+                  (group
+                   (class-core.unbind-group-from-all-parents object)
+                   (mapcar #'(lambda (parent) (class-core.bind-group-to-parent object parent)) (parents object)))))
               ;; return value
               (admin.standard-ajax-response t))
           (error (e) (admin.standard-ajax-response nil (format nil "Error: ~A" e))))
@@ -117,6 +125,24 @@
                     :target "make"))
              ;; else
              "Incorrect type or no type specified")))))
+
+(restas:define-route admin-make-choose-key-route ("/administration-super-panel/make-key" :method :get)
+  (admin.page-wrapper
+   (soy.class_forms:make-choose-key)))
+
+(restas:define-route admin-new-make-post-route ("/administration-super-panel/new-make" :method :post)
+  (debug-slime-format "~A " (hunchentoot:post-parameters*))
+  (let ((type (string-downcase (tbnl:post-parameter "type")))
+        (key (tbnl:post-parameter "key")))
+    (if (getobj key)
+        (restas:redirect 'admin-edit-get-route :type type :key key)
+        (progn
+          ;; FIXME
+          (setobj key (make-instance (string-case (string-downcase type)
+                                       ("product" 'product)
+                                       ("group" 'group)) :key key))
+          (admin.post-make-fix (getobj key))
+          (restas:redirect 'admin-edit-get-route :type type :key)))))
 
 (defgeneric admin.post-make-fix (item)
   (:documentation "Perform class-specific fixes after creating instance")
