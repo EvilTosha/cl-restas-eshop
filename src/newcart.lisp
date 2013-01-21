@@ -348,7 +348,11 @@
             ;; удаление страных символов
             (setf client-mail (remove-if #'(lambda(c) (< 10000 (char-code c))) client-mail))
             (setf tks-mail (remove-if #'(lambda(c) (< 10000 (char-code c))) (soy.sendmail:mailfile mail-file)))
-            (email.send-order-details order-id client-mail filename tks-mail)
+            (email.send-order-details order-id (soy.sendmail:tks-clientmail-wrapper
+                                                (list :body client-mail
+                                                      :ip (tbnl:real-remote-addr)
+                                                      :agent (tbnl:user-agent)))
+                                      filename tks-mail)
             (when (email.valid-email-p email)
               (email.send-client-mail email order-id client-mail))
             (soy.newcart:fullpage
@@ -409,4 +413,3 @@
                                                                              :url "/"))
                                       :header (soy.newcart:header)
                                       :leftcells (soy.newcart:leftcells-empty)))))))
-
