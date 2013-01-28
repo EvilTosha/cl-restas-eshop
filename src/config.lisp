@@ -32,9 +32,10 @@
          :path-to-gateway              (list :value #P"eshop-logs/gateway/"           :type :path)
          :path-to-backups              (list :value #P"eshop-dev/backups/"            :type :path)
          :path-to-big-images-backup    (list :value #P"source-big-images-bkps/"       :type :path)
-         :path-to-main-page            (list :value #P"Dropbox/mainPage/"           :type :path)
-         :path-to-seo                  (list :value #P"Dropbox/seo/"                :type :path)
+         :path-to-main-page            (list :value #P"Dropbox/mainPage/"             :type :path)
+         :path-to-seo                  (list :value #P"Dropbox/seo/"                  :type :path)
          :path-to-reports              (list :value #P"Dropbox/reports/"              :type :path)
+         :path-to-xls                  (list :value #P"Dropbox/xls/"                  :type :path)
          )
    ;; CRITICAL section, options should be different for dev and release servers
    :critical
@@ -43,17 +44,18 @@
                                                                                       :type :path)
          :path-to-sitemap              (list :value #P"eshop-dev/htconf/"             :type :path)
          :path-to-dropbox-backup       (list :value #P"Dropbox/eshop-backups/"        :type :path)
+         :send-emails                  (list :value nil                               :type :bool)
          :gateway-warn-emails          (list :value (list "Supplers@alpha-pc.com"
                                                           "web_design@alpha-pc.com"
                                                           "wolforus@gmail.com"
-                                                          "slamly@gmail.com")       :type :string-list)
+                                                          "slamly@gmail.com")         :type :string-list)
          :xls-warn-emails              (list :value (list "wolforus@gmail.com"
-                                                          "web_design@alpha-pc.com") :type :string-list)
+                                                          "web_design@alpha-pc.com")  :type :string-list)
          :order-emails                 (list :value (list "internetorder@alpha-pc.com"
                                                           "shop@320-8080.ru"
                                                           "zakaz320@yandex.ru"
                                                           "slamly@gmail.com"
-                                                          "wolforus@gmail.com")         :type :string-list)
+                                                          "wolforus@gmail.com")       :type :string-list)
          :from-email                   (list :value "shop@320-8080.ru"                :type :string)
          )
    ;; OTHER-OPTIONS section

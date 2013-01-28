@@ -108,34 +108,35 @@ Note: attachments are list of mime objects. To easily create mime from pathname 
            ((or string list) to reply-to cc bcc)
            (list other-headers)
            (ignore other-headers))
-  (let ((sendmail (sb-unix::process-input
-                   (sb-ext:run-program +sendmail-bin+
-                                       `("-f" ,from
-                                              ,@(alexandria:ensure-list to)
-                                              ,@(alexandria:ensure-list cc)
-                                              ,@(alexandria:ensure-list bcc))
-                                       :input :stream
-                                       :wait nil)))
-        (mime (when attachments
-                (make-instance
-                 'multipart-mime
-                 :subtype "mixed"
-                 :content
-                 ;; Firstly the text input
-                 (cons (make-body-mime-from-string body)
-                       ;; The attachments themselves
-                       (alexandria:ensure-list attachments))))))
-    ;; (error mime)
-    (mapc #'(lambda (header value)
-              (when value
-                (format sendmail "~A: ~{~A~^,~}~%" header (alexandria:ensure-list value))))
-          (list "To" "Cc" "From" "Reply-To" "Subject")
-          (list  to   cc   from   reply-to   subject))
-    ;; (error mime)
-    (if mime
-        (cl-mime:print-mime sendmail mime t t)
+  (when +sendmail-bin+
+    (let ((sendmail (sb-unix::process-input
+                     (sb-ext:run-program +sendmail-bin+
+                                         `("-f" ,from
+                                           ,@(alexandria:ensure-list to)
+                                           ,@(alexandria:ensure-list cc)
+                                           ,@(alexandria:ensure-list bcc))
+                                         :input :stream
+                                         :wait nil)))
+          (mime (when attachments
+                  (make-instance
+                   'multipart-mime
+                   :subtype "mixed"
+                   :content
+                   ;; Firstly the text input
+                   (cons (make-body-mime-from-string body)
+                         ;; The attachments themselves
+                         (alexandria:ensure-list attachments))))))
+      ;; (error mime)
+      (mapc #'(lambda (header value)
+                (when value
+                  (format sendmail "~A: ~{~A~^,~}~%" header (alexandria:ensure-list value))))
+            (list "To" "Cc" "From" "Reply-To" "Subject")
+            (list  to   cc   from   reply-to   subject))
+      ;; (error mime)
+      (if mime
+          (cl-mime:print-mime sendmail mime t t)
         (cl-mime:print-mime sendmail (make-body-mime-from-string body) t t))
-    (close sendmail)))
+      (close sendmail))))
 
 (defun send-email-with-template (template-email
                                  &key (from (get-user) from-supplied-p)

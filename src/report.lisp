@@ -199,7 +199,35 @@ list of conses (column-header . column-specifier).
    #'(lambda (item) (length (filters.filter item))))
   (report.%rsc
    'filter-active-products
-   #'(lambda (item) (count-if #'active (filters.filter item)))))
+   #'(lambda (item) (count-if #'active (filters.filter item))))
+  ;; printers/cartriges
+  (report.%rsc 'printer-name #'name)
+  (report.%rsc 'printer-vendor #'vendor)
+  (report.%rsc 'printer-type #'printer-type)
+  (report.%rsc 'printer-original-cartr-count
+               #'(lambda (printer) (format nil "~D" (length (original-cartriges printer)))))
+  (report.%rsc 'printer-original-cartr-active
+               #'(lambda (printer) (format nil "~D" (count-if #'active (original-cartriges printer)
+                                                         :key (alexandria:rcurry #'getobj 'product)))))
+  (report.%rsc 'printer-other-cartr-count
+               #'(lambda (printer) (format nil "~D" (length (other-cartriges printer)))))
+  (report.%rsc 'printer-other-cartr-active
+               #'(lambda (printer) (format nil "~D" (count-if #'active (other-cartriges printer)
+                                                         :key (alexandria:rcurry #'getobj 'product)))))
+  (report.%rsc 'printer-all-cartr-count
+               #'(lambda (printer) (format nil "~D"
+                                      (+ (length (original-cartriges printer))
+                                         (length (other-cartriges printer))))))
+  (report.%rsc 'printer-all-cartr-active
+               #'(lambda (printer) (format nil "~D"
+                                      (+ (count-if #'active (original-cartriges printer)
+                                                   :key (alexandria:rcurry #'getobj 'product))
+                                         (count-if #'active (other-cartriges printer)
+                                                   :key (alexandria:rcurry #'getobj 'product))))))
+  (report.%rsc 'printer-original-cartriges
+               #'(lambda (printer) (format nil "~{~A~^ ~}" (original-cartriges printer))))
+  (report.%rsc 'printer-other-cartriges
+               #'(lambda (printer) (format nil "~{~A~^ ~}" (other-cartriges printer)))))
 
 (report.register-standard-columns)
 
@@ -276,6 +304,22 @@ list of conses (column-header . column-specifier).
          (cons "Active" 'product-active)
          (cons "seo-text" 'product-seo-text-exists))
    'product))
+
+(defun report.printers-report (stream)
+  (report.write-report-with-standard-columns
+   stream
+   '(("Название принтера" . printer-name)
+     ("Производитель" . printer-vendor)
+     ("Тип" . printer-type)
+     ("Количество (оригинальные)" . printer-original-cartr-count)
+     ("Активных (оригинальные)" . printer-original-cartr-active)
+     ("Количество (другие)" . printer-other-cartr-count)
+     ("Активных (другие)" . printer-other-cartr-active)
+     ("Количество (все)" . printer-all-cartr-count)
+     ("Активных (все)" . printer-all-cartr-active)
+     ("Оригинальные картриджи" . printer-original-cartriges)
+     ("Другие картриджи" . printer-other-cartriges))
+   (alexandria:hash-table-values *printer-storage*)))
 
 (defun report.pics-report (stream &optional (products nil products-supplied-p))
   (cl-csv:write-csv-row (list "Продукт"
@@ -410,7 +454,9 @@ list of conses (column-header . column-specifier).
     (create-report (format nil "seo-report-groups-~A.csv" time) #'report.group-report)
     (create-report (format nil "seo-report-vendors-~A.csv" time) #'write-vendors)
     (create-report (format nil "seo-report-products-~A.csv" time) #'report.seo-seria-filters)
-    (create-report (format nil "seo-report-seria-filters-~A.csv" time) #'report.product-vendor-report)))
+    (create-report (format nil "seo-report-seria-filters-~A.csv" time) #'report.product-vendor-report)
+    ;; FIXME: do own button and fuction for the printers report
+    (create-report (format nil "printer-report-~A.csv" time) #'report.printers-report)))
 
 
 (defun report.write-alias (&optional (stream *standard-output*))

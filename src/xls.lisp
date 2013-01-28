@@ -7,22 +7,15 @@
 (defvar *xls.errors-num* 0)
 
 
-(defclass nko ()
-  ((folder  :initarg :folder  :initform nil :accessor folder)
-   (xls2csv :initarg :xls2csv :initform nil :accessor xls2csv)))
+(alexandria:define-constant +xls2csv-bin+
+    (find-if #'probe-file
+             (list "/usr/bin/xls2csv"
+                   "/usr/lib/xls2csv"
+                   "/usr/sbin/xls2csv"))
+  :test (constantly t)
+  :documentation "Path to executable xls2csv file")
 
-
-(defmethod initialize-instance :after ((obn nko) &key)
-  (unless (file-exists-p (xls2csv obn))
-    (error "xls2csv not found"))
-  (unless (directory-exists-p (folder obn))
-    (error "folder not found")))
-
-(defparameter px (make-instance 'nko
-                                :folder  (format nil "~aDropbox/xls" (user-homedir-pathname))
-                                :xls2csv "/usr/bin/xls2csv"))
-
-(defmethod ƒ ((isg string) (obn nko))
+(defmethod ƒ ((isg string))
   (let ((bin))
     (values
      (mapcar #'(lambda (y) (string-trim '(#\Space #\Tab) y))
@@ -50,7 +43,7 @@
      bin)))
 
 
-(defmethod ƒ ((prm list) (obn nko))
+(defmethod ƒ ((prm list))
   (let* ((line (getf prm :line))
          (optgroups (getf prm :optgroups))
          (fields (getf prm :fields))
@@ -76,51 +69,50 @@
     (append flt (list :result-options (reverse rs)))))
 
 
-(defmethod ƒ ((ifl pathname) (obn nko))
+(defmethod ƒ ((ifl pathname))
   (let ((rs)
         (otp)
         (log-output *standard-output*))
     (setf otp (with-output-to-string (*standard-output*)
                 (let* ((proc (sb-ext:run-program
-                              (xls2csv obn)
+                              +xls2csv-bin+
                               (list "-q3" (format nil "~a" ifl)) :wait nil :output :stream))
                        (optgroups)
                        (fields))
                   (with-open-stream (in (sb-ext:process-output proc))
                     (loop
                        :for ist := (read-line in nil)
-                       :until (or (null ist)
-                                  (string= "" (string-trim "#\," ist)))
-                       :do (progn
-                             (multiple-value-bind (line esf)
-                                 (ƒ ist px)
-                               (when esf
-                                 (format log-output "~&~a|~a:~a" ifl line esf)
-                                 (error "DTD"))
-                               (when line
-                                 (cond ((null optgroups) (setf optgroups line))
-                                       ((null fields) (setf fields line))
-                                       (t (handler-case
-                                              (let ((val (ƒ (list :line line
-                                                                  :optgroups optgroups
-                                                                  :fields fields)
-                                                            px)))
-                                                (print val)
-                                                (push val rs))
-                                            (SB-INT:SIMPLE-PARSE-ERROR () nil))))))))))))
+                       :while (valid-string-p ist :unwanted-chars '(#\,))
+                       ;; (or (null ist)
+                                  ;; (string= "" (string-trim "#\," ist)))
+                       :do (multiple-value-bind (line esf)
+                               (ƒ ist)
+                             (when esf
+                               (format log-output "~&~a|~a:~a" ifl line esf)
+                               (error "DTD"))
+                             (when line
+                               (cond ((null optgroups) (setf optgroups line))
+                                     ((null fields) (setf fields line))
+                                     (t (handler-case
+                                            (let ((val (ƒ (list :line line
+                                                                :optgroups optgroups
+                                                                :fields fields))))
+                                              (print val)
+                                              (push val rs))
+                                          (SB-INT:SIMPLE-PARSE-ERROR () nil)))))))))))
     rs))
 
-(defmethod xls.process-all-dtd ((jct nko) (obn nko))
+(defmethod xls.process-all-dtd ()
   (log5:log-for info "Processing DTD...")
   (let ((cnt 0)
         (items nil)
         (num-all 0))
     (loop :for file :in (remove-if #'(lambda (file) (or (directory-pathname-p file)
                                                         (not (equal (pathname-type file) "xls"))))
-                                   (rename-recursive-get-files (folder obn)))
+                                   (rename-recursive-get-files (config.get-option :paths :path-to-xls)))
        :do
-       (setf items (reverse (ƒ file px)))
-       (setf num-all (+ num-all (length items)))
+       (setf items (reverse (ƒ file)))
+       (incf num-all (length items))
        (log5:log-for info-console "~a. Processing file: ~a | ~a" (incf cnt) file (length items))
        (loop :for item :in items :do
           (let* ((articul (getf item :articul))
@@ -163,7 +155,7 @@
   (let ((*xls.errors* "<table>")
         (*xls.errors-num* 0))
     (setf *xls.product-table* (make-hash-table :test #'equal))
-    (xls.process-all-dtd px px)
+    (xls.process-all-dtd)
     (setf *xls.errors* (concatenate 'string "</table>" *xls.errors*))
     (email.send-xls-doubles-warn *xls.errors-num* *xls.errors*)))
 
@@ -172,7 +164,7 @@
   (let* ((file (format nil "~a" filepath))
          (proc (when (file-exists-p file)
                  (sb-ext:run-program
-                  "/usr/bin/xls2csv"
+                  +xls2csv-bin+
                   (list "-q3" file) :wait nil :output :stream))))
     (when proc
       (with-open-stream (stream (sb-ext:process-output proc))
