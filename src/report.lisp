@@ -181,6 +181,8 @@ list of conses (column-header . column-specifier).
                          (name it)
                          "no")))
   ;; marketing filters
+  (report.%rsc 'filter-key #'key)
+  (report.%rsc 'filter-active #'(lambda (item) (if (active item) "да" "нет")))
   (report.%rsc 'filter-vendor #'(lambda (item) (getf (data item) :vendor)))
   (report.%rsc 'filter-seria #'(lambda (item) (getf (data item) :seria)))
   (report.%rsc 'filter-name #'(lambda (item) (getf (data item) :name)))
@@ -191,9 +193,12 @@ list of conses (column-header . column-specifier).
    'filter-url
    #'(lambda (item)
        ;; TODO: use restas url designator
-       (format nil "http://www.320-8080.ru/~A/~A"
-               (key (parent item))
-               (key item))))
+       (if (parent item)
+           (format nil "http://www.320-8080.ru/~A/~A"
+                   (key (parent item))
+                   (key item))
+           ;; else
+           "no url")))
   (report.%rsc
    'filter-products
    #'(lambda (item) (length (filters.filter item))))
@@ -320,6 +325,17 @@ list of conses (column-header . column-specifier).
      ("Оригинальные картриджи" . printer-original-cartriges)
      ("Другие картриджи" . printer-other-cartriges))
    (alexandria:hash-table-values *printer-storage*)))
+
+(defun report.filters-report (stream)
+  (report.write-report-with-standard-columns
+   stream
+   '(("Key" . filter-key)
+     ("Имя" . filter-name)
+     ("Url" . filter-url)
+     ("Активный" . filter-active)
+     ("Количество продуктов" . filter-products)
+     ("Количество активных продуктов" . filter-active-products))
+   'filter))
 
 (defun report.pics-report (stream &optional (products nil products-supplied-p))
   (cl-csv:write-csv-row (list "Продукт"
@@ -453,6 +469,7 @@ list of conses (column-header . column-specifier).
   (let ((time (time.encode.backup-filename)))
     (create-report (format nil "seo-report-groups-~A.csv" time) #'report.group-report)
     (create-report (format nil "seo-report-vendors-~A.csv" time) #'write-vendors)
+    ;; FIXME: wrong names for reports
     (create-report (format nil "seo-report-products-~A.csv" time) #'report.seo-seria-filters)
     (create-report (format nil "seo-report-seria-filters-~A.csv" time) #'report.product-vendor-report)
     ;; FIXME: do own button and fuction for the printers report
