@@ -230,9 +230,9 @@ list of conses (column-header . column-specifier).
                                          (count-if #'active (other-cartriges printer)
                                                    :key (alexandria:rcurry #'getobj 'product))))))
   (report.%rsc 'printer-original-cartriges
-               #'(lambda (printer) (format nil "~{~A~^ ~}" (original-cartriges printer))))
+               #'(lambda (printer) (format nil "~{~A~^,~}" (original-cartriges printer))))
   (report.%rsc 'printer-other-cartriges
-               #'(lambda (printer) (format nil "~{~A~^ ~}" (other-cartriges printer)))))
+               #'(lambda (printer) (format nil "~{~A~^,~}" (other-cartriges printer)))))
 
 (report.register-standard-columns)
 
@@ -472,8 +472,9 @@ list of conses (column-header . column-specifier).
     ;; FIXME: wrong names for reports
     (create-report (format nil "seo-report-products-~A.csv" time) #'report.seo-seria-filters)
     (create-report (format nil "seo-report-seria-filters-~A.csv" time) #'report.product-vendor-report)
-    ;; FIXME: do own button and fuction for the printers report
-    (create-report (format nil "printer-report-~A.csv" time) #'report.printers-report)))
+    ;; FIXME: do own button and fuction for the printers and filters reports
+    (create-report (format nil "printer-report-~A.csv" time) #'report.printers-report)
+    (create-report (format nil "filter-report-~A.csv" time) #'report.filters-report)))
 
 
 (defun report.write-alias (&optional (stream *standard-output*))
@@ -517,3 +518,52 @@ list of conses (column-header . column-specifier).
 (defun report.do-groups-products-report ()
   (create-report (format nil "groups-products-~a.csv" (time.encode.backup-filename))
                  #'report.groups-products-report))
+
+
+;;;; fullfilter report
+;; temp
+(defun fullfilter-keyword-t (keyword)
+  (alexandria:make-keyword (format nil "~A-T" keyword)))
+
+(defun fullfilter-keyword-f (keyword)
+  (alexandria:make-keyword (format nil "~A-F" keyword)))
+
+(defun fullfilter-keyword-n (keyword num)
+  (alexandria:make-keyword (format nil "~A-~D" keyword num)))
+
+(defun get-advanced-filters (group)
+  (loop :for filter-group :in (advanced (fullfilter group))
+     :appending (second filter-group) :into filters
+     :finally (return filters)))
+
+(defun fullfilter-report (stream)
+  (format stream "Группа;Ключ группы;Фильтр;Значение;Продуктов;Активных;~%")
+  (process-storage
+   #'(lambda (group)
+       (when (fullfilter group)
+         (let ((filters (append (base (fullfilter group)) (get-advanced-filters group)))
+               res)
+           (mapcar #'(lambda (param-list)
+                       (let ((kw (first param-list))
+                             (name (second param-list)))
+                         (if (or (equal :slider (third param-list))
+                                 (equal :range (third param-list)))
+                             (let ((products (fullfilter-controller (products group) group
+                                                                    (list (fullfilter-keyword-f kw) "0"
+                                                                          (fullfilter-keyword-t kw) "100000000"))))
+                               (push (list name (length products) (count-if #'active products))
+                                     res))
+                             ;; else
+                             (loop :for opt :in (fourth param-list)
+                                :for i :from 0 to (1- (length (fourth param-list)))
+                                :do
+                                (let ((products (fullfilter-controller (products group) group
+                                                                       (list (fullfilter-keyword-n kw i) "1"))))
+                                  (push (list name opt (length products) (count-if #'active products))
+                                        res))))))
+                   filters)
+           (mapcar #'(lambda (res-val)
+                       (format stream "~A;~A;~{~A;~}~%"
+                               (name group) (key group) res-val))
+                   res))))
+   'group))
