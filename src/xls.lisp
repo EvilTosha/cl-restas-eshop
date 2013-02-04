@@ -55,12 +55,14 @@
 (defun xls.%prepare-error-email (errors-table)
   (declare (hash-table errors-table))
   (with-output-to-string (stream)
+    (format stream "<table>")
     (maphash #'(lambda (key files)
                  (format stream "<tr><td>~A</td>
                                  <td><a href=\"http://320-8080.ru/~A\">~A</a></td>
                                  <td>~{~A ~}</td></tr>"
                          key key key files))
-             errors-table)))
+             errors-table)
+    (format stream "</table>")))
 
 (defun xls.update-options-from-xls ()
   (let (;; hash-table that stores for each articul the first file where it has occured
@@ -87,7 +89,8 @@
                               (setf (name-seo product) name))
                             (setf (optgroups product)
                                   (xls.%prepare-optgroups option-descriptor (list (first option-table)
-                                                                                  (second option-table))))))
+                                                                                  (second option-table)))
+                                  (vendor product) (get-option product "Общие характеристики" "Производитель"))))
                       (if (gethash key articul-file)
                           (asif (gethash key error-articuls)
                                 (push file it)
