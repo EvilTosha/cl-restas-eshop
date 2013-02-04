@@ -296,7 +296,7 @@
          (rename-convert-all)
          "DO proccess-pictures")
         ("dtd"
-         (dtd)
+         (xls.update-options-from-xls)
          "DO DTD")
         ("articles-restore"
          (articles.restore)

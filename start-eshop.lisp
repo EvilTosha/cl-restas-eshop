@@ -42,7 +42,7 @@
 		(eshop:class-core.unserialize-all)
 		(eshop:gateway.load))
 	(when (eshop:config.get-option :start-options :load-xls)
-		(eshop:dtd)
+		(eshop::xls.update-options-from-xls)
     (eshop:cartrige.restore))
 	(when (eshop:config.get-option :start-options :load-content)
 		(eshop:static-pages.restore)

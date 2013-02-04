@@ -31,7 +31,7 @@
   (:export :config.parse-config
            :config.get-option
            :servo.compile-soy
-           :dtd
+           :xls.update-options-from-xls
            :sklonenie.restore
            :class-core.unserialize-all
            :gateway.load
