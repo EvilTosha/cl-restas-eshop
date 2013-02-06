@@ -2,11 +2,6 @@
 
 (in-package #:eshop)
 
-(defvar *xls.product-table* (make-hash-table :test #'equal))
-(defvar *xls.errors* nil)
-(defvar *xls.errors-num* 0)
-
-
 (alexandria:define-constant +xls2csv-bin+
     (find-if #'probe-file
              (list "/usr/bin/xls2csv"
@@ -14,6 +9,8 @@
                    "/usr/sbin/xls2csv"))
   :test (constantly t)
   :documentation "Path to executable xls2csv file")
+
+(defvar *xls-last-modified* (make-hash-table :test #'equal))
 
 (defun xls.%read-and-process-file (pathname)
   "Processes the xls file and returns a list of options lists"
@@ -64,6 +61,36 @@
              errors-table)
     (format stream "</table>")))
 
+(defun xls.%update-options-single-file (file articul-file error-articuls)
+  (declare ((or pathname string) file) (hash-table articul-file error-articuls))
+  (log5:log-for info-console "Processing file: ~A" file)
+  (let ((option-table (xls.%read-and-process-file file)))
+    (loop
+       :for option-descriptor :in (cddr (butlast option-table)) ; without 2 header rows and last crap row
+       :do (let* ((key (first option-descriptor))
+                  (name (second option-descriptor))
+                  (product (getobj key 'product)))
+             (when (valid-string-p key :whitespace-check nil)
+               (if (null product)
+                   (log5:log-for warning
+                                 "Product ~A (articul ~A), not found, skip. File: ~A"
+                                 name key file)
+                   ;; else
+                   (progn
+                     (when (valid-string-p name :whitespace-check nil)
+                       (setf (name-seo product) name))
+                     (setf (optgroups product)
+                           (xls.%prepare-optgroups option-descriptor (list (first option-table)
+                                                                           (second option-table)))
+                           (vendor product) (get-option product "Общие характеристики" "Производитель"))))
+               (if (gethash key articul-file)
+                   (asif (gethash key error-articuls)
+                         (push file it)
+                         ;; else
+                         (setf it (list (gethash key articul-file) file)))
+                   ;; else
+                   (setf (gethash key articul-file) file)))))))
+
 (defun xls.update-options-from-xls ()
   (let (;; hash-table that stores for each articul the first file where it has occured
         (articul-file (make-hash-table :test #'equal))
@@ -72,32 +99,13 @@
     (cl-fad:walk-directory
      (config.get-option :paths :path-to-xls)
      #'(lambda (file)
-         (let ((option-table (xls.%read-and-process-file file)))
-           (loop
-              :for option-descriptor :in (cddr (butlast option-table)) ; without 2 header rows and last crap row
-              :do (let* ((key (first option-descriptor))
-                         (name (second option-descriptor))
-                         (product (getobj key 'product)))
-                    (when (valid-string-p key :whitespace-check nil)
-                      (if (null product)
-                          (log5:log-for warning
-                                        "Product ~A (articul ~A), not found, skip. File: ~A"
-                                        name key file)
-                          ;; else
-                          (progn
-                            (when (valid-string-p name :whitespace-check nil)
-                              (setf (name-seo product) name))
-                            (setf (optgroups product)
-                                  (xls.%prepare-optgroups option-descriptor (list (first option-table)
-                                                                                  (second option-table)))
-                                  (vendor product) (get-option product "Общие характеристики" "Производитель"))))
-                      (if (gethash key articul-file)
-                          (asif (gethash key error-articuls)
-                                (push file it)
-                                ;; else
-                                (setf it (list (gethash key articul-file) file)))
-                          ;; else
-                          (setf (gethash key articul-file) file)))))))
+         ;; check last modified date
+         (let ((file-last-modified (file-write-date file)))
+           (slet (gethash file *xls-last-modified*)
+             (when (or (not it)
+                       (< it file-last-modified))
+               (xls.%update-options-single-file file articul-file error-articuls)
+               (setf it file-last-modified)))))
      :test #'(lambda (file)
                (and (not (directory-pathname-p file))
                     (equal (pathname-type file) "xls"))))
